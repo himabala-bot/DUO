@@ -1,20 +1,21 @@
 import type { Metadata } from 'next';
-import { Plus_Jakarta_Sans, Newsreader, JetBrains_Mono } from 'next/font/google';
+import { Poppins, Work_Sans, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/context/AuthContext';
 import { RealtimeProvider } from '@/context/RealtimeContext';
 import { ToastProvider } from '@/context/ToastContext';
 
-const sans = Plus_Jakarta_Sans({
+const workSans = Work_Sans({
   subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
   variable: '--font-sans',
   display: 'swap',
 });
 
-const serif = Newsreader({
+const poppins = Poppins({
   subsets: ['latin'],
-  style: ['normal', 'italic'],
-  variable: '--font-serif',
+  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-display',
   display: 'swap',
 });
 
@@ -36,7 +37,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${sans.variable} ${serif.variable} ${mono.variable}`}>
+    <html lang="en" className={`${workSans.variable} ${poppins.variable} ${mono.variable}`}>
       <body className="min-h-screen bg-[#FAF7F2] text-[#422F0E] font-sans antialiased">
         <ToastProvider>
           <AuthProvider>
