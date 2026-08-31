@@ -16,19 +16,21 @@ import {
   X,
   Palette,
   Archive,
+  Feather,
+  Sparkles,
 } from 'lucide-react';
 import { Drawing } from '@/types';
 import { format } from 'date-fns';
 import { RealtimeChannel } from '@supabase/supabase-js';
 
-const COLORS = [
-  { name: 'Carbon Ink', value: '#1C1917' },
-  { name: 'Warm Terracotta', value: '#C2410C' },
-  { name: 'Deep Olive', value: '#365314' },
-  { name: 'Warm Sienna', value: '#78350F' },
-  { name: 'Slate Indigo', value: '#334155' },
-  { name: 'Muted Rose', value: '#9D174D' },
-  { name: 'Graphite', value: '#78716C' },
+const PALETTE_COLORS = [
+  { name: 'Deep Ink', value: '#292522' },
+  { name: 'Warm Terracotta', value: '#C96A4A' },
+  { name: 'Dusty Rose', value: '#C9827A' },
+  { name: 'Soft Peach', value: '#F2C9B8' },
+  { name: 'Sage Green', value: '#A8B5A0' },
+  { name: 'Pale Butter', value: '#E8D99B' },
+  { name: 'Soft Lavender', value: '#C9BDD8' },
   { name: 'Paper White', value: '#FFFFFF' },
 ];
 
@@ -42,7 +44,7 @@ const SIZES = [
 export const DrawingCanvas: React.FC = () => {
   const { profile, partner } = useAuth();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [color, setColor] = useState<string>('#1C1917');
+  const [color, setColor] = useState<string>('#292522');
   const [brushSize, setBrushSize] = useState<number>(5);
   const [isEraser, setIsEraser] = useState<boolean>(false);
   const [caption, setCaption] = useState<string>('');
@@ -100,36 +102,20 @@ export const DrawingCanvas: React.FC = () => {
       config: { broadcast: { self: false } },
     });
 
-    channel
-      .on('broadcast', { event: 'new_drawing' }, (payload) => {
-        const newDrawing = payload.payload as Drawing;
-        if (!newDrawing || !newDrawing.id) return;
+    channel.on('broadcast', { event: 'new_drawing' }, (payload) => {
+      const drawing = payload.payload as Drawing;
+      if (!drawing || !drawing.id) return;
 
-        const isMe = newDrawing.sender?.id === profile.id || (newDrawing as any).sender_id === profile.id;
-        const formatted: Drawing = {
-          ...newDrawing,
-          is_me: isMe,
-        };
+      const isMe = drawing.sender?.id === profile.id || (drawing as any).sender_id === profile.id;
+      const formattedDrawing: Drawing = {
+        ...drawing,
+        is_me: isMe,
+      };
 
-        setDrawings((prev) => {
-          if (prev.some((d) => d.id === formatted.id)) return prev;
-          return [formatted, ...prev];
-        });
-      })
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'drawings',
-          filter: `duo_id=eq.${duoId}`,
-        },
-        () => {
-          fetchDrawings();
-        }
-      )
-      .subscribe();
+      setDrawings((prev) => [formattedDrawing, ...prev.filter((d) => d.id !== formattedDrawing.id)]);
+    });
 
+    channel.subscribe();
     channelRef.current = channel;
 
     return () => {
@@ -138,9 +124,9 @@ export const DrawingCanvas: React.FC = () => {
         channelRef.current = null;
       }
     };
-  }, [duoId, profile?.id, fetchDrawings]);
+  }, [duoId, profile?.id]);
 
-  const saveHistoryState = () => {
+  const saveState = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
@@ -149,49 +135,24 @@ export const DrawingCanvas: React.FC = () => {
     const currentState = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const newHistory = history.slice(0, historyIndex + 1);
     newHistory.push(currentState);
+
+    if (newHistory.length > 25) {
+      newHistory.shift();
+    }
+
     setHistory(newHistory);
     setHistoryIndex(newHistory.length - 1);
   };
 
-  const handleUndo = () => {
-    if (historyIndex > 0) {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-
-      const newIndex = historyIndex - 1;
-      ctx.putImageData(history[newIndex], 0, 0);
-      setHistoryIndex(newIndex);
-    }
-  };
-
-  const handleRedo = () => {
-    if (historyIndex < history.length - 1) {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-
-      const newIndex = historyIndex + 1;
-      ctx.putImageData(history[newIndex], 0, 0);
-      setHistoryIndex(newIndex);
-    }
-  };
-
-  const handleClear = () => {
-    if (!confirm('Clear canvas?')) return;
-    initCanvas();
-  };
-
-  const getCanvasCoords = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+  const getCoordinates = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
-    if (!canvas) return { x: 0, y: 0 };
+    if (!canvas) return null;
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
 
     if ('touches' in e) {
+      if (e.touches.length === 0) return null;
       const touch = e.touches[0];
       return {
         x: (touch.clientX - rect.left) * scaleX,
@@ -206,8 +167,9 @@ export const DrawingCanvas: React.FC = () => {
   };
 
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    const coords = getCoordinates(e);
+    if (!coords) return;
     setIsDrawing(true);
-    const coords = getCanvasCoords(e);
     lastPos.current = coords;
 
     const canvas = canvasRef.current;
@@ -216,25 +178,26 @@ export const DrawingCanvas: React.FC = () => {
     if (!ctx) return;
 
     ctx.beginPath();
-    ctx.arc(coords.x, coords.y, (isEraser ? brushSize * 2 : brushSize) / 2, 0, Math.PI * 2);
+    ctx.arc(coords.x, coords.y, brushSize / 2, 0, Math.PI * 2);
     ctx.fillStyle = isEraser ? '#FFFFFF' : color;
     ctx.fill();
   };
 
   const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     if (!isDrawing || !lastPos.current) return;
+    const coords = getCoordinates(e);
+    if (!coords) return;
+
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const coords = getCanvasCoords(e);
-
     ctx.beginPath();
     ctx.moveTo(lastPos.current.x, lastPos.current.y);
     ctx.lineTo(coords.x, coords.y);
     ctx.strokeStyle = isEraser ? '#FFFFFF' : color;
-    ctx.lineWidth = isEraser ? brushSize * 2 : brushSize;
+    ctx.lineWidth = brushSize;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     ctx.stroke();
@@ -246,8 +209,43 @@ export const DrawingCanvas: React.FC = () => {
     if (isDrawing) {
       setIsDrawing(false);
       lastPos.current = null;
-      saveHistoryState();
+      saveState();
     }
+  };
+
+  const handleUndo = () => {
+    if (historyIndex > 0) {
+      const newIndex = historyIndex - 1;
+      setHistoryIndex(newIndex);
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      ctx.putImageData(history[newIndex], 0, 0);
+    }
+  };
+
+  const handleRedo = () => {
+    if (historyIndex < history.length - 1) {
+      const newIndex = historyIndex + 1;
+      setHistoryIndex(newIndex);
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      ctx.putImageData(history[newIndex], 0, 0);
+    }
+  };
+
+  const handleClear = () => {
+    if (!confirm('Clear canvas?')) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    saveState();
   };
 
   const handleSendDrawing = async () => {
@@ -267,7 +265,7 @@ export const DrawingCanvas: React.FC = () => {
           storagePath = await drawingsApi.uploadToSupabaseStorage(blob, duoId);
         }
       } catch (uploadErr) {
-        console.warn('Supabase storage upload bypassed, saving high-res PNG directly:', uploadErr);
+        console.warn('Storage upload bypassed, saving directly:', uploadErr);
         storagePath = dataUrl;
       }
 
@@ -337,7 +335,6 @@ export const DrawingCanvas: React.FC = () => {
       document.body.removeChild(link);
       URL.revokeObjectURL(blobUrl);
     } catch (err) {
-      console.warn('Blob fetch download failed, falling back to direct anchor:', err);
       const link = document.createElement('a');
       link.href = rawUrl;
       link.download = filename;
@@ -353,23 +350,27 @@ export const DrawingCanvas: React.FC = () => {
       {/* Studio Workspace (~1200–1320px) */}
       <div className="w-full max-w-[1200px] lg:max-w-[1320px] space-y-6 sm:space-y-8">
         {/* Top Header & Switcher */}
-        <div className="flex flex-col sm:flex-row sm:items-baseline justify-between pb-6 border-b border-[#E8E4DB] gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-baseline justify-between pb-6 border-b border-[#EBE5DA] gap-4">
           <div>
-            <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-normal text-[#1C1917]">
-              Drawing Studio
+            <div className="inline-flex items-center gap-1.5 rounded-md bg-[#F4F6F2] px-2.5 py-0.5 border border-[#DFE5DA] text-[11px] font-mono uppercase tracking-wider text-[#5E8056] mb-2">
+              <Palette className="h-3 w-3" />
+              <span>Sketchbook Desk</span>
+            </div>
+            <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-normal text-[#292522]">
+              Shared Sketchbook
             </h2>
-            <p className="mt-1.5 text-xs sm:text-sm text-[#78716C]">
-              Hand-drawn notes, sketches, and doodles for {partner?.name}.
+            <p className="mt-1.5 text-xs sm:text-sm text-[#7A7267]">
+              Draw handwritten notes, sketches, and doodles for {partner?.name}.
             </p>
           </div>
 
-          <div className="flex border border-[#E8E4DB] rounded-xl bg-[#F5F2EB] p-1 self-start sm:self-auto">
+          <div className="flex border border-[#E8DFD3] rounded-full bg-[#FAF5EE] p-1 self-start sm:self-auto shadow-2xs">
             <button
               onClick={() => setActiveTab('canvas')}
-              className={`flex items-center space-x-2 rounded-lg px-4 py-1.5 text-xs sm:text-sm font-medium transition-all ${
+              className={`flex items-center space-x-2 rounded-full px-4 py-1.5 text-xs sm:text-sm font-medium transition-all ${
                 activeTab === 'canvas'
-                  ? 'bg-[#FFFFFF] text-[#1C1917] shadow-sm font-semibold'
-                  : 'text-[#78716C] hover:text-[#1C1917]'
+                  ? 'bg-[#FFFFFF] text-[#C96A4A] shadow-xs font-semibold'
+                  : 'text-[#7A7267] hover:text-[#292522]'
               }`}
             >
               <Palette className="h-4 w-4" />
@@ -377,10 +378,10 @@ export const DrawingCanvas: React.FC = () => {
             </button>
             <button
               onClick={() => setActiveTab('gallery')}
-              className={`flex items-center space-x-2 rounded-lg px-4 py-1.5 text-xs sm:text-sm font-medium transition-all ${
+              className={`flex items-center space-x-2 rounded-full px-4 py-1.5 text-xs sm:text-sm font-medium transition-all ${
                 activeTab === 'gallery'
-                  ? 'bg-[#FFFFFF] text-[#1C1917] shadow-sm font-semibold'
-                  : 'text-[#78716C] hover:text-[#1C1917]'
+                  ? 'bg-[#FFFFFF] text-[#C96A4A] shadow-xs font-semibold'
+                  : 'text-[#7A7267] hover:text-[#292522]'
               }`}
             >
               <Archive className="h-4 w-4" />
@@ -393,7 +394,7 @@ export const DrawingCanvas: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
             {/* Canvas Viewport (Desktop 8-9 cols) */}
             <div className="lg:col-span-8 xl:col-span-9 flex flex-col items-center">
-              <div className="w-full overflow-hidden rounded-2xl border border-[#E8E4DB] bg-[#FFFFFF] p-2.5 sm:p-3 shadow-[0_4px_20px_rgba(28,25,23,0.04)]">
+              <div className="w-full overflow-hidden rounded-2xl sm:rounded-3xl border border-[#EBE5DA] bg-[#FFFFFF] p-2.5 sm:p-3 shadow-[0_4px_24px_rgba(41,37,34,0.03)]">
                 <canvas
                   ref={canvasRef}
                   width={800}
@@ -415,14 +416,14 @@ export const DrawingCanvas: React.FC = () => {
                   type="text"
                   value={caption}
                   onChange={(e) => setCaption(e.target.value)}
-                  placeholder="Add a note or title (optional)..."
+                  placeholder="Add a note or title to this doodle (optional)..."
                   maxLength={100}
-                  className="flex-1 rounded-xl border border-[#D4CEC2] bg-[#FFFFFF] px-4 py-3 text-xs sm:text-sm text-[#1C1917] placeholder-[#A8A29E] focus:border-[#C2410C] focus:outline-none focus:ring-1 focus:ring-[#C2410C] shadow-sm"
+                  className="flex-1 rounded-2xl border border-[#E8DFD3] bg-[#FFFFFF] px-4 py-3 text-xs sm:text-sm text-[#292522] placeholder-[#A89F91] focus:border-[#C96A4A] focus:outline-none focus:ring-1 focus:ring-[#C96A4A] shadow-2xs"
                 />
                 <button
                   onClick={handleSendDrawing}
                   disabled={isSending}
-                  className="flex items-center justify-center space-x-2 rounded-xl bg-[#1C1917] px-6 py-3 text-xs sm:text-sm font-medium text-white hover:bg-[#C2410C] transition-all disabled:opacity-40 min-h-[44px] shadow-sm shrink-0"
+                  className="flex items-center justify-center space-x-2 rounded-2xl bg-[#C96A4A] px-6 py-3 text-xs sm:text-sm font-medium text-white hover:bg-[#B75C3E] transition-all disabled:opacity-40 min-h-[44px] shadow-[0_2px_8px_rgba(201,106,74,0.2)] shrink-0"
                 >
                   <span>{isSending ? 'Sending...' : `Send to ${partner?.name || 'Partner'}`}</span>
                   <ArrowRight className="h-4 w-4" />
@@ -431,16 +432,16 @@ export const DrawingCanvas: React.FC = () => {
             </div>
 
             {/* Tools & Palette Sidebar (Desktop 4-3 cols) */}
-            <div className="lg:col-span-4 xl:col-span-3 rounded-2xl border border-[#E8E4DB] bg-[#FFFFFF] p-5 sm:p-6 shadow-[0_2px_8px_rgba(28,25,23,0.03)] flex flex-col gap-6">
+            <div className="lg:col-span-4 xl:col-span-3 rounded-2xl sm:rounded-3xl border border-[#EBE5DA] bg-[#FFFFFF] p-5 sm:p-6 shadow-[0_2px_12px_rgba(41,37,34,0.03)] flex flex-col gap-6">
               {/* History Actions */}
               <div>
-                <span className="text-[11px] font-mono uppercase tracking-widest text-[#8C857B]">Actions</span>
+                <span className="text-[10px] font-mono uppercase tracking-widest text-[#A89F91]">Actions</span>
                 <div className="mt-2.5 flex gap-2">
                   <button
                     onClick={handleUndo}
                     disabled={historyIndex <= 0}
                     title="Undo"
-                    className="flex-1 flex items-center justify-center rounded-xl border border-[#E8E4DB] bg-[#FBFAF7] p-3 text-[#57534E] hover:bg-[#F5F2EB] disabled:opacity-30 min-h-[42px] transition-all"
+                    className="flex-1 flex items-center justify-center rounded-xl border border-[#E8DFD3] bg-[#FAF8F5] p-3 text-[#696156] hover:bg-[#FAF1EC] hover:text-[#C96A4A] disabled:opacity-30 min-h-[42px] transition-all"
                   >
                     <RotateCcw className="h-4 w-4" />
                   </button>
@@ -448,25 +449,54 @@ export const DrawingCanvas: React.FC = () => {
                     onClick={handleRedo}
                     disabled={historyIndex >= history.length - 1}
                     title="Redo"
-                    className="flex-1 flex items-center justify-center rounded-xl border border-[#E8E4DB] bg-[#FBFAF7] p-3 text-[#57534E] hover:bg-[#F5F2EB] disabled:opacity-30 min-h-[42px] transition-all"
+                    className="flex-1 flex items-center justify-center rounded-xl border border-[#E8DFD3] bg-[#FAF8F5] p-3 text-[#696156] hover:bg-[#FAF1EC] hover:text-[#C96A4A] disabled:opacity-30 min-h-[42px] transition-all"
                   >
                     <RotateCw className="h-4 w-4" />
                   </button>
                   <button
                     onClick={handleClear}
                     title="Clear Canvas"
-                    className="flex-1 flex items-center justify-center rounded-xl border border-[#E8E4DB] bg-[#FBFAF7] p-3 text-[#78716C] hover:text-[#DC2626] hover:bg-[#FEF2F2] min-h-[42px] transition-all"
+                    className="flex items-center justify-center rounded-xl border border-[#E8DFD3] bg-[#FAF8F5] p-3 text-[#A89F91] hover:bg-[#FAF0ED] hover:text-[#C96A4A] min-h-[42px] transition-all"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
               </div>
 
-              {/* Inks / Colors */}
+              {/* Tool Mode: Pen vs Eraser */}
               <div>
-                <span className="text-[11px] font-mono uppercase tracking-widest text-[#8C857B]">Ink Palette</span>
+                <span className="text-[10px] font-mono uppercase tracking-widest text-[#A89F91]">Tool Mode</span>
+                <div className="mt-2.5 flex gap-2">
+                  <button
+                    onClick={() => setIsEraser(false)}
+                    className={`flex-1 flex items-center justify-center space-x-2 rounded-xl py-2.5 text-xs font-medium border transition-all ${
+                      !isEraser
+                        ? 'bg-[#FAF1EC] border-[#F0DDD4] text-[#C96A4A] font-semibold'
+                        : 'border-[#E8DFD3] bg-[#FAF8F5] text-[#7A7267] hover:bg-[#FAF5EE]'
+                    }`}
+                  >
+                    <Palette className="h-4 w-4" />
+                    <span>Ink Pen</span>
+                  </button>
+                  <button
+                    onClick={() => setIsEraser(true)}
+                    className={`flex-1 flex items-center justify-center space-x-2 rounded-xl py-2.5 text-xs font-medium border transition-all ${
+                      isEraser
+                        ? 'bg-[#FAF1EC] border-[#F0DDD4] text-[#C96A4A] font-semibold'
+                        : 'border-[#E8DFD3] bg-[#FAF8F5] text-[#7A7267] hover:bg-[#FAF5EE]'
+                    }`}
+                  >
+                    <Eraser className="h-4 w-4" />
+                    <span>Eraser</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Color Swatches */}
+              <div>
+                <span className="text-[10px] font-mono uppercase tracking-widest text-[#A89F91]">Ink Palette</span>
                 <div className="mt-2.5 grid grid-cols-4 gap-2.5">
-                  {COLORS.map((c) => (
+                  {PALETTE_COLORS.map((c) => (
                     <button
                       key={c.value}
                       onClick={() => {
@@ -474,119 +504,82 @@ export const DrawingCanvas: React.FC = () => {
                         setIsEraser(false);
                       }}
                       title={c.name}
-                      className={`relative h-10 w-full rounded-lg border transition-all ${
-                        !isEraser && color === c.value
-                          ? 'border-[#1C1917] ring-2 ring-[#1C1917]/20 scale-105 shadow-sm'
-                          : 'border-[#E8E4DB] hover:scale-105'
-                      }`}
                       style={{ backgroundColor: c.value }}
+                      className={`h-9 w-full rounded-xl border transition-all flex items-center justify-center ${
+                        color === c.value && !isEraser
+                          ? 'border-[#292522] scale-110 shadow-md ring-2 ring-[#C96A4A]/30'
+                          : 'border-[#E8DFD3] hover:scale-105'
+                      }`}
                     >
-                      {!isEraser && color === c.value && (
-                        <Check className={`h-4 w-4 mx-auto ${c.value === '#FFFFFF' || c.value === '#78716C' ? 'text-black' : 'text-white'}`} />
+                      {color === c.value && !isEraser && (
+                        <Check className={`h-4 w-4 ${c.value === '#FFFFFF' || c.value === '#E8D99B' || c.value === '#F2C9B8' ? 'text-[#292522]' : 'text-white'}`} />
                       )}
                     </button>
                   ))}
                 </div>
               </div>
 
-              {/* Nib Sizes */}
+              {/* Brush Size */}
               <div>
-                <span className="text-[11px] font-mono uppercase tracking-widest text-[#8C857B]">Nib Size</span>
-                <div className="mt-2.5 grid grid-cols-2 lg:grid-cols-1 gap-2">
+                <span className="text-[10px] font-mono uppercase tracking-widest text-[#A89F91]">Stroke Width</span>
+                <div className="mt-2.5 grid grid-cols-4 gap-2">
                   {SIZES.map((s) => (
                     <button
-                      key={s.name}
+                      key={s.value}
                       onClick={() => setBrushSize(s.value)}
-                      className={`flex items-center justify-between rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-medium transition-all ${
+                      className={`rounded-xl py-2 text-xs font-mono border transition-all ${
                         brushSize === s.value
-                          ? 'bg-[#F5F2EB] text-[#1C1917] font-semibold border border-[#D4CEC2]'
-                          : 'text-[#78716C] hover:bg-[#FBFAF7] border border-transparent'
+                          ? 'bg-[#292522] text-white border-[#292522] font-semibold'
+                          : 'border-[#E8DFD3] bg-[#FAF8F5] text-[#7A7267] hover:bg-[#FAF5EE]'
                       }`}
                     >
-                      <span>{s.name}</span>
-                      <div
-                        className="rounded-full bg-[#1C1917]"
-                        style={{ width: `${s.value + 3}px`, height: `${s.value + 3}px` }}
-                      />
+                      {s.name}
                     </button>
                   ))}
                 </div>
               </div>
-
-              {/* Eraser */}
-              <div>
-                <button
-                  onClick={() => setIsEraser(!isEraser)}
-                  className={`flex w-full items-center justify-center space-x-2 rounded-xl py-3 text-xs sm:text-sm font-medium transition-all min-h-[42px] ${
-                    isEraser
-                      ? 'bg-[#1C1917] text-white shadow-sm'
-                      : 'border border-[#E8E4DB] bg-[#FBFAF7] text-[#57534E] hover:bg-[#F5F2EB]'
-                  }`}
-                >
-                  <Eraser className="h-4 w-4" />
-                  <span>{isEraser ? 'Eraser Active' : 'Eraser'}</span>
-                </button>
-              </div>
             </div>
           </div>
         ) : (
-          /* Gallery View */
-          <div>
+          /* Archive Gallery */
+          <div className="space-y-6">
             {drawings.length === 0 ? (
-              <div className="flex h-64 flex-col items-center justify-center rounded-2xl border border-[#E8E4DB] bg-[#FFFFFF] p-8 sm:p-12 text-center shadow-sm">
-                <h4 className="font-serif text-xl text-[#1C1917]">No drawings in archive</h4>
-                <p className="mt-1.5 text-xs sm:text-sm text-[#78716C]">
-                  Draw a sketch and share it with {partner?.name} to start your archive.
+              <div className="rounded-3xl border border-[#EBE5DA] bg-[#FFFFFF] p-8 sm:p-14 text-center shadow-2xs">
+                <div className="h-12 w-12 rounded-2xl bg-[#F4F6F2] text-[#5E8056] flex items-center justify-center mx-auto mb-3 border border-[#DFE5DA]">
+                  <Palette className="h-6 w-6" />
+                </div>
+                <h4 className="font-serif text-xl text-[#292522]">No sketches in the gallery</h4>
+                <p className="mt-1.5 text-xs sm:text-sm text-[#7A7267] max-w-sm mx-auto">
+                  Create your first drawing in the Studio and send it to your partner.
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
-                {drawings.map((draw) => {
-                  const imgSource = draw.image_url || draw.storage_path;
-
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+                {drawings.map((drawing) => {
+                  const imgUrl = drawing.image_url || drawing.storage_path;
                   return (
                     <div
-                      key={draw.id}
-                      className="rounded-2xl border border-[#E8E4DB] bg-[#FFFFFF] overflow-hidden shadow-[0_2px_8px_rgba(28,25,23,0.03)] transition-all hover:border-[#D4CEC2] hover:shadow-md"
+                      key={drawing.id}
+                      onClick={() => setSelectedDrawing(drawing)}
+                      className="group cursor-pointer rounded-2xl sm:rounded-3xl border border-[#EBE5DA] bg-[#FFFFFF] p-3 shadow-2xs transition-all hover:border-[#C96A4A] hover:shadow-md"
                     >
-                      <div
-                        onClick={() => setSelectedDrawing(draw)}
-                        className="cursor-pointer aspect-[4/3] w-full bg-[#FBFAF7] flex items-center justify-center overflow-hidden border-b border-[#E8E4DB]"
-                      >
-                        {imgSource ? (
-                          <img
-                            src={imgSource}
-                            alt={draw.caption || 'DUO Drawing'}
-                            className="h-full w-full object-contain p-3"
-                          />
-                        ) : (
-                          <div className="text-xs text-[#8C857B] font-mono">No preview</div>
-                        )}
+                      <div className="aspect-[4/3] w-full overflow-hidden rounded-xl border border-[#F0EBE1] bg-[#FAF8F5]">
+                        <img
+                          src={imgUrl}
+                          alt={drawing.caption || 'Drawing'}
+                          className="h-full w-full object-contain group-hover:scale-105 transition-transform"
+                        />
                       </div>
-
-                      <div className="p-4">
-                        <div className="flex items-center justify-between text-xs font-mono text-[#8C857B]">
-                          <span>{draw.is_me ? 'You' : draw.sender?.name}</span>
-                          <span>{format(new Date(draw.created_at), 'MMM dd, yyyy')}</span>
-                        </div>
-                        {draw.caption && <p className="mt-1.5 text-xs sm:text-sm text-[#1C1917] font-serif italic line-clamp-2">"{draw.caption}"</p>}
-
-                        <div className="mt-3.5 flex justify-end gap-2">
-                          <button
-                            onClick={() => setSelectedDrawing(draw)}
-                            className="rounded-lg p-2 text-[#78716C] hover:bg-[#F5F2EB] hover:text-[#1C1917] transition-colors"
-                            title="View"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDownloadDrawing(draw)}
-                            className="rounded-lg p-2 text-[#78716C] hover:bg-[#F5F2EB] hover:text-[#1C1917] transition-colors"
-                            title="Download PNG"
-                          >
-                            <Download className="h-4 w-4" />
-                          </button>
-                        </div>
+                      <div className="mt-2.5 px-1">
+                        <span className="text-[10px] font-mono text-[#A89F91] block">
+                          {format(new Date(drawing.created_at), 'MMM dd, yyyy')}
+                        </span>
+                        <h4 className="font-serif text-sm font-medium text-[#292522] truncate mt-0.5">
+                          {drawing.caption || 'Untitled Sketch'}
+                        </h4>
+                        <span className="text-[11px] text-[#C96A4A] font-mono mt-1 inline-block">
+                          {drawing.is_me ? 'By you' : `By ${drawing.sender?.name || partner?.name}`}
+                        </span>
                       </div>
                     </div>
                   );
@@ -596,48 +589,47 @@ export const DrawingCanvas: React.FC = () => {
           </div>
         )}
 
-        {/* Lightbox Modal */}
+        {/* Full Image Modal */}
         {selectedDrawing && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-[2px]">
-            <div className="relative max-h-[90vh] max-w-3xl w-full overflow-hidden rounded-2xl border border-[#E8E4DB] bg-[#FFFFFF] p-6 shadow-2xl">
-              <div className="flex items-center justify-between pb-4 border-b border-[#E8E4DB]">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-xs">
+            <div className="w-full max-w-xl rounded-3xl border border-[#EBE5DA] bg-[#FFFFFF] p-6 shadow-xl">
+              <div className="flex items-center justify-between pb-3 border-b border-[#EBE5DA]">
                 <div>
-                  <h4 className="font-serif text-lg text-[#1C1917]">
-                    Drawing by {selectedDrawing.is_me ? 'You' : selectedDrawing.sender?.name}
+                  <h4 className="font-serif text-lg text-[#292522]">
+                    {selectedDrawing.caption || 'Shared Sketch'}
                   </h4>
-                  <p className="text-xs font-mono text-[#8C857B]">
-                    {format(new Date(selectedDrawing.created_at), 'MMMM dd, yyyy hh:mm a')}
-                  </p>
+                  <span className="text-[10px] font-mono text-[#A89F91]">
+                    {format(new Date(selectedDrawing.created_at), 'EEEE, MMMM dd, yyyy • hh:mm a')}
+                  </span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => handleDownloadDrawing(selectedDrawing)}
-                    className="rounded-xl border border-[#E8E4DB] bg-[#FBFAF7] px-3.5 py-1.5 text-xs font-medium text-[#1C1917] hover:bg-[#F5F2EB] flex items-center gap-1.5"
-                  >
-                    <Download className="h-4 w-4" /> Download
-                  </button>
-                  <button
-                    onClick={() => setSelectedDrawing(null)}
-                    className="rounded-xl p-2 text-[#8C857B] hover:text-[#1C1917]"
-                  >
-                    <X className="h-5 w-5" />
-                  </button>
-                </div>
+                <button
+                  onClick={() => setSelectedDrawing(null)}
+                  className="rounded-full p-1.5 text-[#A89F91] hover:text-[#292522]"
+                >
+                  <X className="h-5 w-5" />
+                </button>
               </div>
 
-              <div className="mt-4 overflow-hidden rounded-xl bg-[#FBFAF7] border border-[#E8E4DB] p-4 flex items-center justify-center">
+              <div className="mt-4 aspect-[4/3] w-full overflow-hidden rounded-2xl border border-[#EBE5DA] bg-[#FAF8F5]">
                 <img
                   src={selectedDrawing.image_url || selectedDrawing.storage_path}
-                  alt={selectedDrawing.caption}
-                  className="max-h-[60vh] w-auto object-contain"
+                  alt={selectedDrawing.caption || 'Drawing'}
+                  className="h-full w-full object-contain"
                 />
               </div>
 
-              {selectedDrawing.caption && (
-                <p className="mt-3 text-center text-sm font-serif italic text-[#1C1917]">
-                  "{selectedDrawing.caption}"
-                </p>
-              )}
+              <div className="mt-4 flex justify-between items-center">
+                <span className="text-xs font-mono text-[#C96A4A]">
+                  {selectedDrawing.is_me ? 'Drawn by you' : `Drawn by ${selectedDrawing.sender?.name || partner?.name}`}
+                </span>
+                <button
+                  onClick={() => handleDownloadDrawing(selectedDrawing)}
+                  className="flex items-center space-x-2 rounded-xl bg-[#292522] px-4 py-2 text-xs font-medium text-white hover:bg-[#C96A4A] transition-all shadow-xs"
+                >
+                  <Download className="h-4 w-4" />
+                  <span>Download</span>
+                </button>
+              </div>
             </div>
           </div>
         )}

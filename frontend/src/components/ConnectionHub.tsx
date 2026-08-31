@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { duoApi } from '@/lib/api';
 import { ConnectionRequest } from '@/types';
-import { Copy, Check, RefreshCw, ArrowRight, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Copy, Check, RefreshCw, ArrowRight, CheckCircle2, AlertCircle, KeyRound, Heart, Sparkles } from 'lucide-react';
 
 export const ConnectionHub: React.FC = () => {
   const { profile, partner, hasActiveDuo, refreshProfile } = useAuth();
@@ -116,24 +116,24 @@ export const ConnectionHub: React.FC = () => {
       <div className="w-full max-w-[840px] space-y-6 sm:space-y-8">
         {/* Active Connected Room Card */}
         {hasActiveDuo && partner ? (
-          <div className="rounded-2xl border border-[#E8E4DB] bg-[#FFFFFF] p-6 sm:p-8 shadow-[0_2px_12px_rgba(28,25,23,0.03)]">
+          <div className="rounded-2xl sm:rounded-3xl border border-[#EBE5DA] bg-[#FFFFFF] p-6 sm:p-8 shadow-[0_2px_12px_rgba(41,37,34,0.03)]">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
               <div>
-                <div className="inline-flex items-center space-x-2 rounded-full bg-[#F4F1EA] px-3.5 py-1 text-xs font-mono text-[#78716C] mb-3">
-                  <span className="h-2 w-2 rounded-full bg-[#059669]" />
-                  <span>Room Connected</span>
+                <div className="inline-flex items-center space-x-2 rounded-full bg-[#F2F6F0] border border-[#D5E2D1] px-3 py-1 text-xs font-mono text-[#4D6A46] mb-3">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#7A9C71]" />
+                  <span>Private Room Active</span>
                 </div>
-                <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-normal text-[#1C1917]">
-                  {profile?.name} <span className="text-[#8C857B] font-light">&</span> {partner.name}
+                <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-normal text-[#292522]">
+                  {profile?.name} <span className="text-[#C96A4A] font-light">&</span> {partner.name}
                 </h2>
-                <p className="mt-2 text-xs sm:text-sm text-[#78716C] max-w-lg leading-relaxed">
+                <p className="mt-2 text-xs sm:text-sm text-[#7A7267] max-w-lg leading-relaxed">
                   Your private room is active. All chats, drawings, and daily reflections are shared exclusively between the two of you.
                 </p>
               </div>
 
               <button
                 onClick={handleLeaveDuo}
-                className="rounded-xl border border-[#E8E4DB] bg-[#FBFAF7] px-4 py-2.5 text-xs sm:text-sm text-[#78716C] hover:border-[#D4CEC2] hover:text-[#C2410C] transition-all shrink-0"
+                className="rounded-xl border border-[#E8DFD3] bg-[#FAF8F5] px-4 py-2.5 text-xs sm:text-sm text-[#7A7267] hover:border-[#F0DDD4] hover:bg-[#FAF0ED] hover:text-[#C96A4A] transition-all shrink-0"
               >
                 Disconnect room
               </button>
@@ -146,14 +146,14 @@ export const ConnectionHub: React.FC = () => {
           <div
             className={`flex items-center space-x-2.5 rounded-2xl border p-4 text-xs sm:text-sm ${
               message.type === 'success'
-                ? 'border-[#A7F3D0] bg-[#ECFDF5] text-[#065F46]'
-                : 'border-[#FCA5A5] bg-[#FEF2F2] text-[#991B1B]'
+                ? 'border-[#D5E2D1] bg-[#F2F6F0] text-[#4D6A46]'
+                : 'border-[#F4DCD9] bg-[#FAF2F0] text-[#C96A4A]'
             }`}
           >
             {message.type === 'success' ? (
-              <CheckCircle2 className="h-4 w-4 shrink-0 text-[#059669]" />
+              <CheckCircle2 className="h-4 w-4 shrink-0 text-[#5E8056]" />
             ) : (
-              <AlertCircle className="h-4 w-4 shrink-0 text-[#DC2626]" />
+              <AlertCircle className="h-4 w-4 shrink-0 text-[#C96A4A]" />
             )}
             <span>{message.text}</span>
           </div>
@@ -161,14 +161,14 @@ export const ConnectionHub: React.FC = () => {
 
         {/* Incoming Requests Banner */}
         {incomingRequests.length > 0 && (
-          <div className="rounded-2xl border border-[#EDD5C8] bg-[#FDF8F5] p-6 shadow-[0_2px_8px_rgba(194,65,12,0.04)]">
+          <div className="rounded-2xl sm:rounded-3xl border border-[#F0DDD4] bg-[#FAF2EE] p-6 shadow-2xs">
             <div className="flex items-center space-x-2 mb-1.5">
-              <span className="h-2 w-2 rounded-full bg-[#C2410C]" />
-              <h3 className="font-serif text-lg font-medium text-[#1C1917]">
+              <span className="h-2 w-2 rounded-full bg-[#C96A4A]" />
+              <h3 className="font-serif text-lg font-medium text-[#292522]">
                 Incoming Connection Request
               </h3>
             </div>
-            <p className="text-xs sm:text-sm text-[#78716C]">
+            <p className="text-xs sm:text-sm text-[#7A7267]">
               Someone is requesting to link keys and create a private room with you.
             </p>
 
@@ -176,24 +176,24 @@ export const ConnectionHub: React.FC = () => {
               {incomingRequests.map((req) => (
                 <div
                   key={req.id}
-                  className="flex flex-col sm:flex-row items-start sm:items-center justify-between rounded-xl border border-[#E8E4DB] bg-[#FFFFFF] p-4 gap-3"
+                  className="flex flex-col sm:flex-row items-start sm:items-center justify-between rounded-xl border border-[#EBE5DA] bg-[#FFFFFF] p-4 gap-3 shadow-2xs"
                 >
                   <div>
-                    <h4 className="text-xs sm:text-sm font-semibold text-[#1C1917]">{req.sender.name}</h4>
-                    <p className="text-xs text-[#78716C] font-mono">{req.sender.email}</p>
+                    <h4 className="text-xs sm:text-sm font-semibold text-[#292522]">{req.sender.name}</h4>
+                    <p className="text-xs text-[#7A7267] font-mono">{req.sender.email}</p>
                   </div>
 
                   <div className="flex items-center space-x-2 w-full sm:w-auto justify-end">
                     <button
                       onClick={() => handleAccept(req.id)}
                       disabled={isSubmitting}
-                      className="rounded-xl bg-[#1C1917] px-4 py-2 text-xs font-medium text-white hover:bg-[#2E2A27] transition-all disabled:opacity-50 min-h-[38px]"
+                      className="rounded-xl bg-[#C96A4A] px-4 py-2 text-xs font-medium text-white hover:bg-[#B75C3E] transition-all disabled:opacity-50 min-h-[38px] shadow-[0_2px_8px_rgba(201,106,74,0.18)]"
                     >
                       Accept & Link
                     </button>
                     <button
                       onClick={() => handleDecline(req.id)}
-                      className="rounded-xl border border-[#E8E4DB] px-3.5 py-2 text-xs text-[#78716C] hover:text-[#1C1917] min-h-[38px]"
+                      className="rounded-xl border border-[#E8DFD3] px-3.5 py-2 text-xs text-[#7A7267] hover:text-[#292522] min-h-[38px]"
                     >
                       Decline
                     </button>
@@ -207,102 +207,109 @@ export const ConnectionHub: React.FC = () => {
         {/* Pairing Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {/* Card 1: Your Key */}
-          <div className="rounded-2xl border border-[#E8E4DB] bg-[#FFFFFF] p-6 sm:p-7 shadow-[0_2px_8px_rgba(28,25,23,0.03)] flex flex-col justify-between">
+          <div className="rounded-2xl sm:rounded-3xl border border-[#EBE5DA] bg-[#FFFFFF] p-6 sm:p-7 shadow-[0_2px_12px_rgba(41,37,34,0.03)] flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-mono uppercase tracking-widest text-[#8C857B]">
-                  Your Duo Key
+                <span className="text-[10px] font-mono uppercase tracking-widest text-[#A89F91]">
+                  Your Connection Key
                 </span>
                 <button
                   onClick={handleRegenerateCode}
                   title="Regenerate key"
-                  className="text-[#8C857B] hover:text-[#1C1917] p-1.5 transition-colors rounded-lg hover:bg-[#F5F2EB]"
+                  className="text-[#A89F91] hover:text-[#C96A4A] p-1.5 transition-colors rounded-lg hover:bg-[#FAF2EF]"
                 >
-                  <RefreshCw className="h-4 w-4" />
+                  <RefreshCw className="h-3.5 w-3.5" />
                 </button>
               </div>
 
-              <h3 className="mt-3.5 font-serif text-xl font-normal text-[#1C1917]">
-                Share with partner
-              </h3>
-              <p className="mt-1 text-xs sm:text-sm text-[#78716C] leading-relaxed">
-                Give this key to your partner so they can connect directly to your room.
-              </p>
-
-              <div className="mt-6 rounded-2xl border border-[#E8E4DB] bg-[#F5F2EB] p-5 text-center shadow-inner">
-                <span className="font-mono text-2xl sm:text-3xl font-medium tracking-widest text-[#1C1917]">
-                  {profile?.duo_code || 'DUO-......'}
+              <div className="mt-4 rounded-2xl border border-[#E8DFD3] bg-[#FAF8F5] p-5 text-center shadow-2xs">
+                <span className="font-mono text-2xl sm:text-3xl font-medium tracking-widest text-[#292522]">
+                  {profile?.duo_code}
                 </span>
               </div>
+              <p className="mt-3 text-xs text-[#7A7267] leading-relaxed">
+                Share this unique key with your partner so they can connect with you.
+              </p>
             </div>
 
-            <div className="mt-6">
-              <button
-                onClick={handleCopyCode}
-                className="w-full flex items-center justify-center space-x-2 rounded-xl border border-[#D4CEC2] bg-[#FBFAF7] py-3 text-xs sm:text-sm font-medium text-[#1C1917] hover:bg-[#F5F2EB] transition-all min-h-[42px]"
-              >
-                {copied ? <Check className="h-4 w-4 text-[#059669]" /> : <Copy className="h-4 w-4 text-[#78716C]" />}
-                <span>{copied ? 'Key copied to clipboard' : 'Copy Duo Key'}</span>
-              </button>
-            </div>
+            <button
+              onClick={handleCopyCode}
+              className="mt-6 flex items-center justify-center space-x-2 rounded-xl border border-[#E8DFD3] bg-[#FAF5EE] py-3 text-xs sm:text-sm font-medium text-[#292522] hover:bg-[#FAF1EC] hover:text-[#C96A4A] hover:border-[#F0DDD4] transition-all shadow-2xs min-h-[44px]"
+            >
+              {copied ? (
+                <>
+                  <Check className="h-4 w-4 text-[#5E8056]" />
+                  <span className="text-[#5E8056] font-mono">Key copied to clipboard</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="h-4 w-4 text-[#A89F91]" />
+                  <span>Copy Connection Key</span>
+                </>
+              )}
+            </button>
           </div>
 
           {/* Card 2: Connect with Partner Key */}
-          <div className="rounded-2xl border border-[#E8E4DB] bg-[#FFFFFF] p-6 sm:p-7 shadow-[0_2px_8px_rgba(28,25,23,0.03)] flex flex-col justify-between">
+          <div className="rounded-2xl sm:rounded-3xl border border-[#EBE5DA] bg-[#FFFFFF] p-6 sm:p-7 shadow-[0_2px_12px_rgba(41,37,34,0.03)] flex flex-col justify-between">
             <div>
-              <span className="text-[11px] font-mono uppercase tracking-widest text-[#8C857B]">
-                Enter Partner's Key
+              <span className="text-[10px] font-mono uppercase tracking-widest text-[#A89F91]">
+                Pair with Partner
               </span>
-
-              <h3 className="mt-3.5 font-serif text-xl font-normal text-[#1C1917]">
-                Join partner's room
-              </h3>
-              <p className="mt-1 text-xs sm:text-sm text-[#78716C] leading-relaxed">
-                Enter the code your partner gave you to link your accounts.
+              <p className="mt-2 text-xs sm:text-sm text-[#7A7267] leading-relaxed">
+                Enter your partner's key below to link your private room.
               </p>
 
-              <form onSubmit={handleConnect} className="mt-6 space-y-4">
-                <div>
-                  <input
-                    type="text"
-                    value={partnerCode}
-                    onChange={(e) => setPartnerCode(e.target.value.toUpperCase())}
-                    placeholder="e.g. DUO-7K4P2M"
-                    maxLength={15}
-                    disabled={hasActiveDuo}
-                    className="w-full rounded-xl border border-[#D4CEC2] bg-[#FFFFFF] px-4 py-3 text-center font-mono text-lg font-medium tracking-widest text-[#1C1917] uppercase placeholder-[#A8A29E] focus:border-[#C2410C] focus:outline-none focus:ring-1 focus:ring-[#C2410C] disabled:bg-[#F5F2EB] disabled:text-[#8C857B]"
-                  />
-                </div>
+              <form onSubmit={handleConnect} className="mt-4 space-y-3">
+                <input
+                  type="text"
+                  value={partnerCode}
+                  onChange={(e) => setPartnerCode(e.target.value.toUpperCase())}
+                  placeholder="DUO-XXXXXX"
+                  maxLength={10}
+                  className="w-full rounded-2xl border border-[#E8DFD3] bg-[#FAF8F5] px-4 py-3 font-mono text-sm uppercase tracking-wider text-[#292522] placeholder-[#A89F91] focus:border-[#C96A4A] focus:bg-[#FFFFFF] focus:outline-none focus:ring-1 focus:ring-[#C96A4A] shadow-2xs"
+                />
 
                 <button
                   type="submit"
-                  disabled={isSubmitting || !partnerCode.trim() || hasActiveDuo}
-                  className="flex w-full items-center justify-center space-x-2 rounded-xl bg-[#1C1917] py-3 text-xs sm:text-sm font-medium text-white hover:bg-[#2E2A27] transition-all disabled:opacity-40 min-h-[42px] shadow-sm"
+                  disabled={!partnerCode.trim() || isSubmitting}
+                  className="w-full flex items-center justify-center space-x-2 rounded-xl bg-[#C96A4A] py-3 text-xs sm:text-sm font-medium text-white hover:bg-[#B75C3E] transition-all disabled:opacity-40 shadow-[0_2px_8px_rgba(201,106,74,0.18)] min-h-[44px]"
                 >
-                  <span>{isSubmitting ? 'Linking...' : 'Send Connection Request'}</span>
+                  <span>{isSubmitting ? 'Sending Request...' : 'Send Connection Request'}</span>
                   <ArrowRight className="h-4 w-4" />
                 </button>
               </form>
             </div>
-
-            {outgoingRequests.length > 0 && (
-              <div className="mt-6 pt-4 border-t border-[#E8E4DB]">
-                <span className="text-xs font-mono text-[#8C857B]">Outgoing Request:</span>
-                {outgoingRequests.map((req) => (
-                  <div key={req.id} className="mt-2 flex items-center justify-between rounded-xl bg-[#F5F2EB] p-3 text-xs">
-                    <span className="text-[#57534E]">Sent to <strong className="text-[#1C1917]">{req.receiver.name}</strong></span>
-                    <button
-                      onClick={() => handleCancel(req.id)}
-                      className="text-xs text-[#C2410C] hover:underline font-mono"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
         </div>
+
+        {/* Outgoing Pending Requests */}
+        {outgoingRequests.length > 0 && (
+          <div className="rounded-2xl sm:rounded-3xl border border-[#EBE5DA] bg-[#FAF8F5] p-5 sm:p-6 space-y-3">
+            <span className="text-[10px] font-mono uppercase tracking-widest text-[#A89F91]">
+              Pending Sent Requests
+            </span>
+            <div className="space-y-2.5">
+              {outgoingRequests.map((req) => (
+                <div
+                  key={req.id}
+                  className="flex items-center justify-between rounded-xl border border-[#EBE5DA] bg-[#FFFFFF] p-3.5 text-xs shadow-2xs"
+                >
+                  <div>
+                    <span className="font-medium text-[#292522]">To: {req.receiver.name}</span>
+                    <span className="text-[#A89F91] font-mono ml-2">({req.receiver.email})</span>
+                  </div>
+                  <button
+                    onClick={() => handleCancel(req.id)}
+                    className="text-[#A89F91] hover:text-[#C96A4A] transition-colors font-mono"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

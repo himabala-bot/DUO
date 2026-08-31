@@ -8,32 +8,32 @@
 
 @layer base {
   body {
-    background-color: #fbfaf7;
-    color: #1c1917;
+    background-color: #FBFAF7;
+    color: #292522;
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
   ::selection {
-    background-color: #faede6;
-    color: #9c3b1e;
+    background-color: #F3D7D3;
+    color: #C96A4A;
   }
 
-  /* Quiet, tactile scrollbar */
+  /* Tactile stationery scrollbar */
   ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 5px;
+    height: 5px;
   }
   ::-webkit-scrollbar-track {
-    background: #f4f1ea;
+    background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: #ded9cd;
-    border-radius: 4px;
+    background: #E5DDD0;
+    border-radius: 9999px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #c7c0b0;
+    background: #D4C7B5;
   }
 }
 
@@ -49,15 +49,47 @@
   font-family: var(--font-mono);
 }
 
-/* Subtle stationery rule background */
-.bg-paper {
-  background-color: #fbfaf7;
+/* Warm Stationery Accents */
+.paper-card {
+  background-color: #FFFFFF;
+  border: 1px solid #EBE5DA;
+  box-shadow: 0 2px 12px rgba(41, 37, 34, 0.03);
 }
 
-.bg-parchment {
-  background-color: #f5f2eb;
+.paper-card-warm {
+  background-color: #FAF6F0;
+  border: 1px solid #E8DFD3;
 }
 
-.border-rule {
-  border-color: #e8e4db;
+.paper-card-blush {
+  background-color: #FAF2F0;
+  border: 1px solid #F0DDD9;
+}
+
+.paper-card-sage {
+  background-color: #F4F6F2;
+  border: 1px solid #DFE5DA;
+}
+
+.paper-card-butter {
+  background-color: #FBF8EE;
+  border: 1px solid #EDE5CC;
+}
+
+.paper-card-lavender {
+  background-color: #F6F4F9;
+  border: 1px solid #E3DDEB;
+}
+
+/* Delicate stamp label */
+.stamp-tag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-radius: 6px;
+  padding: 2px 8px;
+  border: 1px dashed #DCD4C6;
+  background-color: #FAF5EE;
+  color: #7A7267;
 }

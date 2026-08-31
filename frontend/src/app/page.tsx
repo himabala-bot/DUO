@@ -17,10 +17,10 @@ export default function Home() {
 
   if (isLoading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-[#FBFAF7] text-[#1C1917]">
+      <div className="flex h-screen items-center justify-center bg-[#FBFAF7] text-[#292522]">
         <div className="text-center">
-          <span className="font-serif text-3xl font-normal text-[#1C1917]">Duo</span>
-          <p className="mt-2 text-xs font-mono text-[#8C857B]">Opening room...</p>
+          <span className="font-serif text-3xl font-normal text-[#292522]">Duo</span>
+          <p className="mt-2 text-xs font-mono text-[#A89F91]">Opening room...</p>
         </div>
       </div>
     );
