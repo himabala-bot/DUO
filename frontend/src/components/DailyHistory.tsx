@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { dailyApi } from '@/lib/api';
 import { DailyHistoryDay, DailyResponse } from '@/types';
-import { ChevronRight, Calendar, Archive, Bookmark, Sparkles } from 'lucide-react';
+import { ChevronRight, Calendar, Archive, Bookmark, Sparkles, Heart } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 
 export const DailyHistory: React.FC = () => {
@@ -59,42 +59,42 @@ export const DailyHistory: React.FC = () => {
 
   return (
     <div className="w-full flex justify-center px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10">
-      {/* Centered Memory Archive Workspace (~1100–1240px) */}
+      {/* Centered Memory Archive */}
       <div className="w-full max-w-[1100px] lg:max-w-[1240px] space-y-6 sm:space-y-8">
         {/* Header */}
-        <div className="pb-6 border-b border-[#EBE5DA]">
-          <div className="inline-flex items-center gap-1.5 rounded-md bg-[#F6F4F9] px-2.5 py-0.5 border border-[#E3DDEB] text-[11px] font-mono uppercase tracking-wider text-[#7B6A96] mb-2">
-            <Archive className="h-3 w-3" />
-            <span>Shared Journal Archive</span>
+        <div className="pb-6 border-b border-[#F4EBE6]">
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-[#FAF5FF] px-3 py-1 border border-[#E9D5FF] text-xs font-mono uppercase tracking-wider text-[#9333EA] mb-2 shadow-2xs">
+            <span>📸</span>
+            <span>Our Keepsake Vault</span>
           </div>
-          <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-normal text-[#292522]">
-            Memory Archive
+          <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#2D2522]">
+            Sweet Memories 💕
           </h2>
-          <p className="mt-1.5 text-xs sm:text-sm text-[#7A7267]">
-            Revisit past reflections and keepsake answers exchanged between you and {partner?.name}.
+          <p className="mt-1.5 text-xs sm:text-sm text-[#7A6D65]">
+            Revisit past love notes and daily reflections shared between you and {partner?.name}.
           </p>
         </div>
 
         {isLoading ? (
-          <div className="flex h-64 items-center justify-center text-xs font-mono text-[#A89F91]">
-            Opening archive...
+          <div className="flex h-64 items-center justify-center text-xs font-mono text-[#B2A49B]">
+            Opening our memory scrapbook... 💕
           </div>
         ) : historyList.length === 0 ? (
-          <div className="rounded-3xl border border-[#EBE5DA] bg-[#FFFFFF] p-8 sm:p-14 text-center shadow-xs">
-            <div className="h-12 w-12 rounded-2xl bg-[#F6F4F9] text-[#7B6A96] flex items-center justify-center mx-auto mb-3 border border-[#E3DDEB]">
-              <Bookmark className="h-6 w-6" />
+          <div className="rounded-3xl border-2 border-[#FCE1E8] bg-[#FFFFFF] p-8 sm:p-14 text-center shadow-xs">
+            <div className="h-14 w-14 rounded-3xl bg-[#FFF0F3] text-[#E11D48] flex items-center justify-center mx-auto mb-3 border border-[#FCE1E8] shadow-xs">
+              <Heart className="h-7 w-7 fill-[#E11D48]" />
             </div>
-            <h4 className="font-serif text-xl text-[#292522]">No shared memories yet</h4>
-            <p className="mt-1.5 text-xs sm:text-sm text-[#7A7267] max-w-md mx-auto leading-relaxed">
-              Answer today's Daily Reflections to preserve your first shared entry in this space.
+            <h4 className="font-serif text-2xl font-bold text-[#2D2522]">No shared memories yet</h4>
+            <p className="mt-1.5 text-xs sm:text-sm text-[#7A6D65] max-w-md mx-auto leading-relaxed">
+              Answer today's Daily Questions to create your very first keepsake in this scrapbook! 💕
             </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 lg:gap-8 items-start">
-            {/* Timeline Sidebar (Desktop 4 cols) */}
+            {/* Timeline Sidebar */}
             <div className="md:col-span-4 lg:col-span-4 space-y-2.5">
-              <span className="text-[10px] font-mono uppercase tracking-widest text-[#A89F91]">
-                Timeline ({historyList.length} {historyList.length === 1 ? 'day' : 'days'})
+              <span className="text-[10px] font-mono uppercase tracking-widest text-[#B2A49B] font-bold">
+                Memories Timeline ({historyList.length} {historyList.length === 1 ? 'day' : 'days'} 💕)
               </span>
 
               {/* Mobile Horizontal Carousel / Desktop Vertical List */}
@@ -107,24 +107,24 @@ export const DailyHistory: React.FC = () => {
                     <button
                       key={item.date}
                       onClick={() => setSelectedDate(item.date)}
-                      className={`min-w-[180px] md:min-w-0 md:w-full text-left rounded-2xl p-4 transition-all flex items-center justify-between border shrink-0 ${
+                      className={`min-w-[190px] md:min-w-0 md:w-full text-left rounded-3xl p-4 transition-all flex items-center justify-between border-2 shrink-0 ${
                         isSelected
-                          ? 'border-[#C96A4A] bg-[#FAF1EC] shadow-xs'
-                          : 'border-[#EBE5DA] bg-[#FFFFFF] hover:bg-[#FAF8F5] text-[#7A7267]'
+                          ? 'border-[#FF758C] bg-gradient-to-r from-[#FFF5F7] to-[#FFF9F5] shadow-sm scale-[1.02]'
+                          : 'border-[#F4EBE6] bg-[#FFFFFF] hover:bg-[#FFF5F7] text-[#7A6D65]'
                       }`}
                     >
                       <div>
-                        <div className={`text-xs sm:text-sm font-semibold font-mono ${isSelected ? 'text-[#C96A4A]' : 'text-[#292522]'}`}>
-                          {formatted}
+                        <div className={`text-xs sm:text-sm font-bold font-mono ${isSelected ? 'text-[#E11D48]' : 'text-[#2D2522]'}`}>
+                          🌸 {formatted}
                         </div>
-                        <p className="mt-1 text-xs text-[#7A7267] truncate max-w-[150px] md:max-w-[200px]">
+                        <p className="mt-1 text-xs text-[#7A6D65] truncate max-w-[150px] md:max-w-[200px]">
                           {item.summary}
                         </p>
                       </div>
 
                       <ChevronRight
                         className={`hidden md:block h-4 w-4 shrink-0 ml-2 ${
-                          isSelected ? 'text-[#C96A4A]' : 'text-[#D4CBBF]'
+                          isSelected ? 'text-[#E11D48]' : 'text-[#D1C2B8]'
                         }`}
                       />
                     </button>
@@ -133,27 +133,27 @@ export const DailyHistory: React.FC = () => {
               </div>
             </div>
 
-            {/* Date Details Reading Area (Desktop 8 cols) */}
+            {/* Date Details Reading Area */}
             <div className="md:col-span-8 lg:col-span-8">
               {isLoadingDetails ? (
-                <div className="flex h-64 items-center justify-center rounded-3xl border border-[#EBE5DA] bg-[#FFFFFF] text-xs font-mono text-[#A89F91]">
-                  Opening entry...
+                <div className="flex h-64 items-center justify-center rounded-3xl border border-[#FCE1E8] bg-[#FFFFFF] text-xs font-mono text-[#B2A49B]">
+                  Unlocking memory... 💕
                 </div>
               ) : dateResponses ? (
                 <div className="space-y-6">
-                  <div className="flex items-center gap-2.5 pb-4 border-b border-[#EBE5DA]">
-                    <div className="h-7 w-7 rounded-lg bg-[#FAF2EF] text-[#C96A4A] flex items-center justify-center border border-[#F2DDD7]">
+                  <div className="flex items-center gap-2.5 pb-4 border-b border-[#F4EBE6]">
+                    <div className="h-8 w-8 rounded-2xl bg-[#FFF0F3] text-[#E11D48] flex items-center justify-center border border-[#FCE1E8]">
                       <Calendar className="h-4 w-4" />
                     </div>
-                    <h3 className="font-serif text-xl sm:text-2xl font-normal text-[#292522]">
-                      {selectedDate ? format(parseISO(selectedDate), 'EEEE, MMMM dd, yyyy') : ''}
+                    <h3 className="font-serif text-2xl font-bold text-[#2D2522]">
+                      {selectedDate ? format(parseISO(selectedDate), 'EEEE, MMMM dd, yyyy') : ''} 💕
                     </h3>
                   </div>
 
                   {/* Responses List */}
                   {dateResponses.my_responses.length === 0 && dateResponses.partner_responses.length === 0 ? (
-                    <div className="rounded-3xl border border-[#EBE5DA] bg-[#FFFFFF] p-8 text-center text-xs sm:text-sm text-[#7A7267]">
-                      No submitted responses for this date.
+                    <div className="rounded-3xl border-2 border-[#FCE1E8] bg-[#FFFFFF] p-8 text-center text-xs sm:text-sm text-[#7A6D65]">
+                      No submitted memories recorded for this date.
                     </div>
                   ) : (
                     dateResponses.my_responses.map((myResp, idx) => {
@@ -164,39 +164,39 @@ export const DailyHistory: React.FC = () => {
                       return (
                         <div
                           key={myResp.id}
-                          className="rounded-2xl sm:rounded-3xl border border-[#EBE5DA] bg-[#FFFFFF] p-5 sm:p-7 space-y-4 shadow-[0_2px_12px_rgba(41,37,34,0.03)]"
+                          className="rounded-3xl border-2 border-[#FCE1E8] bg-[#FFFFFF] p-6 sm:p-7 space-y-4 shadow-[0_4px_20px_rgba(244,114,182,0.06)]"
                         >
                           <div className="flex items-baseline space-x-2.5">
-                            <span className="font-mono text-xs sm:text-sm text-[#C96A4A] font-semibold">{String(idx + 1).padStart(2, '0')} /</span>
-                            <h4 className="font-serif text-base sm:text-lg font-normal text-[#292522]">
+                            <span className="font-mono text-sm text-[#E11D48] font-bold">🌸 {String(idx + 1).padStart(2, '0')} /</span>
+                            <h4 className="font-serif text-lg sm:text-xl font-bold text-[#2D2522]">
                               {myResp.question_text}
                             </h4>
                           </div>
 
                           {/* My Answer */}
-                          <div className="rounded-2xl border border-[#E8DFD3] bg-[#FAF8F5] p-4 sm:p-5">
-                            <span className="text-[10px] font-mono uppercase tracking-wider text-[#A89F91]">
+                          <div className="rounded-2xl border border-[#FED7AA] bg-[#FFF9F5] p-4 sm:p-5">
+                            <span className="text-[10px] font-mono uppercase tracking-wider text-[#EA580C] font-bold">
                               {profile?.name} (You):
                             </span>
-                            <p className="mt-1 text-xs sm:text-sm md:text-base text-[#292522] whitespace-pre-wrap leading-relaxed">
+                            <p className="mt-1 text-xs sm:text-sm md:text-base text-[#2D2522] whitespace-pre-wrap leading-relaxed">
                               {myResp.answer || '(No answer recorded)'}
                             </p>
                           </div>
 
                           {/* Partner's Answer */}
                           {partnerResp ? (
-                            <div className="rounded-2xl border border-[#F0DDD4] bg-[#FAF2EE] p-4 sm:p-5">
-                              <span className="text-[10px] font-mono uppercase tracking-wider text-[#C96A4A] flex items-center gap-1">
+                            <div className="rounded-2xl border-2 border-[#FCE1E8] bg-gradient-to-r from-[#FFF5F7] to-[#FFF9F5] p-4 sm:p-5">
+                              <span className="text-[10px] font-mono uppercase tracking-wider text-[#E11D48] font-bold flex items-center gap-1">
                                 <Sparkles className="h-3 w-3" />
-                                {partner?.name}:
+                                {partner?.name}'s Answer 💕:
                               </span>
-                              <p className="mt-1 text-xs sm:text-sm md:text-base text-[#292522] whitespace-pre-wrap leading-relaxed font-serif italic">
+                              <p className="mt-1 text-xs sm:text-sm md:text-base text-[#2D2522] whitespace-pre-wrap leading-relaxed font-serif italic">
                                 "{partnerResp.answer || '(No answer recorded)'}"
                               </p>
                             </div>
                           ) : (
-                            <div className="text-xs font-mono text-[#A89F91] italic px-1">
-                              {partner?.name} did not record an answer on this day.
+                            <div className="text-xs font-mono text-[#B2A49B] italic px-1">
+                              {partner?.name} didn't record an answer on this day.
                             </div>
                           )}
                         </div>

@@ -8,32 +8,32 @@
 
 @layer base {
   body {
-    background-color: #FBFAF7;
-    color: #292522;
+    background-color: #FFFDF9;
+    color: #2D2522;
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
   ::selection {
-    background-color: #F3D7D3;
-    color: #C96A4A;
+    background-color: #FED7E2;
+    color: #E11D48;
   }
 
-  /* Tactile stationery scrollbar */
+  /* Cute rounded bubble scrollbar */
   ::-webkit-scrollbar {
-    width: 5px;
-    height: 5px;
+    width: 6px;
+    height: 6px;
   }
   ::-webkit-scrollbar-track {
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: #E5DDD0;
+    background: #F2D5CB;
     border-radius: 9999px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #D4C7B5;
+    background: #E8B4A6;
   }
 }
 
@@ -49,47 +49,82 @@
   font-family: var(--font-mono);
 }
 
-/* Warm Stationery Accents */
-.paper-card {
-  background-color: #FFFFFF;
-  border: 1px solid #EBE5DA;
-  box-shadow: 0 2px 12px rgba(41, 37, 34, 0.03);
+/* 🌸 Cute Washi Tape Decorator */
+.washi-tape-pink {
+  background: linear-gradient(135deg, rgba(254, 215, 226, 0.85), rgba(251, 207, 232, 0.7));
+  border-left: 2px dashed rgba(244, 114, 182, 0.4);
+  border-right: 2px dashed rgba(244, 114, 182, 0.4);
+  box-shadow: 0 1px 3px rgba(244, 114, 182, 0.15);
 }
 
-.paper-card-warm {
-  background-color: #FAF6F0;
-  border: 1px solid #E8DFD3;
+.washi-tape-yellow {
+  background: linear-gradient(135deg, rgba(254, 240, 138, 0.85), rgba(253, 230, 138, 0.7));
+  border-left: 2px dashed rgba(234, 179, 8, 0.4);
+  border-right: 2px dashed rgba(234, 179, 8, 0.4);
+  box-shadow: 0 1px 3px rgba(234, 179, 8, 0.15);
 }
 
-.paper-card-blush {
-  background-color: #FAF2F0;
-  border: 1px solid #F0DDD9;
+.washi-tape-mint {
+  background: linear-gradient(135deg, rgba(209, 250, 229, 0.85), rgba(167, 243, 208, 0.7));
+  border-left: 2px dashed rgba(16, 185, 129, 0.4);
+  border-right: 2px dashed rgba(16, 185, 129, 0.4);
+  box-shadow: 0 1px 3px rgba(16, 185, 129, 0.15);
 }
 
-.paper-card-sage {
-  background-color: #F4F6F2;
-  border: 1px solid #DFE5DA;
+.washi-tape-peach {
+  background: linear-gradient(135deg, rgba(255, 228, 214, 0.9), rgba(254, 215, 195, 0.75));
+  border-left: 2px dashed rgba(251, 146, 60, 0.4);
+  border-right: 2px dashed rgba(251, 146, 60, 0.4);
+  box-shadow: 0 1px 3px rgba(251, 146, 60, 0.15);
 }
 
-.paper-card-butter {
-  background-color: #FBF8EE;
-  border: 1px solid #EDE5CC;
+/* 🧸 Cute Marshmallow Bubble & Paper Cards */
+.card-marshmallow {
+  background: #FFFFFF;
+  border: 1.5px solid #F6E6DF;
+  box-shadow: 0 4px 20px rgba(225, 112, 85, 0.05), 0 1px 4px rgba(0, 0, 0, 0.02);
+  border-radius: 24px;
 }
 
-.paper-card-lavender {
-  background-color: #F6F4F9;
-  border: 1px solid #E3DDEB;
+.card-strawberry {
+  background: linear-gradient(180deg, #FFF5F7 0%, #FFFFFF 100%);
+  border: 1.5px solid #FCE1E8;
+  box-shadow: 0 4px 16px rgba(244, 114, 182, 0.06);
 }
 
-/* Delicate stamp label */
-.stamp-tag {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  border-radius: 6px;
-  padding: 2px 8px;
-  border: 1px dashed #DCD4C6;
-  background-color: #FAF5EE;
-  color: #7A7267;
+.card-peach {
+  background: linear-gradient(180deg, #FFF7F2 0%, #FFFFFF 100%);
+  border: 1.5px solid #FDE4D8;
+  box-shadow: 0 4px 16px rgba(251, 146, 60, 0.06);
+}
+
+.card-matcha {
+  background: linear-gradient(180deg, #F5FAF4 0%, #FFFFFF 100%);
+  border: 1.5px solid #DFEDE0;
+  box-shadow: 0 4px 16px rgba(74, 150, 90, 0.05);
+}
+
+.card-honey {
+  background: linear-gradient(180deg, #FFFCF2 0%, #FFFFFF 100%);
+  border: 1.5px solid #FBECC8;
+  box-shadow: 0 4px 16px rgba(234, 179, 8, 0.05);
+}
+
+.card-lavender {
+  background: linear-gradient(180deg, #F8F5FD 0%, #FFFFFF 100%);
+  border: 1.5px solid #E8DFFA;
+  box-shadow: 0 4px 16px rgba(168, 85, 247, 0.05);
+}
+
+/* Cute heartbeat animation */
+@keyframes heartPulse {
+  0% { transform: scale(1); }
+  15% { transform: scale(1.18); }
+  30% { transform: scale(1); }
+  45% { transform: scale(1.15); }
+  60% { transform: scale(1); }
+}
+
+.animate-heart-pulse {
+  animation: heartPulse 1.8s infinite ease-in-out;
 }

@@ -16,7 +16,7 @@ import {
   X,
   Palette,
   Archive,
-  Feather,
+  Heart,
   Sparkles,
 } from 'lucide-react';
 import { Drawing } from '@/types';
@@ -24,27 +24,28 @@ import { format } from 'date-fns';
 import { RealtimeChannel } from '@supabase/supabase-js';
 
 const PALETTE_COLORS = [
-  { name: 'Deep Ink', value: '#292522' },
-  { name: 'Warm Terracotta', value: '#C96A4A' },
-  { name: 'Dusty Rose', value: '#C9827A' },
-  { name: 'Soft Peach', value: '#F2C9B8' },
-  { name: 'Sage Green', value: '#A8B5A0' },
-  { name: 'Pale Butter', value: '#E8D99B' },
-  { name: 'Soft Lavender', value: '#C9BDD8' },
-  { name: 'Paper White', value: '#FFFFFF' },
+  { name: 'Bubblegum Pink', value: '#FF758C' },
+  { name: 'Strawberry Rose', value: '#E11D48' },
+  { name: 'Sweet Peach', value: '#FB923C' },
+  { name: 'Honey Sunshine', value: '#EAB308' },
+  { name: 'Matcha Mint', value: '#10B981' },
+  { name: 'Sky Blue', value: '#38BDF8' },
+  { name: 'Soft Lavender', value: '#A855F7' },
+  { name: 'Midnight Ink', value: '#1E1B18' },
+  { name: 'Marshmallow White', value: '#FFFFFF' },
 ];
 
 const SIZES = [
   { name: 'Fine', value: 2 },
   { name: 'Pen', value: 5 },
   { name: 'Brush', value: 10 },
-  { name: 'Marker', value: 20 },
+  { name: 'Marker', value: 22 },
 ];
 
 export const DrawingCanvas: React.FC = () => {
   const { profile, partner } = useAuth();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [color, setColor] = useState<string>('#292522');
+  const [color, setColor] = useState<string>('#FF758C');
   const [brushSize, setBrushSize] = useState<number>(5);
   const [isEraser, setIsEraser] = useState<boolean>(false);
   const [caption, setCaption] = useState<string>('');
@@ -60,7 +61,6 @@ export const DrawingCanvas: React.FC = () => {
 
   const duoId = profile?.active_duo_id;
 
-  // Initialize canvas with clean white paper background
   const initCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -89,7 +89,6 @@ export const DrawingCanvas: React.FC = () => {
     fetchDrawings();
   }, [initCanvas, fetchDrawings]);
 
-  // Set up Supabase Realtime channel for instant drawings sync
   useEffect(() => {
     if (!isSupabaseConfigured() || !duoId || !profile) return;
 
@@ -238,7 +237,7 @@ export const DrawingCanvas: React.FC = () => {
   };
 
   const handleClear = () => {
-    if (!confirm('Clear canvas?')) return;
+    if (!confirm('Clear sketchpad? 🎨')) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -265,7 +264,6 @@ export const DrawingCanvas: React.FC = () => {
           storagePath = await drawingsApi.uploadToSupabaseStorage(blob, duoId);
         }
       } catch (uploadErr) {
-        console.warn('Storage upload bypassed, saving directly:', uploadErr);
         storagePath = dataUrl;
       }
 
@@ -298,10 +296,10 @@ export const DrawingCanvas: React.FC = () => {
 
       setCaption('');
       initCanvas();
-      alert(`Drawing sent to ${partner?.name || 'partner'}!`);
+      alert(`Doodle sent with love to ${partner?.name || 'your partner'}! 💕`);
     } catch (err: any) {
       console.error('Failed to send drawing:', err);
-      alert(err.message || 'Failed to send drawing. Please check your connection.');
+      alert(err.message || 'Failed to send doodle.');
     } finally {
       setIsSending(false);
     }
@@ -311,7 +309,7 @@ export const DrawingCanvas: React.FC = () => {
     const rawUrl = drawing.image_url || drawing.storage_path;
     if (!rawUrl) return;
 
-    const filename = `duo_drawing_${format(new Date(drawing.created_at), 'yyyyMMdd_HHmmss')}.png`;
+    const filename = `duo_sketch_${format(new Date(drawing.created_at), 'yyyyMMdd_HHmmss')}.png`;
 
     try {
       if (rawUrl.startsWith('data:')) {
@@ -347,54 +345,54 @@ export const DrawingCanvas: React.FC = () => {
 
   return (
     <div className="w-full flex justify-center px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10">
-      {/* Studio Workspace (~1200–1320px) */}
+      {/* Studio Workspace */}
       <div className="w-full max-w-[1200px] lg:max-w-[1320px] space-y-6 sm:space-y-8">
         {/* Top Header & Switcher */}
-        <div className="flex flex-col sm:flex-row sm:items-baseline justify-between pb-6 border-b border-[#EBE5DA] gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-baseline justify-between pb-6 border-b border-[#F4EBE6] gap-4">
           <div>
-            <div className="inline-flex items-center gap-1.5 rounded-md bg-[#F4F6F2] px-2.5 py-0.5 border border-[#DFE5DA] text-[11px] font-mono uppercase tracking-wider text-[#5E8056] mb-2">
-              <Palette className="h-3 w-3" />
-              <span>Sketchbook Desk</span>
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-[#F0FDF4] px-3 py-1 border border-[#BBF7D0] text-xs font-mono uppercase tracking-wider text-[#15803D] mb-2 shadow-2xs">
+              <span>🎨</span>
+              <span>Our Shared Sketchpad</span>
             </div>
-            <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-normal text-[#292522]">
-              Shared Sketchbook
+            <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#2D2522]">
+              Doodle Studio 💕
             </h2>
-            <p className="mt-1.5 text-xs sm:text-sm text-[#7A7267]">
-              Draw handwritten notes, sketches, and doodles for {partner?.name}.
+            <p className="mt-1.5 text-xs sm:text-sm text-[#7A6D65]">
+              Draw cute handwritten notes, sweet doodles, and sketches for {partner?.name}.
             </p>
           </div>
 
-          <div className="flex border border-[#E8DFD3] rounded-full bg-[#FAF5EE] p-1 self-start sm:self-auto shadow-2xs">
+          <div className="flex border-2 border-[#FCE1E8] rounded-full bg-[#FFF5F7] p-1 self-start sm:self-auto shadow-xs">
             <button
               onClick={() => setActiveTab('canvas')}
-              className={`flex items-center space-x-2 rounded-full px-4 py-1.5 text-xs sm:text-sm font-medium transition-all ${
+              className={`flex items-center space-x-2 rounded-full px-4 py-1.5 text-xs sm:text-sm font-bold transition-all ${
                 activeTab === 'canvas'
-                  ? 'bg-[#FFFFFF] text-[#C96A4A] shadow-xs font-semibold'
-                  : 'text-[#7A7267] hover:text-[#292522]'
+                  ? 'bg-[#FFFFFF] text-[#E11D48] shadow-xs'
+                  : 'text-[#7A6D65] hover:text-[#E11D48]'
               }`}
             >
-              <Palette className="h-4 w-4" />
-              <span>Studio</span>
+              <span>🎨</span>
+              <span>Sketchpad</span>
             </button>
             <button
               onClick={() => setActiveTab('gallery')}
-              className={`flex items-center space-x-2 rounded-full px-4 py-1.5 text-xs sm:text-sm font-medium transition-all ${
+              className={`flex items-center space-x-2 rounded-full px-4 py-1.5 text-xs sm:text-sm font-bold transition-all ${
                 activeTab === 'gallery'
-                  ? 'bg-[#FFFFFF] text-[#C96A4A] shadow-xs font-semibold'
-                  : 'text-[#7A7267] hover:text-[#292522]'
+                  ? 'bg-[#FFFFFF] text-[#E11D48] shadow-xs'
+                  : 'text-[#7A6D65] hover:text-[#E11D48]'
               }`}
             >
-              <Archive className="h-4 w-4" />
-              <span>Archive ({drawings.length})</span>
+              <span>📸</span>
+              <span>Doodle Vault ({drawings.length})</span>
             </button>
           </div>
         </div>
 
         {activeTab === 'canvas' ? (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
-            {/* Canvas Viewport (Desktop 8-9 cols) */}
+            {/* Canvas Viewport */}
             <div className="lg:col-span-8 xl:col-span-9 flex flex-col items-center">
-              <div className="w-full overflow-hidden rounded-2xl sm:rounded-3xl border border-[#EBE5DA] bg-[#FFFFFF] p-2.5 sm:p-3 shadow-[0_4px_24px_rgba(41,37,34,0.03)]">
+              <div className="w-full overflow-hidden rounded-3xl border-2 border-[#FCE1E8] bg-[#FFFFFF] p-3 sm:p-4 shadow-[0_8px_28px_rgba(244,114,182,0.08)]">
                 <canvas
                   ref={canvasRef}
                   width={800}
@@ -406,7 +404,7 @@ export const DrawingCanvas: React.FC = () => {
                   onTouchStart={startDrawing}
                   onTouchMove={draw}
                   onTouchEnd={stopDrawing}
-                  className="w-full aspect-[4/3] rounded-xl cursor-crosshair touch-none bg-[#FFFFFF]"
+                  className="w-full aspect-[4/3] rounded-2xl cursor-crosshair touch-none bg-[#FFFFFF]"
                 />
               </div>
 
@@ -416,32 +414,32 @@ export const DrawingCanvas: React.FC = () => {
                   type="text"
                   value={caption}
                   onChange={(e) => setCaption(e.target.value)}
-                  placeholder="Add a note or title to this doodle (optional)..."
+                  placeholder="Add a cute caption or love note 💕 (optional)..."
                   maxLength={100}
-                  className="flex-1 rounded-2xl border border-[#E8DFD3] bg-[#FFFFFF] px-4 py-3 text-xs sm:text-sm text-[#292522] placeholder-[#A89F91] focus:border-[#C96A4A] focus:outline-none focus:ring-1 focus:ring-[#C96A4A] shadow-2xs"
+                  className="flex-1 rounded-2xl border-2 border-[#FCE1E8] bg-[#FFFFFF] px-4 py-3 text-xs sm:text-sm text-[#2D2522] placeholder-[#B2A49B] focus:border-[#FF758C] focus:outline-none focus:ring-2 focus:ring-[#FF758C]/20 shadow-xs"
                 />
                 <button
                   onClick={handleSendDrawing}
                   disabled={isSending}
-                  className="flex items-center justify-center space-x-2 rounded-2xl bg-[#C96A4A] px-6 py-3 text-xs sm:text-sm font-medium text-white hover:bg-[#B75C3E] transition-all disabled:opacity-40 min-h-[44px] shadow-[0_2px_8px_rgba(201,106,74,0.2)] shrink-0"
+                  className="flex items-center justify-center space-x-2 rounded-2xl bg-gradient-to-r from-[#FF758C] to-[#FF7EB3] px-6 py-3 text-xs sm:text-sm font-bold text-white hover:scale-105 hover:shadow-[0_4px_16px_rgba(255,117,140,0.35)] transition-all disabled:opacity-40 min-h-[46px] shadow-sm shrink-0"
                 >
-                  <span>{isSending ? 'Sending...' : `Send to ${partner?.name || 'Partner'}`}</span>
+                  <span>{isSending ? 'Sending Doodle...' : `Send Doodle to ${partner?.name || 'Partner'} 💕`}</span>
                   <ArrowRight className="h-4 w-4" />
                 </button>
               </div>
             </div>
 
-            {/* Tools & Palette Sidebar (Desktop 4-3 cols) */}
-            <div className="lg:col-span-4 xl:col-span-3 rounded-2xl sm:rounded-3xl border border-[#EBE5DA] bg-[#FFFFFF] p-5 sm:p-6 shadow-[0_2px_12px_rgba(41,37,34,0.03)] flex flex-col gap-6">
+            {/* Tools & Cute Candy Palette */}
+            <div className="lg:col-span-4 xl:col-span-3 rounded-3xl border-2 border-[#FCE1E8] bg-[#FFFFFF] p-6 shadow-[0_8px_24px_rgba(244,114,182,0.06)] flex flex-col gap-6">
               {/* History Actions */}
               <div>
-                <span className="text-[10px] font-mono uppercase tracking-widest text-[#A89F91]">Actions</span>
+                <span className="text-[10px] font-mono uppercase tracking-widest text-[#B2A49B] font-bold">Quick Actions</span>
                 <div className="mt-2.5 flex gap-2">
                   <button
                     onClick={handleUndo}
                     disabled={historyIndex <= 0}
                     title="Undo"
-                    className="flex-1 flex items-center justify-center rounded-xl border border-[#E8DFD3] bg-[#FAF8F5] p-3 text-[#696156] hover:bg-[#FAF1EC] hover:text-[#C96A4A] disabled:opacity-30 min-h-[42px] transition-all"
+                    className="flex-1 flex items-center justify-center rounded-2xl border border-[#FCE1E8] bg-[#FFF5F7] p-3 text-[#E11D48] hover:bg-[#FFE4E8] disabled:opacity-30 min-h-[42px] transition-all"
                   >
                     <RotateCcw className="h-4 w-4" />
                   </button>
@@ -449,41 +447,41 @@ export const DrawingCanvas: React.FC = () => {
                     onClick={handleRedo}
                     disabled={historyIndex >= history.length - 1}
                     title="Redo"
-                    className="flex-1 flex items-center justify-center rounded-xl border border-[#E8DFD3] bg-[#FAF8F5] p-3 text-[#696156] hover:bg-[#FAF1EC] hover:text-[#C96A4A] disabled:opacity-30 min-h-[42px] transition-all"
+                    className="flex-1 flex items-center justify-center rounded-2xl border border-[#FCE1E8] bg-[#FFF5F7] p-3 text-[#E11D48] hover:bg-[#FFE4E8] disabled:opacity-30 min-h-[42px] transition-all"
                   >
                     <RotateCw className="h-4 w-4" />
                   </button>
                   <button
                     onClick={handleClear}
-                    title="Clear Canvas"
-                    className="flex items-center justify-center rounded-xl border border-[#E8DFD3] bg-[#FAF8F5] p-3 text-[#A89F91] hover:bg-[#FAF0ED] hover:text-[#C96A4A] min-h-[42px] transition-all"
+                    title="Clear Sketchpad"
+                    className="flex items-center justify-center rounded-2xl border border-[#FCE1E8] bg-[#FFF5F7] p-3 text-[#E11D48] hover:bg-[#FFE4E8] min-h-[42px] transition-all"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
               </div>
 
-              {/* Tool Mode: Pen vs Eraser */}
+              {/* Tool Mode */}
               <div>
-                <span className="text-[10px] font-mono uppercase tracking-widest text-[#A89F91]">Tool Mode</span>
+                <span className="text-[10px] font-mono uppercase tracking-widest text-[#B2A49B] font-bold">Tool</span>
                 <div className="mt-2.5 flex gap-2">
                   <button
                     onClick={() => setIsEraser(false)}
-                    className={`flex-1 flex items-center justify-center space-x-2 rounded-xl py-2.5 text-xs font-medium border transition-all ${
+                    className={`flex-1 flex items-center justify-center space-x-2 rounded-2xl py-2.5 text-xs font-bold border transition-all ${
                       !isEraser
-                        ? 'bg-[#FAF1EC] border-[#F0DDD4] text-[#C96A4A] font-semibold'
-                        : 'border-[#E8DFD3] bg-[#FAF8F5] text-[#7A7267] hover:bg-[#FAF5EE]'
+                        ? 'bg-[#FFF0F3] border-[#FCE1E8] text-[#E11D48] shadow-xs'
+                        : 'border-[#F4EBE6] bg-[#FFFDFC] text-[#7A6D65] hover:bg-[#FFF5F7]'
                     }`}
                   >
                     <Palette className="h-4 w-4" />
-                    <span>Ink Pen</span>
+                    <span>Doodle Pen</span>
                   </button>
                   <button
                     onClick={() => setIsEraser(true)}
-                    className={`flex-1 flex items-center justify-center space-x-2 rounded-xl py-2.5 text-xs font-medium border transition-all ${
+                    className={`flex-1 flex items-center justify-center space-x-2 rounded-2xl py-2.5 text-xs font-bold border transition-all ${
                       isEraser
-                        ? 'bg-[#FAF1EC] border-[#F0DDD4] text-[#C96A4A] font-semibold'
-                        : 'border-[#E8DFD3] bg-[#FAF8F5] text-[#7A7267] hover:bg-[#FAF5EE]'
+                        ? 'bg-[#FFF0F3] border-[#FCE1E8] text-[#E11D48] shadow-xs'
+                        : 'border-[#F4EBE6] bg-[#FFFDFC] text-[#7A6D65] hover:bg-[#FFF5F7]'
                     }`}
                   >
                     <Eraser className="h-4 w-4" />
@@ -492,10 +490,10 @@ export const DrawingCanvas: React.FC = () => {
                 </div>
               </div>
 
-              {/* Color Swatches */}
+              {/* Candy Palette */}
               <div>
-                <span className="text-[10px] font-mono uppercase tracking-widest text-[#A89F91]">Ink Palette</span>
-                <div className="mt-2.5 grid grid-cols-4 gap-2.5">
+                <span className="text-[10px] font-mono uppercase tracking-widest text-[#B2A49B] font-bold">Candy Inks</span>
+                <div className="mt-2.5 grid grid-cols-3 gap-2.5">
                   {PALETTE_COLORS.map((c) => (
                     <button
                       key={c.value}
@@ -505,14 +503,14 @@ export const DrawingCanvas: React.FC = () => {
                       }}
                       title={c.name}
                       style={{ backgroundColor: c.value }}
-                      className={`h-9 w-full rounded-xl border transition-all flex items-center justify-center ${
+                      className={`h-10 w-full rounded-2xl border-2 transition-all flex items-center justify-center ${
                         color === c.value && !isEraser
-                          ? 'border-[#292522] scale-110 shadow-md ring-2 ring-[#C96A4A]/30'
-                          : 'border-[#E8DFD3] hover:scale-105'
+                          ? 'border-[#2D2522] scale-110 shadow-md ring-2 ring-[#FF758C]/40'
+                          : 'border-[#F4EBE6] hover:scale-105'
                       }`}
                     >
                       {color === c.value && !isEraser && (
-                        <Check className={`h-4 w-4 ${c.value === '#FFFFFF' || c.value === '#E8D99B' || c.value === '#F2C9B8' ? 'text-[#292522]' : 'text-white'}`} />
+                        <Check className={`h-4 w-4 ${c.value === '#FFFFFF' || c.value === '#EAB308' || c.value === '#FB923C' ? 'text-[#2D2522]' : 'text-white'}`} />
                       )}
                     </button>
                   ))}
@@ -521,16 +519,16 @@ export const DrawingCanvas: React.FC = () => {
 
               {/* Brush Size */}
               <div>
-                <span className="text-[10px] font-mono uppercase tracking-widest text-[#A89F91]">Stroke Width</span>
+                <span className="text-[10px] font-mono uppercase tracking-widest text-[#B2A49B] font-bold">Brush Size</span>
                 <div className="mt-2.5 grid grid-cols-4 gap-2">
                   {SIZES.map((s) => (
                     <button
                       key={s.value}
                       onClick={() => setBrushSize(s.value)}
-                      className={`rounded-xl py-2 text-xs font-mono border transition-all ${
+                      className={`rounded-2xl py-2 text-xs font-mono font-bold border transition-all ${
                         brushSize === s.value
-                          ? 'bg-[#292522] text-white border-[#292522] font-semibold'
-                          : 'border-[#E8DFD3] bg-[#FAF8F5] text-[#7A7267] hover:bg-[#FAF5EE]'
+                          ? 'bg-[#E11D48] text-white border-[#E11D48] shadow-xs'
+                          : 'border-[#F4EBE6] bg-[#FFFDFC] text-[#7A6D65] hover:bg-[#FFF5F7]'
                       }`}
                     >
                       {s.name}
@@ -541,16 +539,14 @@ export const DrawingCanvas: React.FC = () => {
             </div>
           </div>
         ) : (
-          /* Archive Gallery */
+          /* Archive Gallery with Polaroid Frames */
           <div className="space-y-6">
             {drawings.length === 0 ? (
-              <div className="rounded-3xl border border-[#EBE5DA] bg-[#FFFFFF] p-8 sm:p-14 text-center shadow-2xs">
-                <div className="h-12 w-12 rounded-2xl bg-[#F4F6F2] text-[#5E8056] flex items-center justify-center mx-auto mb-3 border border-[#DFE5DA]">
-                  <Palette className="h-6 w-6" />
-                </div>
-                <h4 className="font-serif text-xl text-[#292522]">No sketches in the gallery</h4>
-                <p className="mt-1.5 text-xs sm:text-sm text-[#7A7267] max-w-sm mx-auto">
-                  Create your first drawing in the Studio and send it to your partner.
+              <div className="rounded-3xl border-2 border-[#FCE1E8] bg-[#FFFFFF] p-8 sm:p-14 text-center shadow-xs">
+                <span className="text-4xl block mb-2">🎨</span>
+                <h4 className="font-serif text-xl font-bold text-[#2D2522]">No doodles saved yet</h4>
+                <p className="mt-1.5 text-xs sm:text-sm text-[#7A6D65] max-w-sm mx-auto">
+                  Draw your first little sketch in the Studio and surprise {partner?.name}! 💕
                 </p>
               </div>
             ) : (
@@ -561,24 +557,24 @@ export const DrawingCanvas: React.FC = () => {
                     <div
                       key={drawing.id}
                       onClick={() => setSelectedDrawing(drawing)}
-                      className="group cursor-pointer rounded-2xl sm:rounded-3xl border border-[#EBE5DA] bg-[#FFFFFF] p-3 shadow-2xs transition-all hover:border-[#C96A4A] hover:shadow-md"
+                      className="group cursor-pointer rounded-3xl border-2 border-[#FCE1E8] bg-[#FFFFFF] p-3.5 shadow-xs transition-all hover:border-[#FF758C] hover:scale-[1.02] hover:shadow-md"
                     >
-                      <div className="aspect-[4/3] w-full overflow-hidden rounded-xl border border-[#F0EBE1] bg-[#FAF8F5]">
+                      <div className="aspect-[4/3] w-full overflow-hidden rounded-2xl border border-[#FCE1E8] bg-[#FFFDFC]">
                         <img
                           src={imgUrl}
                           alt={drawing.caption || 'Drawing'}
                           className="h-full w-full object-contain group-hover:scale-105 transition-transform"
                         />
                       </div>
-                      <div className="mt-2.5 px-1">
-                        <span className="text-[10px] font-mono text-[#A89F91] block">
+                      <div className="mt-3 px-1">
+                        <span className="text-[10px] font-mono text-[#B2A49B] block">
                           {format(new Date(drawing.created_at), 'MMM dd, yyyy')}
                         </span>
-                        <h4 className="font-serif text-sm font-medium text-[#292522] truncate mt-0.5">
-                          {drawing.caption || 'Untitled Sketch'}
+                        <h4 className="font-serif text-sm font-bold text-[#2D2522] truncate mt-0.5">
+                          {drawing.caption || 'Sweet Doodle 💕'}
                         </h4>
-                        <span className="text-[11px] text-[#C96A4A] font-mono mt-1 inline-block">
-                          {drawing.is_me ? 'By you' : `By ${drawing.sender?.name || partner?.name}`}
+                        <span className="text-xs text-[#E11D48] font-mono font-bold mt-1 inline-block">
+                          {drawing.is_me ? 'By you 💕' : `By ${drawing.sender?.name || partner?.name} ✨`}
                         </span>
                       </div>
                     </div>
@@ -592,25 +588,25 @@ export const DrawingCanvas: React.FC = () => {
         {/* Full Image Modal */}
         {selectedDrawing && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-xs">
-            <div className="w-full max-w-xl rounded-3xl border border-[#EBE5DA] bg-[#FFFFFF] p-6 shadow-xl">
-              <div className="flex items-center justify-between pb-3 border-b border-[#EBE5DA]">
+            <div className="w-full max-w-xl rounded-3xl border-2 border-[#FCE1E8] bg-[#FFFFFF] p-6 shadow-2xl">
+              <div className="flex items-center justify-between pb-3 border-b border-[#FCE1E8]">
                 <div>
-                  <h4 className="font-serif text-lg text-[#292522]">
-                    {selectedDrawing.caption || 'Shared Sketch'}
+                  <h4 className="font-serif text-lg font-bold text-[#2D2522]">
+                    {selectedDrawing.caption || 'Our Doodle 💕'}
                   </h4>
-                  <span className="text-[10px] font-mono text-[#A89F91]">
-                    {format(new Date(selectedDrawing.created_at), 'EEEE, MMMM dd, yyyy • hh:mm a')}
+                  <span className="text-[10px] font-mono text-[#B2A49B]">
+                    {format(new Date(selectedDrawing.created_at), 'EEEE, MMMM dd • hh:mm a')}
                   </span>
                 </div>
                 <button
                   onClick={() => setSelectedDrawing(null)}
-                  className="rounded-full p-1.5 text-[#A89F91] hover:text-[#292522]"
+                  className="rounded-full p-1.5 text-[#B2A49B] hover:text-[#E11D48]"
                 >
                   <X className="h-5 w-5" />
                 </button>
               </div>
 
-              <div className="mt-4 aspect-[4/3] w-full overflow-hidden rounded-2xl border border-[#EBE5DA] bg-[#FAF8F5]">
+              <div className="mt-4 aspect-[4/3] w-full overflow-hidden rounded-2xl border border-[#FCE1E8] bg-[#FFFDFC]">
                 <img
                   src={selectedDrawing.image_url || selectedDrawing.storage_path}
                   alt={selectedDrawing.caption || 'Drawing'}
@@ -619,15 +615,15 @@ export const DrawingCanvas: React.FC = () => {
               </div>
 
               <div className="mt-4 flex justify-between items-center">
-                <span className="text-xs font-mono text-[#C96A4A]">
-                  {selectedDrawing.is_me ? 'Drawn by you' : `Drawn by ${selectedDrawing.sender?.name || partner?.name}`}
+                <span className="text-xs font-mono font-bold text-[#E11D48]">
+                  {selectedDrawing.is_me ? 'Drawn by you 💕' : `Drawn by ${selectedDrawing.sender?.name || partner?.name} ✨`}
                 </span>
                 <button
                   onClick={() => handleDownloadDrawing(selectedDrawing)}
-                  className="flex items-center space-x-2 rounded-xl bg-[#292522] px-4 py-2 text-xs font-medium text-white hover:bg-[#C96A4A] transition-all shadow-xs"
+                  className="flex items-center space-x-2 rounded-2xl bg-gradient-to-r from-[#FF758C] to-[#FF7EB3] px-4 py-2 text-xs font-bold text-white shadow-xs"
                 >
                   <Download className="h-4 w-4" />
-                  <span>Download</span>
+                  <span>Save to Device 💕</span>
                 </button>
               </div>
             </div>
