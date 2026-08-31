@@ -12,6 +12,7 @@ class ProfileSerializer(serializers.ModelSerializer):
     partner = serializers.SerializerMethodField()
     has_active_duo = serializers.SerializerMethodField()
     active_duo_id = serializers.SerializerMethodField()
+    connected_since = serializers.SerializerMethodField()
 
     class Meta:
         model = Profile
@@ -25,6 +26,11 @@ class ProfileSerializer(serializers.ModelSerializer):
             'has_active_duo',
             'active_duo_id',
             'partner',
+            'connected_since',
+            'enter_to_send',
+            'read_receipts',
+            'notifications_enabled',
+            'theme',
             'created_at',
             'updated_at',
         ]
@@ -43,11 +49,22 @@ class ProfileSerializer(serializers.ModelSerializer):
         duo = obj.active_duo
         return str(duo.id) if duo else None
 
+    def get_connected_since(self, obj):
+        duo = obj.active_duo
+        return duo.created_at.isoformat() if duo else None
+
 
 class UpdateProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
-        fields = ['name', 'avatar_url']
+        fields = [
+            'name',
+            'avatar_url',
+            'enter_to_send',
+            'read_receipts',
+            'notifications_enabled',
+            'theme',
+        ]
 
     def validate_name(self, value):
         val = value.strip()

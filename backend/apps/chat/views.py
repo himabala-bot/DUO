@@ -146,7 +146,24 @@ class MarkMessagesReadView(APIView):
             read_at__isnull=True
         ).update(read_at=now)
 
+        return Response({"success": True, "marked_count": updated_count})
+
+
+class ClearMessagesView(APIView):
+    """
+    POST /api/messages/clear/ - Clear all chat messages in active DUO room
+    """
+    permission_classes = [permissions.IsAuthenticated, HasActiveDuo]
+
+    def post(self, request):
+        profile = request.user.profile
+        duo = profile.active_duo
+
+        count, _ = Message.objects.filter(duo=duo).delete()
+        logger.info(f"Cleared {count} messages for Duo {duo.id} by user {profile.id}")
+
         return Response({
             "success": True,
-            "marked_read": updated_count
+            "message": f"Cleared {count} messages.",
+            "cleared_count": count
         })

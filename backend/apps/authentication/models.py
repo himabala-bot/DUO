@@ -16,6 +16,10 @@ class Profile(models.Model):
     email = models.EmailField(unique=True, db_index=True)
     avatar_url = models.TextField(blank=True, default='')
     duo_code = models.CharField(max_length=20, unique=True, db_index=True, blank=True)
+    enter_to_send = models.BooleanField(default=True)
+    read_receipts = models.BooleanField(default=True)
+    notifications_enabled = models.BooleanField(default=True)
+    theme = models.CharField(max_length=20, default='system')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
