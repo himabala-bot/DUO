@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/context/ToastContext';
 import { dailyApi } from '@/lib/api';
 import { DailyQuestion, DailyResponse } from '@/types';
 import {
@@ -18,6 +19,7 @@ import { format } from 'date-fns';
 
 export const DailyView: React.FC = () => {
   const { partner } = useAuth();
+  const { toast } = useToast();
   const [questions, setQuestions] = useState<DailyQuestion[]>([]);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [questionStatuses, setQuestionStatuses] = useState<Record<string, 'DRAFT' | 'SUBMITTED' | 'NOT_STARTED'>>({});
@@ -69,6 +71,7 @@ export const DailyView: React.FC = () => {
     try {
       await dailyApi.saveResponses([{ question_id: qId, answer: text }], 'SAVE_DRAFT');
       setQuestionStatuses((prev) => ({ ...prev, [qId]: 'DRAFT' }));
+      toast.love('Saved privately in your drafts ✨', 'Draft Saved');
       setFeedbackMsg({
         id: qId,
         type: 'draft',
@@ -76,7 +79,7 @@ export const DailyView: React.FC = () => {
       });
       setTimeout(() => setFeedbackMsg(null), 3000);
     } catch (err: any) {
-      alert(err.message || 'Failed to save draft.');
+      toast.error(err.message || 'Failed to save draft.', 'Draft Error');
     } finally {
       setActiveActions((prev) => ({ ...prev, [qId]: null }));
     }
@@ -85,7 +88,7 @@ export const DailyView: React.FC = () => {
   const handleSendQuestion = async (qId: string) => {
     const text = (answers[qId] || '').trim();
     if (!text) {
-      alert('Please write a note before sending 💕');
+      toast.info('Please write a note before sending 💕', 'Empty Note');
       return;
     }
 
@@ -95,6 +98,7 @@ export const DailyView: React.FC = () => {
     try {
       await dailyApi.saveResponses([{ question_id: qId, answer: text }], 'SUBMIT');
       setQuestionStatuses((prev) => ({ ...prev, [qId]: 'SUBMITTED' }));
+      toast.love(`Sealed & shared with ${partner?.name || 'partner'} 💌`, 'Love Note Shared');
       setFeedbackMsg({
         id: qId,
         type: 'success',
@@ -103,7 +107,7 @@ export const DailyView: React.FC = () => {
       await fetchTodayData();
       setTimeout(() => setFeedbackMsg(null), 4000);
     } catch (err: any) {
-      alert(err.message || 'Failed to submit response.');
+      toast.error(err.message || 'Failed to submit response.', 'Error');
     } finally {
       setActiveActions((prev) => ({ ...prev, [qId]: null }));
     }

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/context/ToastContext';
 import { duoApi } from '@/lib/api';
 import { ConnectionRequest } from '@/types';
 import {
@@ -18,6 +19,7 @@ import {
 
 export const ConnectionHub: React.FC = () => {
   const { profile, partner, hasActiveDuo, refreshProfile } = useAuth();
+  const { toast, confirm: confirmModal } = useToast();
   const [partnerCode, setPartnerCode] = useState('');
   const [copied, setCopied] = useState(false);
   const [incomingRequests, setIncomingRequests] = useState<ConnectionRequest[]>([]);
@@ -43,16 +45,27 @@ export const ConnectionHub: React.FC = () => {
     if (!profile?.duo_code) return;
     navigator.clipboard.writeText(profile.duo_code);
     setCopied(true);
+    toast.love('Secret key copied to clipboard 💕', 'Copied');
     setTimeout(() => setCopied(false), 2000);
   };
 
   const handleRegenerateCode = async () => {
-    if (!confirm('Regenerate your secret key? Any previous key you shared will no longer work.')) return;
+    const ok = await confirmModal({
+      title: 'Regenerate Secret Key?',
+      message: 'Any previous key you shared will no longer work. You will get a fresh key to share.',
+      confirmText: 'Generate New Key',
+      cancelText: 'Keep Current',
+      type: 'warning',
+    });
+    if (!ok) return;
+
     try {
       await duoApi.regenerateCode();
       await refreshProfile();
+      toast.love('New secret key generated ✨', 'Key Generated');
       setMessage({ type: 'success', text: 'New secret key generated ✨' });
     } catch (err: any) {
+      toast.error(err.message || 'Failed to regenerate key.', 'Error');
       setMessage({ type: 'error', text: err.message || 'Failed to regenerate key.' });
     }
   };
@@ -66,11 +79,13 @@ export const ConnectionHub: React.FC = () => {
 
     try {
       const res = await duoApi.connect(partnerCode.trim());
+      toast.love(res.message || 'Pairing invite sent 💌', 'Invite Sent');
       setMessage({ type: 'success', text: res.message || 'Pairing invite sent 💌' });
       setPartnerCode('');
       await fetchRequests();
       await refreshProfile();
     } catch (err: any) {
+      toast.error(err.message || 'Failed to pair keys.', 'Pairing Error');
       setMessage({ type: 'error', text: err.message || 'Failed to pair keys.' });
     } finally {
       setIsSubmitting(false);
@@ -83,8 +98,10 @@ export const ConnectionHub: React.FC = () => {
       await duoApi.acceptRequest(reqId);
       await refreshProfile();
       await fetchRequests();
+      toast.love('Room connected! Welcome to your private space 💕', 'Connected');
       setMessage({ type: 'success', text: 'Room connected! Welcome to your private space 💕' });
     } catch (err: any) {
+      toast.error(err.message || 'Failed to accept pairing.', 'Error');
       setMessage({ type: 'error', text: err.message || 'Failed to accept pairing.' });
     } finally {
       setIsSubmitting(false);
@@ -95,7 +112,9 @@ export const ConnectionHub: React.FC = () => {
     try {
       await duoApi.declineRequest(reqId);
       await fetchRequests();
+      toast.info('Connection request declined.', 'Declined');
     } catch (err: any) {
+      toast.error(err.message || 'Failed to decline request.', 'Error');
       setMessage({ type: 'error', text: err.message || 'Failed to decline request.' });
     }
   };
@@ -104,19 +123,31 @@ export const ConnectionHub: React.FC = () => {
     try {
       await duoApi.cancelRequest(reqId);
       await fetchRequests();
+      toast.info('Pairing request cancelled.', 'Cancelled');
     } catch (err: any) {
+      toast.error(err.message || 'Failed to cancel request.', 'Error');
       setMessage({ type: 'error', text: err.message || 'Failed to cancel request.' });
     }
   };
 
   const handleLeaveDuo = async () => {
-    if (!confirm('Disconnect from this room? You will need to re-pair keys to reconnect.')) return;
+    const ok = await confirmModal({
+      title: 'Disconnect Room?',
+      message: 'You will need to exchange secret keys to connect again.',
+      confirmText: 'Disconnect',
+      cancelText: 'Keep Connected',
+      type: 'danger',
+    });
+    if (!ok) return;
+
     try {
       await duoApi.leave();
       await refreshProfile();
       await fetchRequests();
+      toast.love('Room disconnected.', 'Disconnected');
       setMessage({ type: 'success', text: 'Room disconnected.' });
     } catch (err: any) {
+      toast.error(err.message || 'Failed to leave room.', 'Error');
       setMessage({ type: 'error', text: err.message || 'Failed to leave room.' });
     }
   };

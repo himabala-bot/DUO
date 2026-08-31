@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/context/ToastContext';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { messagesApi } from '@/lib/api';
 import { Message } from '@/types';
@@ -25,6 +26,7 @@ const QUICK_EMOJIS = ['❤️', '✨', '☕', '🕊️', '🌿', '🫂', '💌',
 
 export const ChatView: React.FC = () => {
   const { profile, partner } = useAuth();
+  const { toast, confirm } = useToast();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const [isSending, setIsSending] = useState(false);
@@ -213,7 +215,7 @@ export const ChatView: React.FC = () => {
     } catch (err) {
       console.error('Failed to send message:', err);
       setMessages((prev) => prev.filter((m) => m.id !== tempId));
-      alert('Message failed to send. Please check your connection.');
+      toast.error('Message failed to send. Please check your connection.', 'Send Error');
     } finally {
       setIsSending(false);
     }
@@ -270,11 +272,15 @@ export const ChatView: React.FC = () => {
   // Unsend / Delete Message
   const handleDeleteMessage = async (msg: Message) => {
     const isOwner = msg.is_me;
-    const confirmText = isOwner
-      ? 'Unsend this message? It will be removed for both of you.'
-      : 'Delete this message?';
+    const ok = await confirm({
+      title: isOwner ? 'Unsend Message?' : 'Delete Message?',
+      message: isOwner ? 'This message will disappear for both of you.' : 'Remove this message from your chat view.',
+      confirmText: isOwner ? 'Unsend' : 'Delete',
+      cancelText: 'Keep',
+      type: 'danger',
+    });
 
-    if (!confirm(confirmText)) return;
+    if (!ok) return;
 
     setMessages((prev) => prev.filter((m) => m.id !== msg.id));
 

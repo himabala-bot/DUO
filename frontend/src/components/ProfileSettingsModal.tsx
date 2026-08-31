@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/context/ToastContext';
 import { supabase } from '@/lib/supabase';
 import { authApi, messagesApi, duoApi } from '@/lib/api';
 import {
@@ -41,6 +42,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
   onNavigateTab,
 }) => {
   const { profile, partner, hasActiveDuo, refreshProfile, logout } = useAuth();
+  const { toast, confirm: confirmModal } = useToast();
 
   const [activeSection, setActiveSection] = useState<'profile' | 'duo' | 'chat' | 'theme' | 'security'>('profile');
 
@@ -103,9 +105,10 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
       });
       await refreshProfile();
       setProfileSaveSuccess(true);
+      toast.love('Profile updated with love 💕', 'Profile Saved');
       setTimeout(() => setProfileSaveSuccess(false), 3000);
     } catch (err: any) {
-      alert(err.message || 'Failed to update profile.');
+      toast.error(err.message || 'Failed to update profile.', 'Error');
     } finally {
       setIsSavingProfile(false);
     }
@@ -149,12 +152,21 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 
   // Regenerate Duo Key
   const handleRegenerateCode = async () => {
-    if (!confirm('Regenerate your secret key? Your previous key will no longer work.')) return;
+    const ok = await confirmModal({
+      title: 'Regenerate Secret Key?',
+      message: 'Your previous key will no longer work. You will get a fresh key to share.',
+      confirmText: 'Generate New Key',
+      cancelText: 'Keep Current',
+      type: 'warning',
+    });
+    if (!ok) return;
+
     try {
       await duoApi.regenerateCode();
       await refreshProfile();
+      toast.love('New secret key generated ✨', 'Key Updated');
     } catch (err: any) {
-      alert(err.message || 'Failed to regenerate key.');
+      toast.error(err.message || 'Failed to regenerate key.', 'Error');
     }
   };
 
@@ -178,10 +190,12 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
       if (error) throw error;
 
       setPasswordStatus({ type: 'success', msg: 'Password updated successfully ✨' });
+      toast.love('Password updated successfully ✨', 'Security');
       setNewPassword('');
       setConfirmPassword('');
     } catch (err: any) {
       setPasswordStatus({ type: 'error', msg: err.message || 'Failed to update password.' });
+      toast.error(err.message || 'Failed to update password.', 'Error');
     } finally {
       setPasswordLoading(false);
     }
@@ -195,9 +209,10 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
       await refreshProfile();
       setConfirmLeaveDuo(false);
       onClose();
+      toast.love('Room disconnected.', 'Room Status');
       if (onNavigateTab) onNavigateTab('duo');
     } catch (err: any) {
-      alert(err.message || 'Failed to disconnect room.');
+      toast.error(err.message || 'Failed to disconnect room.', 'Error');
     } finally {
       setActionLoading(false);
     }
@@ -218,9 +233,10 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
       }
       setConfirmClearChat(false);
       setActionMessage({ type: 'success', msg: res.message || 'Chat history cleared.' });
+      toast.love('Chat history cleared for both partners.', 'Chat Cleared');
       setTimeout(() => setActionMessage(null), 3500);
     } catch (err: any) {
-      alert(err.message || 'Failed to clear chat.');
+      toast.error(err.message || 'Failed to clear chat.', 'Error');
     } finally {
       setActionLoading(false);
     }
@@ -234,8 +250,9 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
       await authApi.deleteAccount();
       await logout();
       onClose();
+      toast.love('Account deleted successfully.', 'Goodbye');
     } catch (err: any) {
-      alert(err.message || 'Failed to delete account.');
+      toast.error(err.message || 'Failed to delete account.', 'Error');
       setActionLoading(false);
     }
   };

@@ -2,6 +2,7 @@
 
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/context/ToastContext';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { drawingsApi } from '@/lib/api';
 import {
@@ -47,6 +48,7 @@ const SIZES = [
 
 export const DrawingCanvas: React.FC = () => {
   const { profile, partner } = useAuth();
+  const { toast, confirm } = useToast();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [color, setColor] = useState<string>('#1C1917');
   const [brushSize, setBrushSize] = useState<number>(5);
@@ -185,8 +187,15 @@ export const DrawingCanvas: React.FC = () => {
     }
   };
 
-  const handleClear = () => {
-    if (!confirm('Clear canvas?')) return;
+  const handleClear = async () => {
+    const ok = await confirm({
+      title: 'Clear Canvas?',
+      message: 'This will reset your current doodle and sketch.',
+      confirmText: 'Clear',
+      cancelText: 'Keep Drawing',
+      type: 'danger',
+    });
+    if (!ok) return;
     initCanvas();
   };
 
@@ -306,10 +315,10 @@ export const DrawingCanvas: React.FC = () => {
 
       setCaption('');
       initCanvas();
-      alert(`Drawing sent to ${partner?.name || 'partner'}!`);
+      toast.drawing(`Doodle sent to ${partner?.name || 'partner'}! 🎨`, 'Shared');
     } catch (err: any) {
       console.error('Failed to send drawing:', err);
-      alert(err.message || 'Failed to send drawing. Please check your connection.');
+      toast.error(err.message || 'Failed to send drawing. Please check your connection.', 'Error');
     } finally {
       setIsSending(false);
     }

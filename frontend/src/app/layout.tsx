@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans, Newsreader, JetBrains_Mono } from 'next/font/google'
 import './globals.css';
 import { AuthProvider } from '@/context/AuthContext';
 import { RealtimeProvider } from '@/context/RealtimeContext';
+import { ToastProvider } from '@/context/ToastContext';
 
 const sans = Plus_Jakarta_Sans({
   subsets: ['latin'],
@@ -36,12 +37,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${sans.variable} ${serif.variable} ${mono.variable}`}>
-      <body className="min-h-screen bg-[#FBFAF7] text-[#1C1917] font-sans antialiased">
-        <AuthProvider>
-          <RealtimeProvider>
-            {children}
-          </RealtimeProvider>
-        </AuthProvider>
+      <body className="min-h-screen bg-[#FAF7F2] text-[#422F0E] font-sans antialiased">
+        <ToastProvider>
+          <AuthProvider>
+            <RealtimeProvider>
+              {children}
+            </RealtimeProvider>
+          </AuthProvider>
+        </ToastProvider>
       </body>
     </html>
   );
