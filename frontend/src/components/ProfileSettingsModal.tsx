@@ -19,6 +19,7 @@ import {
   RefreshCw,
   AlertTriangle,
   Lock,
+  Mail,
   Calendar,
   Sparkles,
 } from 'lucide-react';
@@ -31,7 +32,7 @@ interface ProfileSettingsModalProps {
 }
 
 const AVATAR_OPTIONS = [
-  '🕊️', '🌿', '☕', '🎨', '🌙', '🧸', '🌸', '✨', '🐾', '🍓', '💖', '🍫'
+  '🌸', '🍓', '🧸', '💌', '✨', '☕', '🕊️', '🐱', '🥑', '🌙', '🎨', '🐾'
 ];
 
 export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
@@ -86,6 +87,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 
   if (!isOpen) return null;
 
+  // Save Profile (Name & Avatar)
   const handleSaveProfile = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!name.trim()) return;
@@ -109,6 +111,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
     }
   };
 
+  // Toggle Preference
   const handleTogglePreference = async (
     key: 'enter_to_send' | 'read_receipts' | 'notifications_enabled',
     value: boolean
@@ -125,6 +128,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
     }
   };
 
+  // Switch Theme
   const handleSelectTheme = async (selected: 'light' | 'dark' | 'system') => {
     setTheme(selected);
     try {
@@ -135,6 +139,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
     }
   };
 
+  // Copy Duo Key
   const handleCopyCode = () => {
     if (!profile?.duo_code) return;
     navigator.clipboard.writeText(profile.duo_code);
@@ -142,8 +147,9 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
     setTimeout(() => setCopiedCode(false), 2500);
   };
 
+  // Regenerate Duo Key
   const handleRegenerateCode = async () => {
-    if (!confirm('Regenerate your DUO key? Your previous key will no longer work.')) return;
+    if (!confirm('Regenerate your secret key? Your previous key will no longer work.')) return;
     try {
       await duoApi.regenerateCode();
       await refreshProfile();
@@ -152,6 +158,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
     }
   };
 
+  // Change Password
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setPasswordStatus(null);
@@ -170,7 +177,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
       const { error } = await supabase.auth.updateUser({ password: newPassword });
       if (error) throw error;
 
-      setPasswordStatus({ type: 'success', msg: 'Password updated successfully! 💕' });
+      setPasswordStatus({ type: 'success', msg: 'Password updated successfully ✨' });
       setNewPassword('');
       setConfirmPassword('');
     } catch (err: any) {
@@ -180,6 +187,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
     }
   };
 
+  // Leave Duo Room
   const handleLeaveDuo = async () => {
     setActionLoading(true);
     try {
@@ -195,6 +203,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
     }
   };
 
+  // Clear Chat History
   const handleClearChat = async () => {
     setActionLoading(true);
     try {
@@ -217,6 +226,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
     }
   };
 
+  // Delete Account
   const handleDeleteAccount = async () => {
     if (deleteConfirmText !== 'DELETE') return;
     setActionLoading(true);
@@ -235,43 +245,46 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
     : null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-3 sm:p-6 backdrop-blur-xs overflow-y-auto">
-      <div className="relative w-full max-w-2xl rounded-3xl border-2 border-[#FCE1E8] bg-[#FFFFFF] shadow-[0_24px_64px_rgba(244,114,182,0.18)] overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-3 sm:p-6 backdrop-blur-[3px] overflow-y-auto">
+      <div className="relative w-full max-w-2xl rounded-3xl border border-[#EFE8DC] bg-[#FFFFFF] shadow-[0_16px_48px_rgba(66,47,14,0.12)] overflow-hidden flex flex-col max-h-[90vh]">
         {/* Modal Top Header */}
-        <div className="flex items-center justify-between border-b border-[#FCE1E8] bg-gradient-to-r from-[#FFF5F7] to-[#FFF8F5] px-6 py-4 shrink-0">
+        <div className="flex items-center justify-between border-b border-[#EFE8DC] bg-[#FAF7F2] px-6 py-4 shrink-0">
           <div className="flex items-center space-x-2">
-            <span className="text-xl">⚙️</span>
-            <h2 className="font-serif text-xl sm:text-2xl font-bold text-[#2D2522]">Settings & Profile 💕</h2>
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#FCC4C0] text-[#EA5E86]">
+              <Heart className="h-3.5 w-3.5 fill-current" />
+            </span>
+            <h2 className="font-serif text-xl sm:text-2xl font-normal text-[#422F0E]">Room Settings</h2>
           </div>
           <button
             onClick={onClose}
-            className="rounded-2xl p-1.5 text-[#B2A49B] hover:text-[#E11D48] hover:bg-[#FFF0F3] transition-colors"
+            className="rounded-full p-1.5 text-[#A89F91] hover:text-[#422F0E] hover:bg-[#F2ECE1] transition-colors"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
         {/* Section Navigation Tabs */}
-        <div className="flex border-b border-[#FCE1E8] bg-[#FFFDFC] px-4 sm:px-6 overflow-x-auto shrink-0 gap-1.5 scrollbar-none py-2">
+        <div className="flex border-b border-[#EFE8DC] bg-[#FAF7F2] px-4 sm:px-6 overflow-x-auto shrink-0 gap-1.5 scrollbar-none py-2">
           {[
-            { id: 'profile', label: 'Identity', emoji: '🌸' },
-            { id: 'duo', label: 'Connection', emoji: '💖' },
-            { id: 'chat', label: 'Chat', emoji: '💬' },
-            { id: 'theme', label: 'Theme', emoji: '🎨' },
-            { id: 'security', label: 'Security', emoji: '🔒' },
+            { id: 'profile', label: 'Profile', icon: User },
+            { id: 'duo', label: 'Our Space', icon: Heart },
+            { id: 'chat', label: 'Chat', icon: MessageSquare },
+            { id: 'theme', label: 'Theme', icon: Sun },
+            { id: 'security', label: 'Security', icon: Shield },
           ].map((sec) => {
+            const Icon = sec.icon;
             const isActive = activeSection === sec.id;
             return (
               <button
                 key={sec.id}
                 onClick={() => setActiveSection(sec.id as any)}
-                className={`flex items-center space-x-1.5 py-2 px-3.5 rounded-2xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
+                className={`flex items-center space-x-2 py-2 px-3.5 text-xs sm:text-sm font-medium rounded-full transition-all whitespace-nowrap ${
                   isActive
-                    ? 'bg-[#FFF0F3] text-[#E11D48] border border-[#FCE1E8] shadow-2xs'
-                    : 'text-[#6D5E56] hover:bg-[#FFF5F7]'
+                    ? 'bg-[#422F0E] text-[#FAF7F2] font-semibold shadow-sm'
+                    : 'text-[#6B5E4E] hover:bg-[#F2ECE1]'
                 }`}
               >
-                <span>{sec.emoji}</span>
+                <Icon className={`h-3.5 w-3.5 ${isActive ? 'text-[#FCC4C0]' : 'text-[#A89F91]'}`} />
                 <span>{sec.label}</span>
               </button>
             );
@@ -283,8 +296,8 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
           {/* Action Message Banner */}
           {actionMessage && (
             <div
-              className={`flex items-center space-x-2 rounded-2xl p-3.5 text-xs font-bold ${
-                actionMessage.type === 'success' ? 'bg-[#DCFCE7] text-[#15803D] border border-[#BBF7D0]' : 'bg-[#FFF0F3] text-[#E11D48] border border-[#FCE1E8]'
+              className={`flex items-center space-x-2 rounded-2xl p-3.5 text-xs ${
+                actionMessage.type === 'success' ? 'bg-[#F5FBEF] text-[#037F71] border border-[#DDF2B8]' : 'bg-[#FFF5F5] text-[#EA5E86] border border-[#FCC4C0]'
               }`}
             >
               <Check className="h-4 w-4" />
@@ -292,13 +305,13 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
             </div>
           )}
 
-          {/* SECTION 1: PROFILE / IDENTITY */}
+          {/* SECTION 1: PROFILE */}
           {activeSection === 'profile' && (
             <div className="space-y-6">
-              {/* Profile Card */}
-              <div className="rounded-3xl border-2 border-[#FCE1E8] bg-gradient-to-r from-[#FFF5F7] to-[#FFF9F5] p-5 flex flex-col sm:flex-row items-center gap-5">
-                <div className="flex h-16 w-16 items-center justify-center rounded-3xl border-2 border-[#FCE1E8] bg-[#FFFFFF] text-3xl shadow-xs shrink-0">
-                  {selectedAvatar.startsWith('http') ? (
+              {/* Profile Card & Avatar */}
+              <div className="rounded-3xl border border-[#EFE8DC] bg-[#FAF7F2] p-5 flex flex-col sm:flex-row items-center gap-5">
+                <div className="flex h-16 w-16 items-center justify-center rounded-3xl border border-[#E5DAC9] bg-[#FFFFFF] text-3xl shadow-sm shrink-0">
+                  {selectedAvatar.startsWith('http') || selectedAvatar.startsWith('data:') ? (
                     <img src={selectedAvatar} alt="Avatar" className="h-full w-full object-cover rounded-3xl" />
                   ) : (
                     <span>{selectedAvatar || '🌸'}</span>
@@ -306,21 +319,21 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                 </div>
 
                 <div className="flex-1 text-center sm:text-left">
-                  <h3 className="font-serif text-xl font-bold text-[#2D2522]">{profile?.name}</h3>
-                  <p className="text-xs font-mono text-[#B2A49B]">{profile?.email}</p>
-                  <div className="mt-2 inline-flex items-center space-x-1.5 rounded-full bg-[#FFFFFF] border border-[#FCE1E8] px-3.5 py-0.5 text-xs font-mono text-[#E11D48]">
-                    <span className={`h-2 w-2 rounded-full ${hasActiveDuo ? 'bg-[#22C55E]' : 'bg-[#D1C2B8]'}`} />
-                    <span>{hasActiveDuo ? `Paired with ${partner?.name || 'Partner'} 💕` : 'Unconnected Room'}</span>
+                  <h3 className="font-serif text-lg font-medium text-[#422F0E]">{profile?.name}</h3>
+                  <p className="text-xs font-mono text-[#A89F91]">{profile?.email}</p>
+                  <div className="mt-2 inline-flex items-center space-x-1.5 rounded-full bg-[#FFFFFF] border border-[#EFE8DC] px-3 py-0.5 text-[11px] font-mono text-[#6B5E4E]">
+                    <span className={`h-1.5 w-1.5 rounded-full ${hasActiveDuo ? 'bg-[#037F71]' : 'bg-[#D4C3AD]'}`} />
+                    <span>{hasActiveDuo ? `Paired with ${partner?.name || 'Partner'}` : 'Unconnected Room'}</span>
                   </div>
                 </div>
               </div>
 
               {/* Avatar Selector */}
               <div>
-                <label className="block text-xs font-mono uppercase tracking-widest text-[#B2A49B] font-bold mb-2.5">
-                  Choose Cute Avatar Icon 💕
+                <label className="block text-[10px] font-mono uppercase tracking-widest text-[#A89F91] mb-2.5">
+                  Pick a Cute Avatar
                 </label>
-                <div className="grid grid-cols-6 sm:grid-cols-12 gap-2">
+                <div className="grid grid-cols-6 gap-2">
                   {AVATAR_OPTIONS.map((emoji) => (
                     <button
                       key={emoji}
@@ -329,10 +342,10 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                         setSelectedAvatar(emoji);
                         setCustomAvatarUrl('');
                       }}
-                      className={`h-11 w-full rounded-2xl border-2 flex items-center justify-center text-xl transition-all hover:scale-110 ${
+                      className={`h-11 w-full rounded-2xl border flex items-center justify-center text-xl transition-all hover:scale-105 ${
                         selectedAvatar === emoji
-                          ? 'border-[#FF758C] bg-[#FFF0F3] shadow-xs'
-                          : 'border-[#F4EBE6] bg-[#FFFDFC]'
+                          ? 'border-[#422F0E] bg-[#FFF8FA] ring-2 ring-[#FCC4C0] shadow-sm'
+                          : 'border-[#EFE8DC] bg-[#FAF7F2]'
                       }`}
                     >
                       {emoji}
@@ -344,40 +357,40 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
               {/* Edit Form */}
               <form onSubmit={handleSaveProfile} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-bold text-[#6D5E56] mb-1.5">Display Name</label>
+                  <label className="block text-xs font-medium text-[#6B5E4E] mb-1.5">Display Name</label>
                   <input
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="Your name"
-                    className="w-full rounded-2xl border-2 border-[#FCE1E8] bg-[#FFFDFC] px-4 py-2.5 text-xs sm:text-sm text-[#2D2522] focus:border-[#FF758C] focus:bg-[#FFFFFF] focus:outline-none focus:ring-2 focus:ring-[#FF758C]/20"
+                    placeholder="Your sweet name"
+                    className="w-full rounded-full border border-[#EFE8DC] bg-[#FAF7F2] px-5 py-2.5 text-xs sm:text-sm text-[#422F0E] focus:border-[#EA5E86] focus:bg-[#FFFFFF] focus:outline-none focus:ring-2 focus:ring-[#FCC4C0]/40"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-[#6D5E56] mb-1.5">Custom Photo URL (optional)</label>
+                  <label className="block text-xs font-medium text-[#6B5E4E] mb-1.5">Custom Photo URL (optional)</label>
                   <input
                     type="url"
                     value={customAvatarUrl}
                     onChange={(e) => setCustomAvatarUrl(e.target.value)}
-                    placeholder="https://example.com/cute-photo.jpg"
-                    className="w-full rounded-2xl border-2 border-[#FCE1E8] bg-[#FFFDFC] px-4 py-2.5 text-xs text-[#2D2522] focus:border-[#FF758C] focus:bg-[#FFFFFF] focus:outline-none focus:ring-2 focus:ring-[#FF758C]/20"
+                    placeholder="https://example.com/avatar.jpg"
+                    className="w-full rounded-full border border-[#EFE8DC] bg-[#FAF7F2] px-5 py-2.5 text-xs text-[#422F0E] focus:border-[#EA5E86] focus:bg-[#FFFFFF] focus:outline-none focus:ring-2 focus:ring-[#FCC4C0]/40"
                   />
                 </div>
 
                 <div className="flex items-center justify-between pt-2">
                   {profileSaveSuccess && (
-                    <span className="text-xs font-mono text-[#15803D] font-bold flex items-center gap-1">
-                      <Check className="h-4 w-4" /> Profile updated with love! 💕
+                    <span className="text-xs font-mono text-[#037F71] flex items-center gap-1">
+                      <Check className="h-3.5 w-3.5" /> Profile updated 💕
                     </span>
                   )}
                   <button
                     type="submit"
                     disabled={isSavingProfile || !name.trim()}
-                    className="ml-auto flex items-center space-x-2 rounded-2xl bg-gradient-to-r from-[#FF758C] to-[#FF7EB3] px-6 py-2.5 text-xs sm:text-sm font-bold text-white hover:scale-102 hover:shadow-[0_4px_16px_rgba(255,117,140,0.35)] disabled:opacity-40 transition-all shadow-sm"
+                    className="ml-auto flex items-center space-x-2 rounded-full bg-[#422F0E] px-6 py-2.5 text-xs sm:text-sm font-medium text-[#FAF7F2] hover:bg-[#EA5E86] disabled:opacity-40 transition-all shadow-sm"
                   >
-                    <span>{isSavingProfile ? 'Saving...' : 'Save Profile 💕'}</span>
+                    <span>{isSavingProfile ? 'Saving...' : 'Save Profile'}</span>
                   </button>
                 </div>
               </form>
@@ -389,39 +402,39 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
             <div className="space-y-6">
               {/* Partner Card */}
               {hasActiveDuo && partner ? (
-                <div className="rounded-3xl border-2 border-[#FCE1E8] bg-gradient-to-r from-[#FFF5F7] to-[#FFF9F5] p-5 space-y-4">
+                <div className="rounded-3xl border border-[#EFE8DC] bg-[#FAF7F2] p-5 space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-mono uppercase tracking-widest text-[#B2A49B] font-bold">My Favorite Person 💕</span>
-                    <span className="text-xs font-mono text-[#15803D] font-bold flex items-center gap-1.5">
-                      <span className="h-2 w-2 rounded-full bg-[#22C55E] animate-ping" />
-                      Connected
+                    <span className="text-[10px] font-mono uppercase tracking-widest text-[#A89F91]">Connected Partner</span>
+                    <span className="text-xs font-mono text-[#037F71] flex items-center gap-1.5">
+                      <span className="h-2 w-2 rounded-full bg-[#037F71]" />
+                      Paired
                     </span>
                   </div>
 
                   <div className="flex items-center space-x-4">
-                    <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-[#FFFFFF] border-2 border-[#FCE1E8] text-2xl shadow-xs">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#FFFFFF] border border-[#EFE8DC] text-2xl shadow-sm">
                       {partner.avatar_url?.startsWith('http') ? (
-                        <img src={partner.avatar_url} alt={partner.name} className="h-full w-full object-cover rounded-3xl" />
+                        <img src={partner.avatar_url} alt={partner.name} className="h-full w-full object-cover rounded-2xl" />
                       ) : (
-                        <span>{partner.avatar_url || '💖'}</span>
+                        <span>{partner.avatar_url || '🌸'}</span>
                       )}
                     </div>
                     <div>
-                      <h4 className="font-serif text-lg font-bold text-[#2D2522]">{partner.name}</h4>
-                      <p className="text-xs font-mono text-[#7A6D65]">{partner.email}</p>
+                      <h4 className="font-serif text-base sm:text-lg font-medium text-[#422F0E]">{partner.name}</h4>
+                      <p className="text-xs font-mono text-[#A89F91]">{partner.email}</p>
                     </div>
                   </div>
 
                   {connectedDateFormatted && (
-                    <div className="flex items-center space-x-2 text-xs font-mono text-[#E11D48] pt-2 border-t border-[#FCE1E8]">
-                      <Calendar className="h-4 w-4" />
-                      <span>Connected since {connectedDateFormatted} 💕</span>
+                    <div className="flex items-center space-x-2 text-xs font-mono text-[#6B5E4E] pt-2 border-t border-[#EFE8DC]">
+                      <Calendar className="h-3.5 w-3.5 text-[#EA5E86]" />
+                      <span>Paired since {connectedDateFormatted} 💕</span>
                     </div>
                   )}
                 </div>
               ) : (
-                <div className="rounded-3xl border-2 border-[#FCE1E8] bg-[#FFF5F7] p-6 text-center">
-                  <p className="text-xs sm:text-sm text-[#7A6D65]">
+                <div className="rounded-3xl border border-[#EFE8DC] bg-[#FAF7F2] p-6 text-center">
+                  <p className="text-xs sm:text-sm text-[#6B5E4E]">
                     You are not currently paired in an active room.
                   </p>
                   {onNavigateTab && (
@@ -430,75 +443,75 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                         onClose();
                         onNavigateTab('duo');
                       }}
-                      className="mt-3 inline-flex items-center space-x-2 rounded-2xl bg-gradient-to-r from-[#FF758C] to-[#FF7EB3] px-5 py-2 text-xs font-bold text-white shadow-xs"
+                      className="mt-3 inline-flex items-center space-x-2 rounded-full bg-[#422F0E] px-5 py-2 text-xs font-medium text-white hover:bg-[#EA5E86] transition-all"
                     >
-                      <span>Go to Room Key & Pairing 💕</span>
+                      <span>Pair Secret Keys</span>
                     </button>
                   )}
                 </div>
               )}
 
               {/* Your Duo Key Card */}
-              <div className="rounded-3xl border-2 border-[#FCE1E8] bg-[#FFFFFF] p-5 shadow-xs space-y-3">
+              <div className="rounded-3xl border border-[#EFE8DC] bg-[#FFFFFF] p-5 shadow-sm space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-mono uppercase tracking-widest text-[#B2A49B] font-bold">Your Room Key 🗝️</span>
+                  <span className="text-[10px] font-mono uppercase tracking-widest text-[#A89F91]">Your Secret Key</span>
                   <button
                     onClick={handleRegenerateCode}
                     title="Regenerate key"
-                    className="p-1.5 text-[#B2A49B] hover:text-[#E11D48] rounded-xl hover:bg-[#FFF0F3]"
+                    className="p-1 text-[#A89F91] hover:text-[#422F0E] rounded-full hover:bg-[#F2ECE1]"
                   >
-                    <RefreshCw className="h-4 w-4" />
+                    <RefreshCw className="h-3.5 w-3.5" />
                   </button>
                 </div>
 
-                <div className="rounded-2xl border-2 border-dashed border-[#FCE1E8] bg-[#FFF5F7] p-4 text-center">
-                  <span className="font-mono text-2xl font-bold tracking-widest text-[#E11D48]">
+                <div className="rounded-2xl border border-[#EFE8DC] bg-[#FAF7F2] p-4 text-center">
+                  <span className="font-mono text-2xl font-medium tracking-widest text-[#422F0E]">
                     {profile?.duo_code}
                   </span>
                 </div>
 
                 <button
                   onClick={handleCopyCode}
-                  className="w-full flex items-center justify-center space-x-2 rounded-2xl border-2 border-[#FCE1E8] bg-[#FFFDFC] py-2.5 text-xs sm:text-sm font-bold text-[#E11D48] hover:bg-[#FFF0F3] transition-all"
+                  className="w-full flex items-center justify-center space-x-2 rounded-full border border-[#EFE8DC] bg-[#FAF7F2] py-2.5 text-xs font-medium text-[#422F0E] hover:bg-[#F2ECE1] hover:border-[#FCC4C0] transition-all"
                 >
-                  {copiedCode ? <Check className="h-4 w-4 text-[#15803D]" /> : <Copy className="h-4 w-4 text-[#E11D48]" />}
-                  <span>{copiedCode ? 'Key copied to clipboard! 💕' : 'Copy Room Key'}</span>
+                  {copiedCode ? <Check className="h-4 w-4 text-[#037F71]" /> : <Copy className="h-4 w-4 text-[#A89F91]" />}
+                  <span>{copiedCode ? 'Key copied to clipboard 💕' : 'Copy Secret Key'}</span>
                 </button>
               </div>
 
               {/* Disconnect / Leave Duo */}
               {hasActiveDuo && (
-                <div className="rounded-3xl border-2 border-[#FCE1E8] bg-[#FFF5F7] p-5 space-y-3">
-                  <h4 className="text-xs font-bold text-[#E11D48] uppercase tracking-wider font-mono">
+                <div className="rounded-3xl border border-[#FCC4C0] bg-[#FFF5F5] p-5 space-y-3">
+                  <h4 className="text-xs font-semibold text-[#EA5E86] uppercase tracking-wider font-mono">
                     Disconnect Room
                   </h4>
-                  <p className="text-xs text-[#7A6D65]">
+                  <p className="text-xs text-[#6B5E4E]">
                     Disconnecting will un-pair you and {partner?.name}. You will need to exchange keys to connect again.
                   </p>
 
                   {!confirmLeaveDuo ? (
                     <button
                       onClick={() => setConfirmLeaveDuo(true)}
-                      className="rounded-2xl border border-[#FCE1E8] bg-[#FFFFFF] px-4 py-2 text-xs font-bold text-[#E11D48] hover:bg-[#FFE4E8] transition-all"
+                      className="rounded-full border border-[#FCC4C0] bg-[#FFFFFF] px-5 py-2 text-xs font-medium text-[#EA5E86] hover:bg-[#FFF8FA] transition-all"
                     >
                       Disconnect from Duo
                     </button>
                   ) : (
                     <div className="space-y-2 pt-2">
-                      <p className="text-xs font-bold text-[#E11D48]">
+                      <p className="text-xs font-semibold text-[#EA5E86]">
                         Are you sure you want to disconnect?
                       </p>
                       <div className="flex gap-2">
                         <button
                           onClick={handleLeaveDuo}
                           disabled={actionLoading}
-                          className="rounded-2xl bg-[#E11D48] px-4 py-2 text-xs font-bold text-white hover:bg-[#BE123C] transition-all disabled:opacity-50"
+                          className="rounded-full bg-[#EA5E86] px-5 py-2 text-xs font-medium text-white hover:bg-[#D94E76] transition-all disabled:opacity-50"
                         >
                           {actionLoading ? 'Disconnecting...' : 'Yes, Disconnect'}
                         </button>
                         <button
                           onClick={() => setConfirmLeaveDuo(false)}
-                          className="rounded-2xl border border-[#F4EBE6] bg-[#FFFFFF] px-3 py-2 text-xs text-[#6D5E56]"
+                          className="rounded-full border border-[#EFE8DC] bg-[#FFFFFF] px-4 py-2 text-xs text-[#6B5E4E]"
                         >
                           Cancel
                         </button>
@@ -515,18 +528,18 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
             <div className="space-y-6">
               <div className="space-y-4">
                 {/* Enter to Send Toggle */}
-                <div className="flex items-center justify-between rounded-3xl border-2 border-[#FCE1E8] bg-[#FFFDFC] p-4">
+                <div className="flex items-center justify-between rounded-3xl border border-[#EFE8DC] bg-[#FAF7F2] p-4">
                   <div>
-                    <h4 className="text-xs sm:text-sm font-bold text-[#2D2522]">Press Enter to Send 💕</h4>
-                    <p className="text-xs text-[#7A6D65]">
-                      When enabled, pressing <kbd className="font-mono bg-[#FFF0F3] px-1.5 py-0.5 rounded border border-[#FCE1E8] text-[10px] text-[#E11D48]">Enter</kbd> sends the note immediately.
+                    <h4 className="text-xs sm:text-sm font-medium text-[#422F0E]">Press Enter to Send</h4>
+                    <p className="text-xs text-[#6B5E4E]">
+                      When enabled, pressing <kbd className="font-mono bg-[#FFFFFF] px-1.5 py-0.5 rounded-full border border-[#EFE8DC] text-[10px]">Enter</kbd> sends immediately. Shift+Enter creates a new line.
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={() => handleTogglePreference('enter_to_send', !enterToSend)}
                     className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                      enterToSend ? 'bg-[#E11D48]' : 'bg-[#D1C2B8]'
+                      enterToSend ? 'bg-[#422F0E]' : 'bg-[#D4C3AD]'
                     }`}
                   >
                     <span
@@ -538,18 +551,18 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                 </div>
 
                 {/* Read Receipts Toggle */}
-                <div className="flex items-center justify-between rounded-3xl border-2 border-[#FCE1E8] bg-[#FFFDFC] p-4">
+                <div className="flex items-center justify-between rounded-3xl border border-[#EFE8DC] bg-[#FAF7F2] p-4">
                   <div>
-                    <h4 className="text-xs sm:text-sm font-bold text-[#2D2522]">Read Receipts 💕</h4>
-                    <p className="text-xs text-[#7A6D65]">
-                      Show sweet double checks when notes are read by your partner.
+                    <h4 className="text-xs sm:text-sm font-medium text-[#422F0E]">Read Receipts</h4>
+                    <p className="text-xs text-[#6B5E4E]">
+                      Show double-check icons when messages have been seen by your partner.
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={() => handleTogglePreference('read_receipts', !readReceipts)}
                     className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                      readReceipts ? 'bg-[#E11D48]' : 'bg-[#D1C2B8]'
+                      readReceipts ? 'bg-[#422F0E]' : 'bg-[#D4C3AD]'
                     }`}
                   >
                     <span
@@ -561,18 +574,18 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                 </div>
 
                 {/* Message Notifications Toggle */}
-                <div className="flex items-center justify-between rounded-3xl border-2 border-[#FCE1E8] bg-[#FFFDFC] p-4">
+                <div className="flex items-center justify-between rounded-3xl border border-[#EFE8DC] bg-[#FAF7F2] p-4">
                   <div>
-                    <h4 className="text-xs sm:text-sm font-bold text-[#2D2522]">In-App Popup Alerts 💌</h4>
-                    <p className="text-xs text-[#7A6D65]">
-                      Display sweet real-time toasts when new doodles and love notes arrive.
+                    <h4 className="text-xs sm:text-sm font-medium text-[#422F0E]">Message Notifications</h4>
+                    <p className="text-xs text-[#6B5E4E]">
+                      Display sweet Instagram-style popout alerts when new drawings and messages arrive.
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={() => handleTogglePreference('notifications_enabled', !notificationsEnabled)}
                     className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                      notificationsEnabled ? 'bg-[#E11D48]' : 'bg-[#D1C2B8]'
+                      notificationsEnabled ? 'bg-[#422F0E]' : 'bg-[#D4C3AD]'
                     }`}
                   >
                     <span
@@ -585,38 +598,38 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
               </div>
 
               {/* Clear Chat History */}
-              <div className="rounded-3xl border-2 border-[#FCE1E8] bg-[#FFFFFF] p-5 space-y-3">
+              <div className="rounded-3xl border border-[#EFE8DC] bg-[#FFFFFF] p-5 space-y-3">
                 <div className="flex items-center space-x-2">
-                  <Trash2 className="h-4 w-4 text-[#E11D48]" />
-                  <h4 className="text-xs sm:text-sm font-bold text-[#2D2522]">Clear Whisper Chat History</h4>
+                  <Trash2 className="h-4 w-4 text-[#EA5E86]" />
+                  <h4 className="text-xs sm:text-sm font-medium text-[#422F0E]">Clear Chat History</h4>
                 </div>
-                <p className="text-xs text-[#7A6D65] leading-relaxed">
-                  Permanently remove all messages exchanged in this DUO room.
+                <p className="text-xs text-[#6B5E4E] leading-relaxed">
+                  Permanently wipe all messages exchanged in this room.
                 </p>
 
                 {!confirmClearChat ? (
                   <button
                     onClick={() => setConfirmClearChat(true)}
-                    className="rounded-2xl border border-[#FCE1E8] bg-[#FFF5F7] px-4 py-2 text-xs font-bold text-[#E11D48] hover:bg-[#FFE4E8] transition-all"
+                    className="rounded-full border border-[#EFE8DC] bg-[#FAF7F2] px-5 py-2 text-xs font-medium text-[#EA5E86] hover:bg-[#FFF5F5] transition-all"
                   >
-                    Clear All Notes
+                    Clear All Messages
                   </button>
                 ) : (
-                  <div className="rounded-2xl border-2 border-[#FCE1E8] bg-[#FFF5F7] p-4 space-y-2.5">
-                    <p className="text-xs font-bold text-[#E11D48]">
-                      Are you sure? This will delete chat messages for both of you.
+                  <div className="rounded-2xl border border-[#FCC4C0] bg-[#FFF5F5] p-4 space-y-2.5">
+                    <p className="text-xs font-semibold text-[#EA5E86]">
+                      Are you sure? This will delete all chat history for both of you.
                     </p>
                     <div className="flex gap-2">
                       <button
                         onClick={handleClearChat}
                         disabled={actionLoading}
-                        className="rounded-2xl bg-[#E11D48] px-4 py-2 text-xs font-bold text-white hover:bg-[#BE123C] transition-all disabled:opacity-50"
+                        className="rounded-full bg-[#EA5E86] px-5 py-2 text-xs font-medium text-white hover:bg-[#D94E76] transition-all disabled:opacity-50"
                       >
                         {actionLoading ? 'Clearing...' : 'Yes, Delete Everything'}
                       </button>
                       <button
                         onClick={() => setConfirmClearChat(false)}
-                        className="rounded-2xl border border-[#F4EBE6] bg-[#FFFFFF] px-3 py-2 text-xs text-[#6D5E56]"
+                        className="rounded-full border border-[#EFE8DC] bg-[#FFFFFF] px-4 py-2 text-xs text-[#6B5E4E]"
                       >
                         Cancel
                       </button>
@@ -627,21 +640,21 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
             </div>
           )}
 
-          {/* SECTION 4: THEME */}
+          {/* SECTION 4: PERSONALIZATION & THEME */}
           {activeSection === 'theme' && (
             <div className="space-y-6">
               <div>
-                <h3 className="font-serif text-xl font-bold text-[#2D2522]">Theme & Appearance 💕</h3>
-                <p className="text-xs text-[#7A6D65] mt-1">
-                  Choose how DUO looks on your device.
+                <h3 className="font-serif text-lg font-medium text-[#422F0E]">Theme & Appearance</h3>
+                <p className="text-xs text-[#6B5E4E] mt-1">
+                  Choose how your shared space looks.
                 </p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {[
-                  { id: 'light', label: 'Sweet Cream', desc: 'Warm ivory & strawberry blush', icon: Sun },
-                  { id: 'dark', label: 'Nocturnal Love', desc: 'Muted slate & cozy warmth', icon: Moon },
-                  { id: 'system', label: 'Device Default', desc: 'Syncs with your phone/laptop', icon: Laptop },
+                  { id: 'light', label: 'Warm Cream', desc: 'Cozy paper, soft blush & pastel ink', icon: Sun },
+                  { id: 'dark', label: 'Night Owl', desc: 'Muted nocturnal warmth & soft glow', icon: Moon },
+                  { id: 'system', label: 'System Default', desc: 'Syncs with device appearance', icon: Laptop },
                 ].map((item) => {
                   const Icon = item.icon;
                   const isSelected = theme === item.id;
@@ -649,18 +662,18 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                     <button
                       key={item.id}
                       onClick={() => handleSelectTheme(item.id as any)}
-                      className={`flex flex-col items-start p-4 rounded-3xl border-2 text-left transition-all ${
+                      className={`flex flex-col items-start p-4 rounded-3xl border text-left transition-all ${
                         isSelected
-                          ? 'border-[#FF758C] bg-[#FFF0F3] shadow-xs scale-105'
-                          : 'border-[#F4EBE6] bg-[#FFFFFF] hover:bg-[#FFF5F7]'
+                          ? 'border-[#422F0E] bg-[#FFF8FA] ring-2 ring-[#FCC4C0] shadow-sm'
+                          : 'border-[#EFE8DC] bg-[#FFFFFF] hover:bg-[#FAF7F2]'
                       }`}
                     >
                       <div className="flex items-center justify-between w-full mb-3">
-                        <Icon className={`h-5 w-5 ${isSelected ? 'text-[#E11D48]' : 'text-[#B2A49B]'}`} />
-                        {isSelected && <Check className="h-4 w-4 text-[#15803D]" />}
+                        <Icon className={`h-5 w-5 ${isSelected ? 'text-[#EA5E86]' : 'text-[#A89F91]'}`} />
+                        {isSelected && <Check className="h-4 w-4 text-[#037F71]" />}
                       </div>
-                      <span className="text-xs sm:text-sm font-bold text-[#2D2522]">{item.label}</span>
-                      <span className="text-[11px] text-[#7A6D65] mt-1 leading-snug">{item.desc}</span>
+                      <span className="text-xs sm:text-sm font-semibold text-[#422F0E]">{item.label}</span>
+                      <span className="text-[11px] text-[#6B5E4E] mt-1 leading-snug">{item.desc}</span>
                     </button>
                   );
                 })}
@@ -668,34 +681,34 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
             </div>
           )}
 
-          {/* SECTION 5: SECURITY */}
+          {/* SECTION 5: SECURITY & PRIVACY */}
           {activeSection === 'security' && (
             <div className="space-y-6">
               {/* Account Status Card */}
-              <div className="rounded-3xl border-2 border-[#FCE1E8] bg-[#FFF5F7] p-5 space-y-3">
-                <span className="text-[10px] font-mono uppercase tracking-widest text-[#B2A49B] font-bold">Authentication</span>
+              <div className="rounded-3xl border border-[#EFE8DC] bg-[#FAF7F2] p-5 space-y-3">
+                <span className="text-[10px] font-mono uppercase tracking-widest text-[#A89F91]">Authentication</span>
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-xs font-bold text-[#2D2522]">{profile?.email}</span>
-                    <p className="text-[11px] text-[#7A6D65] mt-0.5">Encrypted with Supabase Auth</p>
+                    <span className="text-xs font-medium text-[#422F0E]">{profile?.email}</span>
+                    <p className="text-[11px] text-[#6B5E4E] mt-0.5">Encrypted with Supabase Auth</p>
                   </div>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-[#DCFCE7] border border-[#BBF7D0] px-3 py-0.5 text-[10px] font-mono text-[#15803D] font-bold">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-[#DDF2B8] px-3 py-0.5 text-[10px] font-mono text-[#037F71]">
                     <Check className="h-3 w-3" /> Active
                   </span>
                 </div>
               </div>
 
               {/* Change Password Form */}
-              <form onSubmit={handleChangePassword} className="rounded-3xl border-2 border-[#FCE1E8] bg-[#FFFFFF] p-5 space-y-4 shadow-xs">
+              <form onSubmit={handleChangePassword} className="rounded-3xl border border-[#EFE8DC] bg-[#FFFFFF] p-5 space-y-4 shadow-sm">
                 <div className="flex items-center space-x-2">
-                  <Lock className="h-4 w-4 text-[#E11D48]" />
-                  <h4 className="text-xs sm:text-sm font-bold text-[#2D2522]">Change Password</h4>
+                  <Lock className="h-4 w-4 text-[#EA5E86]" />
+                  <h4 className="text-xs sm:text-sm font-medium text-[#422F0E]">Change Password</h4>
                 </div>
 
                 {passwordStatus && (
                   <div
-                    className={`rounded-2xl p-3 text-xs font-bold ${
-                      passwordStatus.type === 'success' ? 'bg-[#DCFCE7] text-[#15803D] border border-[#BBF7D0]' : 'bg-[#FFF0F3] text-[#E11D48] border border-[#FCE1E8]'
+                    className={`rounded-2xl p-3 text-xs ${
+                      passwordStatus.type === 'success' ? 'bg-[#F5FBEF] text-[#037F71] border border-[#DDF2B8]' : 'bg-[#FFF5F5] text-[#EA5E86] border border-[#FCC4C0]'
                     }`}
                   >
                     {passwordStatus.msg}
@@ -704,25 +717,25 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[11px] font-bold text-[#6D5E56] mb-1">New Password</label>
+                    <label className="block text-[11px] font-medium text-[#6B5E4E] mb-1">New Password</label>
                     <input
                       type="password"
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       placeholder="••••••••"
                       minLength={6}
-                      className="w-full rounded-2xl border-2 border-[#FCE1E8] bg-[#FFFDFC] px-3.5 py-2 text-xs text-[#2D2522] focus:border-[#FF758C] focus:outline-none"
+                      className="w-full rounded-full border border-[#EFE8DC] bg-[#FAF7F2] px-4 py-2 text-xs text-[#422F0E] focus:border-[#EA5E86] focus:outline-none focus:ring-2 focus:ring-[#FCC4C0]/40"
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold text-[#6D5E56] mb-1">Confirm Password</label>
+                    <label className="block text-[11px] font-medium text-[#6B5E4E] mb-1">Confirm Password</label>
                     <input
                       type="password"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="••••••••"
                       minLength={6}
-                      className="w-full rounded-2xl border-2 border-[#FCE1E8] bg-[#FFFDFC] px-3.5 py-2 text-xs text-[#2D2522] focus:border-[#FF758C] focus:outline-none"
+                      className="w-full rounded-full border border-[#EFE8DC] bg-[#FAF7F2] px-4 py-2 text-xs text-[#422F0E] focus:border-[#EA5E86] focus:outline-none focus:ring-2 focus:ring-[#FCC4C0]/40"
                     />
                   </div>
                 </div>
@@ -731,35 +744,35 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                   <button
                     type="submit"
                     disabled={passwordLoading || !newPassword || !confirmPassword}
-                    className="rounded-2xl bg-gradient-to-r from-[#FF758C] to-[#FF7EB3] px-5 py-2 text-xs font-bold text-white hover:scale-102 disabled:opacity-40 transition-all shadow-xs"
+                    className="rounded-full bg-[#422F0E] px-5 py-2 text-xs font-medium text-[#FAF7F2] hover:bg-[#EA5E86] disabled:opacity-40 transition-all"
                   >
-                    {passwordLoading ? 'Updating...' : 'Update Password 💕'}
+                    {passwordLoading ? 'Updating...' : 'Update Password'}
                   </button>
                 </div>
               </form>
 
-              {/* Danger Zone */}
-              <div className="rounded-3xl border-2 border-[#FCE1E8] bg-[#FFF5F7] p-5 space-y-3">
+              {/* Danger Zone: Delete Account */}
+              <div className="rounded-3xl border border-[#FCC4C0] bg-[#FFF5F5] p-5 space-y-3">
                 <div className="flex items-center space-x-2">
-                  <AlertTriangle className="h-4 w-4 text-[#E11D48]" />
-                  <h4 className="text-xs sm:text-sm font-bold text-[#E11D48] uppercase tracking-wider font-mono">
+                  <AlertTriangle className="h-4 w-4 text-[#EA5E86]" />
+                  <h4 className="text-xs sm:text-sm font-semibold text-[#EA5E86] uppercase tracking-wider font-mono">
                     Danger Zone &mdash; Delete Account
                   </h4>
                 </div>
-                <p className="text-xs text-[#7A6D65] leading-relaxed">
-                  Permanently delete your DUO account, disconnect from your room, and erase all profile records.
+                <p className="text-xs text-[#6B5E4E] leading-relaxed">
+                  Permanently delete your DUO account, disconnect from your room, and erase your profile records.
                 </p>
 
                 {!confirmDeleteAccount ? (
                   <button
                     onClick={() => setConfirmDeleteAccount(true)}
-                    className="rounded-2xl bg-[#E11D48] px-4 py-2 text-xs font-bold text-white hover:bg-[#BE123C] transition-all shadow-xs"
+                    className="rounded-full bg-[#EA5E86] px-5 py-2 text-xs font-medium text-white hover:bg-[#D94E76] transition-all"
                   >
                     Delete Account
                   </button>
                 ) : (
-                  <div className="rounded-2xl border-2 border-[#FCE1E8] bg-[#FFFFFF] p-4 space-y-3 shadow-xs">
-                    <p className="text-xs font-bold text-[#E11D48]">
+                  <div className="rounded-2xl border border-[#FCC4C0] bg-[#FFFFFF] p-4 space-y-3">
+                    <p className="text-xs font-semibold text-[#EA5E86]">
                       Type <strong>DELETE</strong> to confirm permanent account deletion:
                     </p>
                     <input
@@ -767,13 +780,13 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                       value={deleteConfirmText}
                       onChange={(e) => setDeleteConfirmText(e.target.value)}
                       placeholder="Type DELETE"
-                      className="w-full rounded-xl border-2 border-[#FCE1E8] px-3.5 py-2 text-xs font-mono text-[#E11D48] focus:outline-none"
+                      className="w-full rounded-full border border-[#FCC4C0] px-4 py-2 text-xs font-mono text-[#EA5E86] focus:outline-none focus:ring-2 focus:ring-[#EA5E86]/40"
                     />
                     <div className="flex gap-2">
                       <button
                         onClick={handleDeleteAccount}
                         disabled={deleteConfirmText !== 'DELETE' || actionLoading}
-                        className="rounded-xl bg-[#E11D48] px-4 py-2 text-xs font-bold text-white hover:bg-[#BE123C] disabled:opacity-40 transition-all"
+                        className="rounded-full bg-[#EA5E86] px-5 py-2 text-xs font-medium text-white hover:bg-[#D94E76] disabled:opacity-40 transition-all"
                       >
                         {actionLoading ? 'Deleting...' : 'Permanently Delete Account'}
                       </button>
@@ -782,7 +795,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                           setConfirmDeleteAccount(false);
                           setDeleteConfirmText('');
                         }}
-                        className="rounded-xl border border-[#F4EBE6] px-3 py-2 text-xs text-[#6D5E56]"
+                        className="rounded-full border border-[#EFE8DC] px-4 py-2 text-xs text-[#6B5E4E]"
                       >
                         Cancel
                       </button>

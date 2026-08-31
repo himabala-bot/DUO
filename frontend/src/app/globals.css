@@ -4,36 +4,50 @@
   --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-serif: 'Newsreader', Georgia, Cambria, 'Times New Roman', serif;
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* DUO Couple Palette */
+  --duo-pink-light: #F9D4F8;
+  --duo-pink-soft: #FCC4C0;
+  --duo-pink-vibrant: #EA5E86;
+  --duo-coral: #EF6545;
+  --duo-orange: #F49625;
+  --duo-peach: #FFD094;
+  --duo-butter: #F7E9B2;
+  --duo-matcha: #DDF2B8;
+  --duo-sage: #AECFD0;
+  --duo-teal: #57B1A8;
+  --duo-deep-teal: #037F71;
+  --duo-espresso: #422F0E;
 }
 
 @layer base {
   body {
-    background-color: #FFFDF9;
-    color: #2D2522;
+    background-color: #FAF7F2;
+    color: #422F0E;
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
   ::selection {
-    background-color: #FED7E2;
-    color: #E11D48;
+    background-color: #FCC4C0;
+    color: #422F0E;
   }
 
-  /* Cute rounded bubble scrollbar */
+  /* Cute, smooth pill scrollbar */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
   }
   ::-webkit-scrollbar-track {
-    background: transparent;
+    background: #F5EFE6;
   }
   ::-webkit-scrollbar-thumb {
-    background: #F2D5CB;
+    background: #E5DAC9;
     border-radius: 9999px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #E8B4A6;
+    background: #D4C3AD;
   }
 }
 
@@ -49,82 +63,15 @@
   font-family: var(--font-mono);
 }
 
-/* 🌸 Cute Washi Tape Decorator */
-.washi-tape-pink {
-  background: linear-gradient(135deg, rgba(254, 215, 226, 0.85), rgba(251, 207, 232, 0.7));
-  border-left: 2px dashed rgba(244, 114, 182, 0.4);
-  border-right: 2px dashed rgba(244, 114, 182, 0.4);
-  box-shadow: 0 1px 3px rgba(244, 114, 182, 0.15);
+/* Warm cozy subtle paper card */
+.bg-duo-cream {
+  background-color: #FAF7F2;
 }
 
-.washi-tape-yellow {
-  background: linear-gradient(135deg, rgba(254, 240, 138, 0.85), rgba(253, 230, 138, 0.7));
-  border-left: 2px dashed rgba(234, 179, 8, 0.4);
-  border-right: 2px dashed rgba(234, 179, 8, 0.4);
-  box-shadow: 0 1px 3px rgba(234, 179, 8, 0.15);
+.bg-duo-card {
+  background-color: #FFFFFF;
 }
 
-.washi-tape-mint {
-  background: linear-gradient(135deg, rgba(209, 250, 229, 0.85), rgba(167, 243, 208, 0.7));
-  border-left: 2px dashed rgba(16, 185, 129, 0.4);
-  border-right: 2px dashed rgba(16, 185, 129, 0.4);
-  box-shadow: 0 1px 3px rgba(16, 185, 129, 0.15);
-}
-
-.washi-tape-peach {
-  background: linear-gradient(135deg, rgba(255, 228, 214, 0.9), rgba(254, 215, 195, 0.75));
-  border-left: 2px dashed rgba(251, 146, 60, 0.4);
-  border-right: 2px dashed rgba(251, 146, 60, 0.4);
-  box-shadow: 0 1px 3px rgba(251, 146, 60, 0.15);
-}
-
-/* 🧸 Cute Marshmallow Bubble & Paper Cards */
-.card-marshmallow {
-  background: #FFFFFF;
-  border: 1.5px solid #F6E6DF;
-  box-shadow: 0 4px 20px rgba(225, 112, 85, 0.05), 0 1px 4px rgba(0, 0, 0, 0.02);
-  border-radius: 24px;
-}
-
-.card-strawberry {
-  background: linear-gradient(180deg, #FFF5F7 0%, #FFFFFF 100%);
-  border: 1.5px solid #FCE1E8;
-  box-shadow: 0 4px 16px rgba(244, 114, 182, 0.06);
-}
-
-.card-peach {
-  background: linear-gradient(180deg, #FFF7F2 0%, #FFFFFF 100%);
-  border: 1.5px solid #FDE4D8;
-  box-shadow: 0 4px 16px rgba(251, 146, 60, 0.06);
-}
-
-.card-matcha {
-  background: linear-gradient(180deg, #F5FAF4 0%, #FFFFFF 100%);
-  border: 1.5px solid #DFEDE0;
-  box-shadow: 0 4px 16px rgba(74, 150, 90, 0.05);
-}
-
-.card-honey {
-  background: linear-gradient(180deg, #FFFCF2 0%, #FFFFFF 100%);
-  border: 1.5px solid #FBECC8;
-  box-shadow: 0 4px 16px rgba(234, 179, 8, 0.05);
-}
-
-.card-lavender {
-  background: linear-gradient(180deg, #F8F5FD 0%, #FFFFFF 100%);
-  border: 1.5px solid #E8DFFA;
-  box-shadow: 0 4px 16px rgba(168, 85, 247, 0.05);
-}
-
-/* Cute heartbeat animation */
-@keyframes heartPulse {
-  0% { transform: scale(1); }
-  15% { transform: scale(1.18); }
-  30% { transform: scale(1); }
-  45% { transform: scale(1.15); }
-  60% { transform: scale(1); }
-}
-
-.animate-heart-pulse {
-  animation: heartPulse 1.8s infinite ease-in-out;
+.border-duo {
+  border-color: #EFE8DC;
 }

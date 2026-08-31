@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { KeyRound, PenTool, BookOpen, ArrowRight, ShieldCheck, Mail, User as UserIcon, Lock, Sparkles, Heart } from 'lucide-react';
+import { KeyRound, PenTool, BookOpen, ArrowRight, ShieldCheck, Mail, User as UserIcon, Lock, Heart, Sparkles } from 'lucide-react';
 
 export const AuthView: React.FC = () => {
   const { loginWithEmail, registerWithEmail, loginWithGoogle } = useAuth();
@@ -46,84 +46,89 @@ export const AuthView: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FFFDF9] text-[#2D2522] flex flex-col justify-between selection:bg-[#FED7E2] selection:text-[#E11D48]">
+    <div className="min-h-screen bg-[#FAF7F2] text-[#422F0E] flex flex-col justify-between selection:bg-[#FCC4C0] selection:text-[#422F0E]">
       {/* Top Bar */}
-      <header className="border-b border-[#F4EBE6] bg-[#FFFDFC]/95 backdrop-blur-md sticky top-0 z-30">
+      <header className="border-b border-[#EFE8DC] bg-[#FAF7F2]/95 backdrop-blur-md sticky top-0 z-30">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6 sm:px-8 lg:px-10">
           <div className="flex items-center space-x-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#FF758C] to-[#FF7EB3] text-white shadow-xs">
-              <Heart className="h-4.5 w-4.5 fill-white" />
-            </div>
-            <span className="font-serif text-2xl font-bold tracking-tight text-[#2D2522]">Duo</span>
-            <span className="text-[10px] font-mono uppercase tracking-widest text-[#B2A49B]">/ our little world 💕</span>
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#FCC4C0] text-[#EA5E86]">
+              <Heart className="h-3.5 w-3.5 fill-current" />
+            </span>
+            <span className="font-serif text-2xl sm:text-3xl font-normal tracking-tight text-[#422F0E]">Duo</span>
           </div>
           <a
             href="#auth-section"
-            className="text-xs sm:text-sm font-bold text-[#E11D48] hover:underline transition-colors"
+            className="rounded-full bg-[#422F0E] px-5 py-2 text-xs font-medium text-[#FAF7F2] hover:bg-[#EA5E86] transition-all shadow-sm"
           >
-            Enter Room &rarr;
+            Sign in &rarr;
           </a>
         </div>
       </header>
 
       {/* Main Landing Page Content */}
       <main className="flex-1">
-        {/* Hero Section */}
+        {/* Hero Narrative Section */}
         <section className="mx-auto max-w-5xl px-6 sm:px-8 lg:px-10 pt-16 pb-12 sm:pt-24 sm:pb-16 text-center sm:text-left">
-          <div className="inline-flex items-center space-x-2 rounded-full border border-[#FCE1E8] bg-[#FFF0F3] px-4 py-1.5 text-xs font-bold text-[#E11D48] mb-6 shadow-2xs">
-            <Heart className="h-3.5 w-3.5 fill-[#E11D48] animate-heart-pulse" />
-            <span>A cozy private digital world for only two 💕</span>
+          <div className="inline-flex items-center space-x-2 rounded-full border border-[#FCC4C0] bg-[#FFF5F5] px-4 py-1.5 text-xs font-medium text-[#EA5E86] mb-6 shadow-sm">
+            <Heart className="h-3.5 w-3.5 fill-current" />
+            <span>A little sanctuary made for two</span>
           </div>
 
-          <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-[#2D2522] leading-[1.12]">
-            A private, cute space made for <span className="italic font-serif text-[#E11D48]">just the two of you</span>.
+          <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-normal tracking-tight text-[#422F0E] leading-[1.14]">
+            A private, cozy space on the internet for <span className="italic font-serif text-[#EA5E86]">you two</span>.
           </h1>
 
-          <p className="mt-6 max-w-3xl text-base sm:text-lg md:text-xl text-[#6D5E56] leading-relaxed font-sans font-light">
-            No public feeds, no followers, no outside noise. Duo is a charming, tactile space to whisper real-time notes, share cute doodles, and reveal sealed daily reflections together.
+          <p className="mt-6 max-w-3xl text-base sm:text-lg md:text-xl text-[#6B5E4E] leading-relaxed font-sans font-light">
+            No public feeds, no followers, no noise. Duo is your secret garden where you share daily love prompts, playful drawings, and real-time thoughts.
           </p>
         </section>
 
-        {/* 3 Pillars */}
+        {/* 3 Pillars: How it works */}
         <section className="mx-auto max-w-5xl px-6 sm:px-8 lg:px-10 py-8 sm:py-12">
-          <div className="border-t border-[#F4EBE6] pt-12">
-            <h2 className="text-[10px] font-mono uppercase tracking-widest text-[#B2A49B] font-bold mb-8">
-              Why Couples Love Duo 💕
+          <div className="border-t border-[#EFE8DC] pt-12">
+            <h2 className="text-[10px] font-mono uppercase tracking-widest text-[#A89F91] mb-8">
+              How our space works
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
-              {/* Feature 1: Pink */}
-              <div className="rounded-3xl border-2 border-[#FCE1E8] bg-gradient-to-b from-[#FFF5F7] to-[#FFFFFF] p-6 sm:p-7 shadow-xs flex flex-col justify-between">
+              {/* Feature 1 */}
+              <div className="rounded-3xl border border-[#EFE8DC] bg-[#FFFFFF] p-6 sm:p-7 shadow-[0_2px_12px_rgba(66,47,14,0.03)] flex flex-col justify-between">
                 <div>
-                  <span className="text-3xl block mb-3">🗝️</span>
-                  <span className="text-[10px] font-mono uppercase tracking-wider text-[#E11D48] font-bold">01 / Connection Key</span>
-                  <h3 className="mt-2 text-lg font-serif font-bold text-[#2D2522]">Private Room Key</h3>
-                  <p className="mt-2 text-xs sm:text-sm text-[#6D5E56] leading-relaxed">
-                    Generate your unique 6-character room key and share it with your partner. Once connected, your little world is sealed forever.
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#AECFD0]/30 text-[#037F71] mb-5">
+                    <KeyRound className="h-5 w-5" />
+                  </div>
+                  <span className="text-xs font-mono text-[#A89F91]">01 / Secret Key</span>
+                  <h3 className="mt-2 text-lg font-serif font-medium text-[#422F0E]">Private Pairing</h3>
+                  <p className="mt-2 text-xs sm:text-sm text-[#6B5E4E] leading-relaxed">
+                    Generate your unique DUO secret code and share it with your partner. Once connected, your room is sealed forever.
                   </p>
                 </div>
               </div>
 
-              {/* Feature 2: Mint */}
-              <div className="rounded-3xl border-2 border-[#BBF7D0] bg-gradient-to-b from-[#F0FDF4] to-[#FFFFFF] p-6 sm:p-7 shadow-xs flex flex-col justify-between">
+              {/* Feature 2 */}
+              <div className="rounded-3xl border border-[#EFE8DC] bg-[#FFFFFF] p-6 sm:p-7 shadow-[0_2px_12px_rgba(66,47,14,0.03)] flex flex-col justify-between">
                 <div>
-                  <span className="text-3xl block mb-3">🎨</span>
-                  <span className="text-[10px] font-mono uppercase tracking-wider text-[#15803D] font-bold">02 / Doodle Studio</span>
-                  <h3 className="mt-2 text-lg font-serif font-bold text-[#2D2522]">Notes & Doodle Studio</h3>
-                  <p className="mt-2 text-xs sm:text-sm text-[#6D5E56] leading-relaxed">
-                    Instant whisper chat stream and a cute candy-color doodle pad to draw little sketches, heart doodles, and letters.
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#DDF2B8]/50 text-[#037F71] mb-5">
+                    <PenTool className="h-5 w-5" />
+                  </div>
+                  <span className="text-xs font-mono text-[#A89F91]">02 / Live Doodles</span>
+                  <h3 className="mt-2 text-lg font-serif font-medium text-[#422F0E]">Notes & Drawing Studio</h3>
+                  <p className="mt-2 text-xs sm:text-sm text-[#6B5E4E] leading-relaxed">
+                    Instant messaging with real-time ink canvas to leave sweet sketches, doodle reactions, and heartfelt love letters.
                   </p>
                 </div>
               </div>
 
-              {/* Feature 3: Honey */}
-              <div className="rounded-3xl border-2 border-[#FEF08A] bg-gradient-to-b from-[#FEFCE8] to-[#FFFFFF] p-6 sm:p-7 shadow-xs flex flex-col justify-between">
+              {/* Feature 3 */}
+              <div className="rounded-3xl border border-[#EFE8DC] bg-[#FFFFFF] p-6 sm:p-7 shadow-[0_2px_12px_rgba(66,47,14,0.03)] flex flex-col justify-between">
                 <div>
-                  <span className="text-3xl block mb-3">🌸</span>
-                  <span className="text-[10px] font-mono uppercase tracking-wider text-[#A16207] font-bold">03 / Daily Love Notes</span>
-                  <h3 className="mt-2 text-lg font-serif font-bold text-[#2D2522]">Sealed Questions</h3>
-                  <p className="mt-2 text-xs sm:text-sm text-[#6D5E56] leading-relaxed">
-                    Sweet daily prompts to reflect and smile. Answers remain sealed in private drafts until both of you choose to share!
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#FCC4C0]/40 text-[#EA5E86] mb-5">
+                    <BookOpen className="h-5 w-5" />
+                  </div>
+                  <span className="text-xs font-mono text-[#A89F91]">03 / Love Prompts</span>
+                  <h3 className="mt-2 text-lg font-serif font-medium text-[#422F0E]">Daily Questions</h3>
+                  <p className="mt-2 text-xs sm:text-sm text-[#6B5E4E] leading-relaxed">
+                    Thoughtful prompts every day. Answers remain sealed in private drafts until both of you reveal, creating a lifelong scrapbook.
                   </p>
                 </div>
               </div>
@@ -131,16 +136,18 @@ export const AuthView: React.FC = () => {
           </div>
         </section>
 
-        {/* Auth Section */}
+        {/* Auth Entry Form Section */}
         <section id="auth-section" className="mx-auto max-w-md px-6 py-16 sm:py-24">
-          <div className="rounded-3xl border-2 border-[#FCE1E8] bg-[#FFFFFF] p-8 sm:p-10 shadow-[0_16px_48px_rgba(244,114,182,0.12)]">
+          <div className="rounded-3xl border border-[#EFE8DC] bg-[#FFFFFF] p-8 sm:p-10 shadow-[0_12px_36px_rgba(66,47,14,0.06)]">
             <div className="text-center mb-6">
-              <span className="text-3xl block mb-1">💖</span>
-              <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#2D2522]">
-                {isLogin ? 'Welcome Back 💕' : 'Create Your Space 💌'}
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#FCC4C0]/40 text-[#EA5E86] mx-auto mb-3">
+                <Heart className="h-5 w-5 fill-current" />
+              </div>
+              <h2 className="font-serif text-2xl sm:text-3xl font-normal text-[#422F0E]">
+                {isLogin ? 'Welcome back, love' : 'Start your shared room'}
               </h2>
-              <p className="mt-1.5 text-xs sm:text-sm text-[#7A6D65]">
-                {isLogin ? 'Enter your shared world with your favorite person' : 'Begin your private space together'}
+              <p className="mt-1.5 text-xs sm:text-sm text-[#6B5E4E]">
+                {isLogin ? 'Enter your private space' : 'Begin your intimate memories together'}
               </p>
             </div>
 
@@ -148,7 +155,7 @@ export const AuthView: React.FC = () => {
             <button
               onClick={handleGoogleAuth}
               type="button"
-              className="flex w-full items-center justify-center space-x-3 rounded-2xl border-2 border-[#FCE1E8] bg-[#FFFDFC] px-4 py-3 text-xs sm:text-sm font-bold text-[#2D2522] transition-all hover:bg-[#FFF0F3] hover:border-[#FF758C] shadow-2xs"
+              className="flex w-full items-center justify-center space-x-3 rounded-full border border-[#EFE8DC] bg-[#FAF7F2] px-5 py-3 text-xs sm:text-sm font-medium text-[#422F0E] transition-all hover:bg-[#F2ECE1] hover:border-[#FCC4C0] shadow-sm"
             >
               <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24">
                 <path
@@ -172,24 +179,24 @@ export const AuthView: React.FC = () => {
             </button>
 
             <div className="relative my-6 flex items-center justify-center">
-              <div className="w-full border-t border-[#F4EBE6]" />
-              <span className="absolute bg-[#FFFFFF] px-3 text-[10px] font-mono uppercase tracking-wider text-[#B2A49B] font-bold">
+              <div className="w-full border-t border-[#EFE8DC]" />
+              <span className="absolute bg-[#FFFFFF] px-3 text-[10px] font-mono uppercase tracking-wider text-[#A89F91]">
                 or with email
               </span>
             </div>
 
             {/* Toggle Sign In / Create Account */}
-            <div className="flex rounded-2xl border border-[#FCE1E8] bg-[#FFF5F7] p-1 mb-5">
+            <div className="flex rounded-full border border-[#EFE8DC] bg-[#FAF7F2] p-1 mb-5">
               <button
                 onClick={() => {
                   setIsLogin(true);
                   setErrorMsg(null);
                 }}
                 type="button"
-                className={`w-1/2 rounded-xl py-2 text-xs sm:text-sm font-bold transition-all ${
+                className={`w-1/2 rounded-full py-2 text-xs sm:text-sm font-medium transition-all ${
                   isLogin
-                    ? 'bg-[#FFFFFF] text-[#E11D48] shadow-xs'
-                    : 'text-[#7A6D65] hover:text-[#2D2522]'
+                    ? 'bg-[#422F0E] text-[#FAF7F2] shadow-sm font-semibold'
+                    : 'text-[#6B5E4E] hover:text-[#422F0E]'
                 }`}
               >
                 Sign In
@@ -200,25 +207,25 @@ export const AuthView: React.FC = () => {
                   setErrorMsg(null);
                 }}
                 type="button"
-                className={`w-1/2 rounded-xl py-2 text-xs sm:text-sm font-bold transition-all ${
+                className={`w-1/2 rounded-full py-2 text-xs sm:text-sm font-medium transition-all ${
                   !isLogin
-                    ? 'bg-[#FFFFFF] text-[#E11D48] shadow-xs'
-                    : 'text-[#7A6D65] hover:text-[#2D2522]'
+                    ? 'bg-[#422F0E] text-[#FAF7F2] shadow-sm font-semibold'
+                    : 'text-[#6B5E4E] hover:text-[#422F0E]'
                 }`}
               >
-                Create Account
+                Create Room
               </button>
             </div>
 
             {errorMsg && (
-              <div className="mb-4 rounded-2xl border border-[#FCE1E8] bg-[#FFF0F3] p-3.5 text-xs text-[#E11D48] font-medium">
+              <div className="mb-4 rounded-2xl border border-[#FCC4C0] bg-[#FFF5F5] p-3.5 text-xs text-[#EA5E86]">
                 {errorMsg}
               </div>
             )}
 
             {isSuccessRegistration && (
-              <div className="mb-4 rounded-2xl border border-[#BBF7D0] bg-[#DCFCE7] p-3.5 text-xs text-[#15803D] font-medium">
-                Account created! Logging in with love... 💕
+              <div className="mb-4 rounded-2xl border border-[#DDF2B8] bg-[#F5FBEF] p-3.5 text-xs text-[#037F71]">
+                Account created! If email confirmation is enabled on your Supabase project, check your inbox 💕
               </div>
             )}
 
@@ -226,65 +233,50 @@ export const AuthView: React.FC = () => {
             <form onSubmit={handleSubmit} className="space-y-4">
               {!isLogin && (
                 <div>
-                  <label className="block text-[11px] font-bold text-[#6D5E56] mb-1.5">
-                    Your Name
-                  </label>
-                  <div className="relative">
-                    <UserIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#B2A49B]" />
-                    <input
-                      type="text"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder="e.g. Alex"
-                      className="w-full rounded-2xl border-2 border-[#FCE1E8] bg-[#FFFDFC] pl-10 pr-4 py-3 text-xs sm:text-sm text-[#2D2522] placeholder-[#B2A49B] focus:border-[#FF758C] focus:bg-[#FFFFFF] focus:outline-none focus:ring-2 focus:ring-[#FF758C]/20"
-                      required
-                    />
-                  </div>
+                  <label className="block text-xs font-medium text-[#6B5E4E] mb-1">Your Name</label>
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="e.g. Alex"
+                    className="w-full rounded-full border border-[#EFE8DC] bg-[#FAF7F2] px-5 py-2.5 text-xs sm:text-sm text-[#422F0E] placeholder-[#A89F91] focus:border-[#EA5E86] focus:bg-[#FFFFFF] focus:outline-none focus:ring-2 focus:ring-[#FCC4C0]/40"
+                    required
+                  />
                 </div>
               )}
 
               <div>
-                <label className="block text-[11px] font-bold text-[#6D5E56] mb-1.5">
-                  Email Address
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#B2A49B]" />
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com"
-                    className="w-full rounded-2xl border-2 border-[#FCE1E8] bg-[#FFFDFC] pl-10 pr-4 py-3 text-xs sm:text-sm text-[#2D2522] placeholder-[#B2A49B] focus:border-[#FF758C] focus:bg-[#FFFFFF] focus:outline-none focus:ring-2 focus:ring-[#FF758C]/20"
-                    required
-                  />
-                </div>
+                <label className="block text-xs font-medium text-[#6B5E4E] mb-1">Email Address</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@domain.com"
+                  className="w-full rounded-full border border-[#EFE8DC] bg-[#FAF7F2] px-5 py-2.5 text-xs sm:text-sm text-[#422F0E] placeholder-[#A89F91] focus:border-[#EA5E86] focus:bg-[#FFFFFF] focus:outline-none focus:ring-2 focus:ring-[#FCC4C0]/40"
+                  required
+                />
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-[#6D5E56] mb-1.5">
-                  Password
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#B2A49B]" />
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    minLength={6}
-                    className="w-full rounded-2xl border-2 border-[#FCE1E8] bg-[#FFFDFC] pl-10 pr-4 py-3 text-xs sm:text-sm text-[#2D2522] placeholder-[#B2A49B] focus:border-[#FF758C] focus:bg-[#FFFFFF] focus:outline-none focus:ring-2 focus:ring-[#FF758C]/20"
-                    required
-                  />
-                </div>
+                <label className="block text-xs font-medium text-[#6B5E4E] mb-1">Password</label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  minLength={6}
+                  className="w-full rounded-full border border-[#EFE8DC] bg-[#FAF7F2] px-5 py-2.5 text-xs sm:text-sm text-[#422F0E] placeholder-[#A89F91] focus:border-[#EA5E86] focus:bg-[#FFFFFF] focus:outline-none focus:ring-2 focus:ring-[#FCC4C0]/40"
+                  required
+                />
               </div>
 
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full flex items-center justify-center space-x-2 rounded-2xl bg-gradient-to-r from-[#FF758C] to-[#FF7EB3] py-3.5 text-xs sm:text-sm font-bold text-white hover:scale-102 hover:shadow-[0_4px_16px_rgba(255,117,140,0.35)] transition-all disabled:opacity-50 min-h-[48px] shadow-sm"
+                className="mt-2 flex w-full items-center justify-center space-x-2 rounded-full bg-[#422F0E] py-3 text-xs sm:text-sm font-medium text-[#FAF7F2] transition-all hover:bg-[#EA5E86] disabled:opacity-40 shadow-sm"
               >
-                <span>{isLoading ? 'Connecting...' : isLogin ? 'Enter Our Room 💕' : 'Create Our World 💕'}</span>
-                <ArrowRight className="h-4 w-4" />
+                <span>{isLoading ? 'Opening space...' : isLogin ? 'Enter Room' : 'Create Room 💕'}</span>
+                <ArrowRight className="h-4 w-4 text-[#FCC4C0]" />
               </button>
             </form>
           </div>
@@ -292,8 +284,8 @@ export const AuthView: React.FC = () => {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-[#F4EBE6] py-8 text-center text-xs font-mono text-[#B2A49B]">
-        <p>DUO &mdash; A cozy digital world made for two 💕</p>
+      <footer className="border-t border-[#EFE8DC] py-8 text-center text-xs font-mono text-[#A89F91]">
+        DUO &mdash; crafted for love & quiet intimacy
       </footer>
     </div>
   );
