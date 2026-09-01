@@ -28,11 +28,11 @@ interface AvatarProps {
 }
 
 const SIZE_MAP = {
-  xs: 'w-7 h-7 min-w-[1.75rem] min-h-[1.75rem]',
-  sm: 'w-9 h-9 min-w-[2.25rem] min-h-[2.25rem]',
-  md: 'w-11 h-11 min-w-[2.75rem] min-h-[2.75rem]',
-  lg: 'w-16 h-16 min-w-[4rem] min-h-[4rem]',
-  xl: 'w-24 h-24 min-w-[6rem] min-h-[6rem]',
+  xs: 'h-6 w-6',
+  sm: 'h-8 w-8',
+  md: 'h-10 w-10',
+  lg: 'h-14 w-14',
+  xl: 'h-20 w-20',
 };
 
 export const Avatar: React.FC<AvatarProps> = ({
@@ -59,12 +59,12 @@ export const Avatar: React.FC<AvatarProps> = ({
 
   return (
     <div
-      className={`relative inline-flex items-center justify-center rounded-full overflow-hidden shrink-0 aspect-square border border-[#EFE8DC] bg-[#FAF7F2] shadow-sm p-1 ${SIZE_MAP[size]} ${className}`}
+      className={`relative inline-flex items-center justify-center rounded-full overflow-hidden shrink-0 border border-[#EFE8DC] bg-[#FAF7F2] shadow-sm ${SIZE_MAP[size]} ${className}`}
     >
       <img
         src={resolvedSrc}
         alt={name || 'Avatar'}
-        className="w-full h-full object-contain object-center select-none"
+        className="w-full h-full object-cover rounded-full select-none"
         onError={(e) => {
           // Fallback if image fails to load
           e.currentTarget.src = DEFAULT_AVATAR;

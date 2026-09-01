@@ -25,6 +25,7 @@ import { RealtimeChannel } from '@supabase/supabase-js';
 import { VoiceRecorder } from './VoiceRecorder';
 import { WaveformPlayer } from './WaveformPlayer';
 import { Avatar } from './Avatar';
+import { MiniDoodleCanvas } from './MiniDoodleCanvas';
 
 const NOTE_COLORS = [
   { id: 'cream', bg: '#FAF7F2', border: '#EFE8DC', name: 'Cozy Paper' },
@@ -105,6 +106,10 @@ export const LittleNotesView: React.FC = () => {
   const handleCreateNote = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (noteType === 'TEXT' && !textContent.trim()) return;
+    if (noteType === 'DRAWING' && !mediaUrl) {
+      toast.info('Please draw a doodle first', 'Empty Doodle');
+      return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -458,22 +463,11 @@ export const LittleNotesView: React.FC = () => {
                 </div>
               )}
 
-              {/* Drawing / Image URL Option */}
+              {/* Drawing Option - Direct Inline Drawing Canvas */}
               {noteType === 'DRAWING' && (
-                <div className="space-y-2">
-                  <label className="block text-xs font-medium text-[#6B5E4E]">Image / Doodle URL</label>
-                  <input
-                    type="url"
-                    value={mediaUrl}
-                    onChange={(e) => setMediaUrl(e.target.value)}
-                    placeholder="https://example.com/drawing.png"
-                    className="w-full rounded-full border border-[#EFE8DC] bg-[#FAF7F2] px-4 py-2 text-xs text-[#422F0E] focus:outline-none focus:border-[#EA5E86]"
-                  />
-                  {mediaUrl && (
-                    <div className="rounded-2xl border border-[#EFE8DC] overflow-hidden max-h-48 mt-2 p-2 bg-white">
-                      <img src={mediaUrl} alt="Preview" className="w-full h-full object-contain" />
-                    </div>
-                  )}
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-medium text-[#6B5E4E]">Draw Your Doodle</label>
+                  <MiniDoodleCanvas onChange={(dataUrl) => setMediaUrl(dataUrl || '')} />
                 </div>
               )}
 
@@ -490,7 +484,7 @@ export const LittleNotesView: React.FC = () => {
                       ? 'I saw something today that reminded me of you...'
                       : 'Add a sweet caption...'
                   }
-                  rows={3}
+                  rows={2}
                   required={noteType === 'TEXT'}
                   className="w-full rounded-2xl border border-[#EFE8DC] bg-[#FAF7F2] p-3.5 text-xs sm:text-sm text-[#422F0E] placeholder-[#A89F91] focus:border-[#EA5E86] focus:outline-none"
                 />
@@ -537,7 +531,11 @@ export const LittleNotesView: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  disabled={isSubmitting || (noteType === 'TEXT' && !textContent.trim())}
+                  disabled={
+                    isSubmitting ||
+                    (noteType === 'TEXT' && !textContent.trim()) ||
+                    (noteType === 'DRAWING' && !mediaUrl)
+                  }
                   className="px-6 py-2 rounded-full bg-[#422F0E] text-white hover:bg-[#EA5E86] text-xs font-medium shadow-sm disabled:opacity-40 transition-all"
                 >
                   {isSubmitting ? 'Posting...' : 'Post Little Note'}
