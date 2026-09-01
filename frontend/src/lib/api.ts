@@ -175,7 +175,7 @@ export const duoApi = {
 
 // 3. MESSAGING APIS
 export const messagesApi = {
-  list: async (): Promise<{ messages: Message[]; count: number }> => {
+  list: async (): Promise<{ messages: Message[]; disappearing_mode?: boolean; count: number }> => {
     return request('/api/messages/');
   },
 
@@ -205,8 +205,22 @@ export const messagesApi = {
     });
   },
 
-  markRead: async (): Promise<{ success: boolean; marked_read: number }> => {
+  markRead: async (): Promise<{ success: boolean; marked_count?: number; disappearing_started?: number }> => {
     return request('/api/messages/mark-read/', { method: 'POST' });
+  },
+
+  toggleDisappearingMode: async (enabled?: boolean): Promise<{ success: boolean; disappearing_mode: boolean }> => {
+    return request('/api/messages/disappearing-mode/', {
+      method: 'POST',
+      body: JSON.stringify(enabled !== undefined ? { enabled } : {}),
+    });
+  },
+
+  expireMessages: async (messageIds?: string[]): Promise<{ success: boolean; deleted_count: number; deleted_ids: string[] }> => {
+    return request('/api/messages/expire/', {
+      method: 'POST',
+      body: JSON.stringify(messageIds ? { message_ids: messageIds } : {}),
+    });
   },
 };
 

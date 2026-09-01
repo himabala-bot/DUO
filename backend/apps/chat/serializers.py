@@ -27,11 +27,13 @@ class MessageSerializer(serializers.ModelSerializer):
             'reply_to',
             'reactions',
             'is_unsent',
+            'is_disappearing',
             'is_me',
             'created_at',
             'read_at',
+            'expires_at',
         ]
-        read_only_fields = ['id', 'duo_id', 'sender', 'receiver', 'reply_to', 'reactions', 'is_unsent', 'created_at', 'read_at']
+        read_only_fields = ['id', 'duo_id', 'sender', 'receiver', 'reply_to', 'reactions', 'is_unsent', 'is_disappearing', 'created_at', 'read_at', 'expires_at']
 
     def get_is_me(self, obj):
         request = self.context.get('request')

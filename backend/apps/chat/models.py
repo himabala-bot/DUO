@@ -12,8 +12,10 @@ class Message(models.Model):
     reply_to = models.ForeignKey('self', null=True, blank=True, on_delete=models.SET_NULL, related_name='replies')
     reactions = models.JSONField(default=dict, blank=True)
     is_unsent = models.BooleanField(default=False)
+    is_disappearing = models.BooleanField(default=False, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     read_at = models.DateTimeField(null=True, blank=True, db_index=True)
+    expires_at = models.DateTimeField(null=True, blank=True, db_index=True)
 
     class Meta:
         db_table = 'messages'
@@ -21,6 +23,7 @@ class Message(models.Model):
         indexes = [
             models.Index(fields=['duo', 'created_at']),
             models.Index(fields=['receiver', 'read_at']),
+            models.Index(fields=['duo', 'is_disappearing', 'expires_at']),
         ]
 
     def __str__(self):

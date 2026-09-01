@@ -21,6 +21,7 @@ import {
   Star,
   ThumbsUp,
   Flame,
+  Timer,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { RealtimeChannel } from '@supabase/supabase-js';
@@ -44,6 +45,8 @@ export const ChatView: React.FC = () => {
   const [isSending, setIsSending] = useState(false);
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [disappearingMode, setDisappearingMode] = useState(false);
+  const [nowTick, setNowTick] = useState(Date.now());
   const [activeReactionMenu, setActiveReactionMenu] = useState<string | null>(null);
   const [swipingMessageId, setSwipingMessageId] = useState<string | null>(null);
   const [swipeOffset, setSwipeOffset] = useState<number>(0);
@@ -68,6 +71,9 @@ export const ChatView: React.FC = () => {
     try {
       const res = await messagesApi.list();
       setMessages(res.messages || []);
+      if (res.disappearing_mode !== undefined) {
+        setDisappearingMode(res.disappearing_mode);
+      }
       setIsLoading(false);
       messagesApi.markRead().then(() => {
         if (channelRef.current && profile) {
@@ -91,6 +97,40 @@ export const ChatView: React.FC = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages.length, isPartnerTyping]);
+
+  // Live timer tick for disappearing message countdowns
+  useEffect(() => {
+    const hasDisappearingWithExpiry = messages.some((m) => m.is_disappearing && m.expires_at);
+    if (!hasDisappearingWithExpiry) return;
+
+    const interval = setInterval(() => {
+      setNowTick(Date.now());
+    }, 500);
+
+    return () => clearInterval(interval);
+  }, [messages]);
+
+  // Handle automatic expiration & deletion of disappearing messages
+  useEffect(() => {
+    const expiredMsgs = messages.filter(
+      (m) => m.is_disappearing && m.expires_at && new Date(m.expires_at).getTime() <= nowTick
+    );
+
+    if (expiredMsgs.length > 0) {
+      const expiredIds = expiredMsgs.map((m) => m.id);
+      setMessages((prev) => prev.filter((m) => !expiredIds.includes(m.id)));
+
+      messagesApi.expireMessages(expiredIds).then(() => {
+        if (channelRef.current) {
+          channelRef.current.send({
+            type: 'broadcast',
+            event: 'message_deleted',
+            payload: { message_id: expiredIds[0] },
+          });
+        }
+      }).catch(() => {});
+    }
+  }, [nowTick, messages]);
 
   // Set up Supabase Realtime channel for instant two-way chat & typing indicators
   useEffect(() => {
@@ -162,15 +202,31 @@ export const ChatView: React.FC = () => {
       setMessages([]);
     });
 
-    // 5. Listen for read receipts in real time
+    // 5. Listen for read receipts in real time (and trigger disappearing countdowns)
     channel.on('broadcast', { event: 'messages_read' }, () => {
       const now = new Date().toISOString();
+      const defaultExpiry = new Date(Date.now() + 10000).toISOString();
       setMessages((prev) =>
-        prev.map((m) => (m.is_me && !m.read_at ? { ...m, read_at: now } : m))
+        prev.map((m) => {
+          const updatedReadAt = m.is_me && !m.read_at ? now : m.read_at;
+          const updatedExpiresAt = m.is_disappearing && !m.expires_at ? defaultExpiry : m.expires_at;
+          return {
+            ...m,
+            read_at: updatedReadAt,
+            expires_at: updatedExpiresAt,
+          };
+        })
       );
     });
 
-    // 6. Listen for partner typing indicator
+    // 6. Listen for Disappearing Mode changed
+    channel.on('broadcast', { event: 'disappearing_mode_changed' }, (payload) => {
+      const { disappearing_mode } = payload.payload as { disappearing_mode: boolean };
+      setDisappearingMode(disappearing_mode);
+      toast.info(disappearing_mode ? 'Disappearing Mode is on' : 'Disappearing Mode is off', 'Disappearing Mode');
+    });
+
+    // 7. Listen for partner typing indicator
     channel.on('broadcast', { event: 'user_typing' }, (payload) => {
       const { is_typing, user_id } = payload.payload as { is_typing: boolean; user_id?: string };
       if (user_id === profile.id) return;
@@ -197,7 +253,7 @@ export const ChatView: React.FC = () => {
       if (partnerTypingTimerRef.current) clearTimeout(partnerTypingTimerRef.current);
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     };
-  }, [duoId, profile?.id]);
+  }, [duoId, profile?.id, toast]);
 
   // Send typing broadcast
   const sendTypingStatus = (isTyping: boolean) => {
@@ -252,6 +308,8 @@ export const ChatView: React.FC = () => {
         : null,
       reactions: {},
       is_unsent: false,
+      is_disappearing: disappearingMode,
+      expires_at: null,
       is_me: true,
       created_at: new Date().toISOString(),
       read_at: null,
@@ -291,6 +349,27 @@ export const ChatView: React.FC = () => {
       toast.error('Message failed to send. Please check your connection.', 'Send Error');
     } finally {
       setIsSending(false);
+    }
+  };
+
+  // Toggle Disappearing Mode
+  const handleToggleDisappearingMode = async () => {
+    const nextMode = !disappearingMode;
+    setDisappearingMode(nextMode);
+    toast.info(nextMode ? 'Disappearing Mode is on' : 'Disappearing Mode is off', 'Disappearing Mode');
+
+    if (channelRef.current) {
+      channelRef.current.send({
+        type: 'broadcast',
+        event: 'disappearing_mode_changed',
+        payload: { disappearing_mode: nextMode },
+      });
+    }
+
+    try {
+      await messagesApi.toggleDisappearingMode(nextMode);
+    } catch (err) {
+      console.warn('Failed to update disappearing mode:', err);
     }
   };
 
@@ -493,6 +572,28 @@ export const ChatView: React.FC = () => {
           </div>
 
           <div className="flex items-center space-x-2">
+            {/* Subtle indicator when Disappearing Mode is active (no emojis) */}
+            {disappearingMode && (
+              <span className="text-[10px] font-mono font-medium text-[#FB923C] bg-[#FB923C]/10 border border-[#FB923C]/25 px-2.5 py-0.5 rounded-full animate-in fade-in duration-200">
+                Disappearing Mode
+              </span>
+            )}
+
+            {/* Disappearing Mode Toggle Button */}
+            <button
+              type="button"
+              onClick={handleToggleDisappearingMode}
+              className={`flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-mono transition-all border ${
+                disappearingMode
+                  ? 'bg-[#FB923C]/15 border-[#FB923C]/40 text-[#FB923C] font-semibold shadow-xs'
+                  : 'bg-theme-input border-theme text-theme-secondary hover:text-theme-primary hover:bg-theme-card'
+              }`}
+              title={disappearingMode ? 'Turn off Disappearing Mode' : 'Turn on Disappearing Mode'}
+            >
+              <Timer className="h-3.5 w-3.5" />
+              <span>Disappearing</span>
+            </button>
+
             <span className="text-[10px] font-mono text-[#00D26A] flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#00D26A]/10 border border-[#00D26A]/20">
               <span className="h-1.5 w-1.5 rounded-full bg-[#00D26A]" />
               live
@@ -571,7 +672,7 @@ export const ChatView: React.FC = () => {
                     </div>
                   )}
 
-                  {/* Bubble + Timestamp + Action Container (Actions & Time beside bubble facing center whitespace) */}
+                  {/* Bubble + Timestamp + Action Container */}
                   <div
                     className={`flex items-center gap-2 max-w-[85%] sm:max-w-[75%] ${
                       msg.is_me ? 'flex-row-reverse' : 'flex-row'
@@ -630,23 +731,52 @@ export const ChatView: React.FC = () => {
                       )}
                     </div>
 
-                    {/* Timestamp & Read Status (Vertically centered beside text bubble) */}
-                    {showTimestamp && (
-                      <div className="flex items-center space-x-1 px-1 text-[10px] font-mono text-theme-muted shrink-0 select-none">
-                        <span>
-                          {msg.created_at ? format(new Date(msg.created_at), 'hh:mm a') : 'Just now'}
-                        </span>
-                        {msg.is_me && (
-                          <span title={msg.read_at ? 'Read' : 'Sent'}>
-                            {msg.read_at ? (
-                              <CheckCheck className="h-3 w-3 text-[#125CB9]" />
-                            ) : (
-                              <Check className="h-3 w-3 text-theme-muted" />
-                            )}
+                    {/* Timestamp, Read Status & Disappearing Countdown */}
+                    <div
+                      className={`flex flex-col ${
+                        msg.is_me ? 'items-end' : 'items-start'
+                      } space-y-0.5 shrink-0 select-none`}
+                    >
+                      {showTimestamp && (
+                        <div className="flex items-center space-x-1 px-1 text-[10px] font-mono text-theme-muted">
+                          <span>
+                            {msg.created_at ? format(new Date(msg.created_at), 'hh:mm a') : 'Just now'}
                           </span>
-                        )}
-                      </div>
-                    )}
+                          {msg.is_me && (
+                            <span title={msg.read_at ? 'Read' : 'Sent'}>
+                              {msg.read_at ? (
+                                <CheckCheck className="h-3 w-3 text-[#125CB9]" />
+                              ) : (
+                                <Check className="h-3 w-3 text-theme-muted" />
+                              )}
+                            </span>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Disappearing Status / Live Countdown */}
+                      {msg.is_disappearing && (
+                        <div className="flex items-center space-x-1 px-1 text-[10px] font-mono text-[#FB923C]">
+                          {msg.expires_at ? (
+                            (() => {
+                              const diffMs = new Date(msg.expires_at).getTime() - nowTick;
+                              const sec = Math.max(0, Math.ceil(diffMs / 1000));
+                              return (
+                                <span className="inline-flex items-center space-x-1 font-medium">
+                                  <Timer className="h-2.5 w-2.5" />
+                                  <span>{sec > 0 ? `Disappearing in ${sec}s` : 'Disappeared'}</span>
+                                </span>
+                              );
+                            })()
+                          ) : (
+                            <span className="inline-flex items-center space-x-1 opacity-75">
+                              <Timer className="h-2.5 w-2.5" />
+                              <span>Temporary</span>
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
 
                     {/* Hover Reaction & Actions (Positioned on the whitespace side in the center) */}
                     <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 flex items-center space-x-1 shrink-0 bg-theme-card/95 backdrop-blur-xs border border-theme rounded-full px-2 py-1 shadow-sm">

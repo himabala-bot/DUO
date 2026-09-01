@@ -34,6 +34,7 @@ export interface DuoMember {
 export interface Duo {
   id: string;
   status: 'ACTIVE' | 'ARCHIVED';
+  disappearing_mode?: boolean;
   created_at: string;
   members: DuoMember[];
   partner: PartnerProfile | null;
@@ -75,6 +76,8 @@ export interface Message {
   reply_to?: MessageReply | null;
   reactions?: Record<string, string>;
   is_unsent?: boolean;
+  is_disappearing?: boolean;
+  expires_at?: string | null;
   is_me: boolean;
   created_at: string;
   read_at: string | null;

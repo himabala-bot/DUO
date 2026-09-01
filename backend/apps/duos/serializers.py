@@ -17,7 +17,7 @@ class DuoDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Duo
-        fields = ['id', 'status', 'created_at', 'members', 'partner']
+        fields = ['id', 'status', 'disappearing_mode', 'created_at', 'members', 'partner']
 
     def get_partner(self, obj):
         request = self.context.get('request')
