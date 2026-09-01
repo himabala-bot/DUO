@@ -55,32 +55,32 @@ export const NotificationPopout: React.FC<NotificationPopoutProps> = ({
       case 'MESSAGE':
         return {
           icon: MessageSquare,
-          bg: 'bg-[#C2410C]',
+          bg: 'bg-[#5B58E6]',
           label: 'New Message',
         };
       case 'DRAWING':
         return {
           icon: Palette,
-          bg: 'bg-[#059669]',
+          bg: 'bg-[#00D26A]',
           label: 'New Drawing',
         };
       case 'DAILY_RESPONSE':
         return {
           icon: Sparkles,
-          bg: 'bg-[#D97706]',
+          bg: 'bg-[#FB923C]',
           label: 'Daily Answer',
         };
       case 'CONNECTION_REQUEST':
       case 'CONNECTION_ACCEPTED':
         return {
           icon: KeyRound,
-          bg: 'bg-[#4F46E5]',
+          bg: 'bg-[#5B58E6]',
           label: 'Room Update',
         };
       default:
         return {
           icon: Bell,
-          bg: 'bg-[#1C1917]',
+          bg: 'bg-theme-primary',
           label: 'Notification',
         };
     }
@@ -92,19 +92,18 @@ export const NotificationPopout: React.FC<NotificationPopoutProps> = ({
   return (
     <div
       onClick={handleClick}
-      className="fixed top-16 right-4 sm:top-20 sm:right-6 lg:top-6 lg:left-68 z-50 cursor-pointer animate-in fade-in zoom-in-95 slide-in-from-top-3 duration-200 select-none"
+      className="fixed top-14 right-4 sm:top-16 sm:right-6 lg:top-5 lg:left-72 z-50 cursor-pointer animate-in fade-in zoom-in-95 slide-in-from-top-2 duration-150 select-none"
     >
-      <div className="flex items-center space-x-2.5 rounded-full border border-[#E8E4DB] bg-[#FFFFFF] px-3.5 py-2 shadow-[0_8px_24px_rgba(28,25,23,0.12)] hover:scale-105 transition-transform">
-        {/* Instagram-style dynamic popping icon badge */}
-        <div className={`flex h-7 w-7 items-center justify-center rounded-full ${iconInfo.bg} text-white shadow-sm shrink-0 animate-pulse`}>
+      <div className="flex items-center space-x-2.5 rounded-lg border border-theme bg-theme-card px-3 py-2 shadow-md hover:border-[#5B58E6] transition-all">
+        <div className={`flex h-6 w-6 items-center justify-center rounded-md ${iconInfo.bg} text-white shadow-xs shrink-0`}>
           <Icon className="h-3.5 w-3.5" />
         </div>
 
         <div className="flex flex-col pr-1">
-          <span className="text-[11px] font-mono font-semibold text-[#1C1917] tracking-tight">
+          <span className="text-[11px] font-mono font-semibold text-theme-primary tracking-tight">
             {iconInfo.label}
           </span>
-          <span className="text-[11px] text-[#78716C] truncate max-w-[160px] sm:max-w-[220px]">
+          <span className="text-xs text-theme-secondary truncate max-w-[160px] sm:max-w-[220px]">
             {visibleNotif.body}
           </span>
         </div>
@@ -115,7 +114,7 @@ export const NotificationPopout: React.FC<NotificationPopoutProps> = ({
             markNotificationAsRead(visibleNotif.id);
             setVisibleNotif(null);
           }}
-          className="text-[#A8A29E] hover:text-[#1C1917] p-0.5 rounded-full"
+          className="text-theme-muted hover:text-theme-primary p-0.5 rounded"
         >
           <X className="h-3 w-3" />
         </button>

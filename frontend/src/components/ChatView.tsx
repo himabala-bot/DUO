@@ -453,46 +453,50 @@ export const ChatView: React.FC = () => {
   };
 
   return (
-    <div className="flex-1 w-full h-full flex flex-col items-center justify-center p-2 sm:p-4 md:p-6 lg:p-8 min-h-0">
-      {/* Centered Conversation Container (~750–880px) */}
-      <div className="w-full max-w-[840px] xl:max-w-[880px] h-full flex flex-col overflow-hidden rounded-3xl border border-theme bg-theme-card shadow-lg transition-colors">
+    <div className="flex-1 w-full h-full flex flex-col items-center justify-center p-2 sm:p-4 md:p-6 min-h-0">
+      {/* Centered Conversation Container (~840–880px) */}
+      <div className="w-full max-w-3xl xl:max-w-4xl h-full flex flex-col overflow-hidden rounded-xl border border-theme bg-theme-card shadow-sm transition-colors">
         {/* Chat Room Subheader */}
-        <div className="flex items-center justify-between border-b border-theme bg-theme-page px-4 sm:px-6 py-3 shrink-0">
-          <div className="flex items-center space-x-2.5 sm:space-x-3">
-            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#5B58E6] text-white text-xs shadow-sm">
-              <Heart className="h-3.5 w-3.5 fill-current" />
+        <div className="flex items-center justify-between border-b border-theme bg-theme-page px-4 py-2.5 shrink-0">
+          <div className="flex items-center space-x-2.5">
+            <Avatar src={partner?.avatar_url} name={partner?.name} size="sm" />
+            <div>
+              <div className="flex items-center space-x-1.5">
+                <span className="font-serif text-sm font-bold text-theme-primary">
+                  {partner?.name || 'Partner'}
+                </span>
+                <span
+                  className={`h-2 w-2 rounded-full ${
+                    isPartnerTyping ? 'bg-[#5B58E6] animate-pulse' : 'bg-[#00D26A]'
+                  }`}
+                />
+              </div>
+              <span className="text-[10px] font-mono text-theme-muted">
+                {isPartnerTyping ? 'typing...' : 'direct stream'}
+              </span>
             </div>
-            <span className="font-serif text-base sm:text-lg font-bold text-theme-primary">
-              {partner?.name}
-            </span>
-            <span className="text-[10px] font-mono text-theme-muted">/ our stream</span>
           </div>
 
           <div className="flex items-center space-x-2">
-            {isPartnerTyping && (
-              <span className="text-[11px] font-mono text-[#5B58E6] flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#5B58E6]/10 border border-[#5B58E6]/30 animate-pulse">
-                <span>{partner?.name || 'partner'} is typing...</span>
-              </span>
-            )}
-            <span className="text-[11px] font-mono text-[#00D26A] flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#00D26A]/10 border border-[#00D26A]/30">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#00D26A] animate-pulse" />
-              live sync
+            <span className="text-[10px] font-mono text-[#00D26A] flex items-center gap-1.5 px-2 py-0.5 rounded bg-[#00D26A]/10 border border-[#00D26A]/20">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#00D26A]" />
+              live
             </span>
           </div>
         </div>
 
         {/* Message Stream */}
-        <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-5 bg-theme-page">
+        <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3.5 bg-theme-page">
           {isLoading ? (
-            <div className="flex h-full items-center justify-center text-xs sm:text-sm font-mono text-theme-muted">
-              Opening conversation...
+            <div className="flex h-full items-center justify-center text-xs font-mono text-theme-muted">
+              Loading messages...
             </div>
           ) : messages.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center text-center p-6 space-y-2">
-              <Heart className="h-8 w-8 text-[#5B58E6] animate-bounce mb-1" />
-              <span className="font-serif text-xl sm:text-2xl text-theme-primary font-bold">Your quiet space</span>
-              <p className="max-w-xs text-xs sm:text-sm text-theme-secondary leading-relaxed">
-                Send a sweet thought or a voice note to {partner?.name || 'your partner'}.
+              <Heart className="h-6 w-6 text-[#5B58E6] mb-1" />
+              <span className="font-serif text-base text-theme-primary font-bold">Your private conversation</span>
+              <p className="max-w-xs text-xs text-theme-secondary leading-relaxed">
+                Send a sweet note, photo, or voice memo to {partner?.name || 'your partner'}.
               </p>
             </div>
           ) : (
@@ -523,12 +527,12 @@ export const ChatView: React.FC = () => {
                   {/* Replied Message Header */}
                   {msg.reply_to && (
                     <div
-                      className={`mb-1 flex items-center space-x-1.5 text-[11px] text-theme-muted ${
+                      className={`mb-1 flex items-center space-x-1.5 text-[10px] text-theme-muted ${
                         msg.is_me ? 'pr-2 justify-end' : 'pl-2 justify-start'
                       }`}
                     >
                       <CornerDownRight className="h-3 w-3" />
-                      <span className="truncate max-w-[200px]">
+                      <span className="truncate max-w-[220px]">
                         Replying to <strong>{msg.reply_to.sender_name}</strong>: &ldquo;
                         {msg.reply_to.content}&rdquo;
                       </span>
@@ -537,35 +541,35 @@ export const ChatView: React.FC = () => {
 
                   {/* Bubble + Action Container */}
                   <div
-                    className={`flex items-center gap-2 max-w-[85%] sm:max-w-[75%] ${
+                    className={`flex items-center gap-1.5 max-w-[85%] sm:max-w-[75%] ${
                       msg.is_me ? 'flex-row-reverse' : 'flex-row'
                     }`}
                   >
                     {/* Hover Reaction & Actions */}
-                    <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center space-x-1 shrink-0">
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center space-x-0.5 shrink-0 bg-theme-card border border-theme rounded-md p-0.5 shadow-xs">
                       <button
                         onClick={() => setActiveReactionMenu(isMenuOpen ? null : msg.id)}
-                        className="rounded-full p-1.5 text-theme-muted hover:bg-theme-card hover:text-theme-primary transition-all"
+                        className="rounded p-1 text-theme-muted hover:bg-theme-input hover:text-theme-primary transition-colors"
                         title="Add reaction"
                       >
-                        <Smile className="h-4 w-4" />
+                        <Smile className="h-3.5 w-3.5" />
                       </button>
                       <button
                         onClick={() => {
                           setReplyingTo(msg);
                           textareaRef.current?.focus();
                         }}
-                        className="rounded-full p-1.5 text-theme-muted hover:bg-theme-card hover:text-theme-primary transition-all"
+                        className="rounded p-1 text-theme-muted hover:bg-theme-input hover:text-theme-primary transition-colors"
                         title="Reply"
                       >
-                        <Reply className="h-4 w-4" />
+                        <Reply className="h-3.5 w-3.5" />
                       </button>
                       <button
                         onClick={() => handleDeleteMessage(msg)}
-                        className="rounded-full p-1.5 text-theme-muted hover:bg-[#F43F5E]/15 hover:text-[#F43F5E] transition-all"
+                        className="rounded p-1 text-theme-muted hover:bg-[#F43F5E]/15 hover:text-[#F43F5E] transition-colors"
                         title={msg.is_me ? 'Unsend' : 'Delete'}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     </div>
 
@@ -580,10 +584,10 @@ export const ChatView: React.FC = () => {
                         transform: isSwiping ? `translateX(${swipeOffset}px)` : 'none',
                         transition: isSwiping ? 'none' : 'transform 0.15s ease',
                       }}
-                      className={`relative select-none cursor-pointer rounded-[22px] sm:rounded-[24px] px-4.5 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-[14px] leading-relaxed shadow-sm transition-all ${
+                      className={`relative select-none cursor-pointer rounded-lg px-3.5 py-2 text-xs sm:text-sm leading-relaxed transition-all shadow-xs ${
                         msg.is_me
-                          ? 'bg-[#5B58E6] text-white rounded-br-[8px] shadow-md shadow-[#5B58E6]/25'
-                          : 'bg-theme-card text-theme-primary border border-theme rounded-bl-[8px]'
+                          ? 'bg-[#5B58E6] text-white rounded-tr-xs'
+                          : 'bg-theme-card text-theme-primary border border-theme rounded-tl-xs'
                       }`}
                     >
                       {voiceData ? (
@@ -599,9 +603,9 @@ export const ChatView: React.FC = () => {
                       {/* Inline Reactions Pill */}
                       {reactionEntries.length > 0 && (
                         <div
-                          className={`absolute -bottom-2.5 ${
-                            msg.is_me ? 'right-3' : 'left-3'
-                          } flex items-center space-x-1.5 rounded-full border border-theme bg-theme-card px-2 py-0.5 shadow-sm`}
+                          className={`absolute -bottom-2 ${
+                            msg.is_me ? 'right-2' : 'left-2'
+                          } flex items-center space-x-1 rounded-full border border-theme bg-theme-card px-1.5 py-0.5 shadow-xs`}
                         >
                           {reactionEntries.map(([userId, reactionKey]) => (
                             <span
@@ -612,7 +616,7 @@ export const ChatView: React.FC = () => {
                                   handleToggleReaction(msg, reactionKey);
                                 }
                               }}
-                              className="hover:scale-125 transition-transform flex items-center"
+                              className="hover:scale-110 transition-transform flex items-center"
                               title={userId === profile?.id ? 'You reacted' : `${partner?.name} reacted`}
                             >
                               {renderReactionIcon(reactionKey)}
@@ -626,8 +630,8 @@ export const ChatView: React.FC = () => {
                   {/* Reaction Picker Popup */}
                   {isMenuOpen && (
                     <div
-                      className={`z-20 mt-1 flex items-center gap-1.5 rounded-full border border-theme bg-theme-card p-1.5 shadow-xl ${
-                        msg.is_me ? 'mr-2' : 'ml-2'
+                      className={`z-20 mt-1 flex items-center gap-1 rounded-lg border border-theme bg-theme-card p-1 shadow-lg ${
+                        msg.is_me ? 'mr-1' : 'ml-1'
                       }`}
                     >
                       {QUICK_REACTIONS.map((r) => {
@@ -636,33 +640,33 @@ export const ChatView: React.FC = () => {
                           <button
                             key={r.id}
                             onClick={() => handleToggleReaction(msg, r.id)}
-                            className={`rounded-full p-1.5 hover:bg-theme-input hover:scale-125 transition-transform ${r.color}`}
+                            className={`rounded p-1 hover:bg-theme-input hover:scale-110 transition-transform ${r.color}`}
                             title={r.id}
                           >
-                            <Icon className={`h-4 w-4 ${r.fill}`} />
+                            <Icon className={`h-3.5 w-3.5 ${r.fill}`} />
                           </button>
                         );
                       })}
                       <button
                         onClick={() => setActiveReactionMenu(null)}
-                        className="rounded-full p-1 text-theme-muted hover:text-theme-primary"
+                        className="rounded p-1 text-theme-muted hover:text-theme-primary"
                       >
-                        <X className="h-3.5 w-3.5" />
+                        <X className="h-3 w-3" />
                       </button>
                     </div>
                   )}
 
                   {/* Timestamp & Read Status */}
-                  <div className="mt-1 flex items-center space-x-1 px-1 text-[11px] font-mono text-theme-muted">
+                  <div className="mt-0.5 flex items-center space-x-1 px-1 text-[10px] font-mono text-theme-muted">
                     <span>
                       {msg.created_at ? format(new Date(msg.created_at), 'hh:mm a') : 'Just now'}
                     </span>
                     {msg.is_me && (
                       <span title={msg.read_at ? 'Read' : 'Sent'}>
                         {msg.read_at ? (
-                          <CheckCheck className="h-3.5 w-3.5 text-[#5B58E6]" />
+                          <CheckCheck className="h-3 w-3 text-[#5B58E6]" />
                         ) : (
-                          <Check className="h-3.5 w-3.5 text-theme-muted" />
+                          <Check className="h-3 w-3 text-theme-muted" />
                         )}
                       </span>
                     )}
@@ -674,12 +678,12 @@ export const ChatView: React.FC = () => {
 
           {/* 3-Dot Partner Typing Indicator Bubble */}
           {isPartnerTyping && (
-            <div className="flex items-start space-x-2 animate-in fade-in slide-in-from-bottom-2 duration-200">
+            <div className="flex items-start space-x-2 animate-in fade-in duration-150">
               <Avatar src={partner?.avatar_url} name={partner?.name} size="xs" />
-              <div className="flex items-center space-x-1.5 rounded-full border border-theme bg-theme-card px-4 py-2.5 shadow-sm">
-                <span className="h-2 w-2 rounded-full bg-[#5B58E6] animate-bounce [animation-delay:0ms]" />
-                <span className="h-2 w-2 rounded-full bg-[#5B58E6] animate-bounce [animation-delay:150ms]" />
-                <span className="h-2 w-2 rounded-full bg-[#5B58E6] animate-bounce [animation-delay:300ms]" />
+              <div className="flex items-center space-x-1.5 rounded-lg border border-theme bg-theme-card px-3 py-2 shadow-xs">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#5B58E6] animate-bounce [animation-delay:0ms]" />
+                <span className="h-1.5 w-1.5 rounded-full bg-[#5B58E6] animate-bounce [animation-delay:150ms]" />
+                <span className="h-1.5 w-1.5 rounded-full bg-[#5B58E6] animate-bounce [animation-delay:300ms]" />
               </div>
             </div>
           )}
@@ -689,25 +693,25 @@ export const ChatView: React.FC = () => {
 
         {/* Replying Banner */}
         {replyingTo && (
-          <div className="flex items-center justify-between border-t border-theme bg-[#5B58E6]/10 px-4 sm:px-6 py-2.5 text-xs sm:text-sm shrink-0">
+          <div className="flex items-center justify-between border-t border-theme bg-[#5B58E6]/10 px-4 py-2 text-xs shrink-0">
             <div className="flex items-center space-x-2 truncate">
-              <Reply className="h-4 w-4 text-[#5B58E6] shrink-0" />
-              <span className="font-bold text-theme-primary shrink-0">
+              <Reply className="h-3.5 w-3.5 text-[#5B58E6] shrink-0" />
+              <span className="font-semibold text-theme-primary shrink-0">
                 Replying to {replyingTo.is_me ? 'yourself' : replyingTo.sender?.name || partner?.name}:
               </span>
               <span className="truncate italic text-theme-secondary">"{replyingTo.content}"</span>
             </div>
             <button
               onClick={() => setReplyingTo(null)}
-              className="p-1 text-theme-muted hover:text-theme-primary transition-all rounded-full"
+              className="p-1 text-theme-muted hover:text-theme-primary transition-colors rounded"
             >
-              <X className="h-4 w-4" />
+              <X className="h-3.5 w-3.5" />
             </button>
           </div>
         )}
 
         {/* Input Composer & Voice Recorder */}
-        <form onSubmit={handleSendMessage} className="border-t border-theme bg-theme-card p-3 sm:p-4 shrink-0">
+        <form onSubmit={handleSendMessage} className="border-t border-theme bg-theme-card p-2.5 sm:p-3 shrink-0">
           <div className="flex items-center space-x-2">
             {/* Voice Recorder button */}
             <VoiceRecorder onSendVoice={handleSendVoiceNote} />
@@ -720,17 +724,17 @@ export const ChatView: React.FC = () => {
               onKeyDown={handleKeyDown}
               placeholder={`Message ${partner?.name || 'your partner'}...`}
               rows={1}
-              className="flex-1 max-h-32 min-h-[44px] resize-none rounded-full border border-theme bg-theme-input px-4 py-2.5 text-xs sm:text-sm text-theme-primary placeholder-theme-muted focus:border-[#5B58E6] focus:bg-theme-card focus:outline-none focus:ring-2 focus:ring-[#5B58E6]/20 transition-all leading-relaxed"
+              className="flex-1 max-h-32 min-h-[38px] resize-none rounded-lg border border-theme bg-theme-input px-3 py-2 text-xs sm:text-sm text-theme-primary placeholder-theme-muted focus:border-[#5B58E6] focus:bg-theme-card focus:outline-none focus:ring-1 focus:ring-[#5B58E6] transition-all leading-normal"
             />
 
             {/* Send Button */}
             <button
               type="submit"
               disabled={!inputText.trim() || isSending}
-              className="flex h-11 w-11 items-center justify-center rounded-full bg-[#5B58E6] text-white shadow-md shadow-[#5B58E6]/25 hover:bg-[#4A46DC] disabled:opacity-40 disabled:hover:bg-[#5B58E6] transition-all shrink-0"
+              className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#5B58E6] text-white shadow-xs hover:bg-[#4A46DC] disabled:opacity-40 disabled:hover:bg-[#5B58E6] transition-all shrink-0"
               title="Send Message"
             >
-              <Send className="h-4.5 w-4.5" />
+              <Send className="h-4 w-4" />
             </button>
           </div>
         </form>

@@ -144,33 +144,33 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     >
       {children}
 
-      {/* Floating Cute Toasts Container */}
-      <div className="fixed top-5 left-1/2 -translate-x-1/2 z-[9999] flex flex-col items-center gap-2 pointer-events-none w-full max-w-md px-4">
+      {/* Floating Sleek Toasts Container */}
+      <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[9999] flex flex-col items-center gap-2 pointer-events-none w-full max-w-sm px-4">
         {toasts.map((t) => (
           <div
             key={t.id}
-            className={`pointer-events-auto flex items-center space-x-2.5 rounded-full border px-4 py-2.5 transition-all duration-300 animate-in fade-in zoom-in-95 slide-in-from-top-4 ${getToastStyles(
+            className={`pointer-events-auto flex items-center space-x-2.5 rounded-lg border px-3.5 py-2 transition-all duration-200 animate-in fade-in zoom-in-95 slide-in-from-top-2 shadow-sm ${getToastStyles(
               t.type
             )}`}
           >
-            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-theme-input shadow-sm shrink-0">
+            <div className="flex h-5 w-5 items-center justify-center rounded bg-theme-input shadow-xs shrink-0">
               {getToastIcon(t.type)}
             </div>
 
             <div className="flex flex-col pr-1">
               {t.title && (
-                <span className="text-[11px] font-mono font-semibold uppercase tracking-wider leading-none mb-0.5 text-theme-muted">
+                <span className="text-[10px] font-mono font-semibold uppercase tracking-wider leading-none mb-0.5 text-theme-muted">
                   {t.title}
                 </span>
               )}
-              <span className="text-xs sm:text-sm font-medium leading-snug text-theme-primary">
+              <span className="text-xs font-medium leading-snug text-theme-primary">
                 {t.message}
               </span>
             </div>
 
             <button
               onClick={() => t.id && removeToast(t.id)}
-              className="rounded-full p-1 text-theme-muted hover:text-theme-primary hover:bg-black/5 transition-colors"
+              className="rounded p-0.5 text-theme-muted hover:text-theme-primary transition-colors ml-auto"
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -178,30 +178,30 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         ))}
       </div>
 
-      {/* Cute Confirmation Modal Dialog */}
+      {/* Clean Confirmation Modal Dialog */}
       {confirmDialog && (
         <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 p-4 backdrop-blur-[4px] animate-in fade-in duration-150">
-          <div className="w-full max-w-sm rounded-3xl border border-theme bg-theme-card p-6 shadow-2xl text-center animate-in zoom-in-95 duration-200">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#5B58E6]/15 text-[#5B58E6] mb-3">
+          <div className="w-full max-w-sm rounded-xl border border-theme bg-theme-card p-5 shadow-2xl text-center animate-in zoom-in-95 duration-150">
+            <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg bg-[#5B58E6]/10 text-[#5B58E6] mb-2.5">
               {confirmDialog.options.type === 'danger' ? (
-                <Trash2 className="h-6 w-6 text-[#F43F5E]" />
+                <Trash2 className="h-5 w-5 text-[#F43F5E]" />
               ) : (
-                <Heart className="h-6 w-6 fill-current text-[#5B58E6]" />
+                <Heart className="h-5 w-5 fill-current text-[#5B58E6]" />
               )}
             </div>
 
-            <h3 className="font-serif text-xl font-bold text-theme-primary">
+            <h3 className="font-serif text-base font-bold text-theme-primary">
               {confirmDialog.options.title}
             </h3>
-            <p className="mt-1.5 text-xs sm:text-sm text-theme-secondary leading-relaxed">
+            <p className="mt-1 text-xs text-theme-secondary leading-relaxed">
               {confirmDialog.options.message}
             </p>
 
-            <div className="mt-6 flex items-center justify-center gap-2.5">
+            <div className="mt-4 flex items-center justify-center gap-2">
               <button
                 type="button"
                 onClick={() => handleConfirmClose(false)}
-                className="flex-1 rounded-full border border-theme bg-theme-input py-2.5 text-xs sm:text-sm font-medium text-theme-secondary hover:bg-theme-card hover:text-theme-primary transition-all min-h-[40px]"
+                className="flex-1 rounded-lg border border-theme bg-theme-input py-1.5 text-xs font-medium text-theme-secondary hover:bg-theme-card hover:text-theme-primary transition-colors"
               >
                 {confirmDialog.options.cancelText || 'Cancel'}
               </button>
@@ -209,10 +209,10 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
               <button
                 type="button"
                 onClick={() => handleConfirmClose(true)}
-                className={`flex-1 rounded-full py-2.5 text-xs sm:text-sm font-medium text-white shadow-sm transition-all min-h-[40px] ${
+                className={`flex-1 rounded-lg py-1.5 text-xs font-medium text-white shadow-xs transition-colors ${
                   confirmDialog.options.type === 'danger'
                     ? 'bg-[#F43F5E] hover:bg-[#E11D48]'
-                    : 'bg-[#5B58E6] hover:bg-[#4A46DC] shadow-[#5B58E6]/25'
+                    : 'bg-[#5B58E6] hover:bg-[#4A46DC]'
                 }`}
               >
                 {confirmDialog.options.confirmText || 'Confirm'}

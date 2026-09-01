@@ -153,29 +153,29 @@ export const ConnectionHub: React.FC = () => {
   };
 
   return (
-    <div className="w-full flex justify-center px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
-      {/* Centered Connection Room Content (~780–860px) */}
-      <div className="w-full max-w-[840px] space-y-6 sm:space-y-8">
+    <div className="w-full flex justify-center px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      {/* Centered Connection Room Content (~780–840px) */}
+      <div className="w-full max-w-3xl space-y-5">
         {/* Active Connected Room Card */}
         {hasActiveDuo && partner ? (
-          <div className="rounded-3xl border border-theme bg-theme-card p-6 sm:p-8 shadow-sm">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+          <div className="rounded-xl border border-theme bg-theme-card p-5 sm:p-6 shadow-xs">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
-                <div className="inline-flex items-center space-x-2 rounded-full bg-[#00D26A]/10 border border-[#00D26A]/30 px-3.5 py-1 text-xs font-mono text-[#00D26A] mb-3">
-                  <span className="h-2 w-2 rounded-full bg-[#00D26A] animate-pulse" />
+                <div className="inline-flex items-center space-x-1.5 rounded px-2 py-0.5 text-[11px] font-mono text-[#00D26A] bg-[#00D26A]/10 border border-[#00D26A]/25 mb-2">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#00D26A]" />
                   <span>Room Linked & Active</span>
                 </div>
-                <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-theme-primary">
-                  {profile?.name} <span className="text-[#5B58E6] font-light">&amp;</span> {partner.name}
+                <h2 className="font-serif text-xl sm:text-2xl font-bold text-theme-primary">
+                  {profile?.name} <span className="text-[#5B58E6] font-normal">&amp;</span> {partner.name}
                 </h2>
-                <p className="mt-2 text-xs sm:text-sm text-theme-secondary max-w-lg leading-relaxed">
+                <p className="mt-1 text-xs text-theme-secondary max-w-lg leading-relaxed">
                   Your private world is active. All chats, love notes, drawings, and daily reflections are shared only between the two of you.
                 </p>
               </div>
 
               <button
                 onClick={handleLeaveDuo}
-                className="rounded-full border border-theme bg-theme-input px-5 py-2.5 text-xs sm:text-sm text-theme-secondary hover:border-[#F43F5E] hover:text-[#F43F5E] transition-all shrink-0"
+                className="rounded-lg border border-theme bg-theme-input px-3.5 py-1.5 text-xs text-theme-secondary hover:border-[#F43F5E] hover:text-[#F43F5E] transition-colors shrink-0"
               >
                 Disconnect room
               </button>
@@ -186,10 +186,10 @@ export const ConnectionHub: React.FC = () => {
         {/* Alert Messages */}
         {message && (
           <div
-            className={`flex items-center space-x-2.5 rounded-3xl border p-4 text-xs sm:text-sm ${
+            className={`flex items-center space-x-2 rounded-lg border p-3 text-xs ${
               message.type === 'success'
-                ? 'border-[#00D26A]/30 bg-[#00D26A]/10 text-[#00D26A]'
-                : 'border-[#F43F5E]/30 bg-[#F43F5E]/10 text-[#F43F5E]'
+                ? 'border-[#00D26A]/25 bg-[#00D26A]/10 text-[#00D26A]'
+                : 'border-[#F43F5E]/25 bg-[#F43F5E]/10 text-[#F43F5E]'
             }`}
           >
             {message.type === 'success' ? (
@@ -203,39 +203,39 @@ export const ConnectionHub: React.FC = () => {
 
         {/* Incoming Requests Banner */}
         {incomingRequests.length > 0 && (
-          <div className="rounded-3xl border border-[#5B58E6]/30 bg-[#5B58E6]/10 p-6 shadow-sm">
-            <div className="flex items-center space-x-2 mb-1.5">
-              <Heart className="h-4 w-4 text-[#5B58E6] fill-current" />
-              <h3 className="font-serif text-lg font-bold text-theme-primary">
+          <div className="rounded-xl border border-[#5B58E6]/25 bg-[#5B58E6]/10 p-4 shadow-xs">
+            <div className="flex items-center space-x-2 mb-1">
+              <Heart className="h-3.5 w-3.5 text-[#5B58E6] fill-current" />
+              <h3 className="font-serif text-sm font-bold text-theme-primary">
                 Incoming Pairing Request
               </h3>
             </div>
-            <p className="text-xs sm:text-sm text-theme-secondary">
+            <p className="text-xs text-theme-secondary">
               Someone wants to link secret keys and create a private room with you.
             </p>
 
-            <div className="mt-4 space-y-3">
+            <div className="mt-3 space-y-2">
               {incomingRequests.map((req) => (
                 <div
                   key={req.id}
-                  className="flex flex-col sm:flex-row items-start sm:items-center justify-between rounded-2xl border border-theme bg-theme-card p-4 gap-3 shadow-sm"
+                  className="flex flex-col sm:flex-row items-start sm:items-center justify-between rounded-lg border border-theme bg-theme-card p-3 gap-2.5 shadow-xs"
                 >
                   <div>
-                    <h4 className="text-xs sm:text-sm font-bold text-theme-primary">{req.sender.name}</h4>
-                    <p className="text-xs text-theme-muted font-mono">{req.sender.email}</p>
+                    <h4 className="text-xs font-bold text-theme-primary">{req.sender.name}</h4>
+                    <p className="text-[11px] text-theme-muted font-mono">{req.sender.email}</p>
                   </div>
 
                   <div className="flex items-center space-x-2 w-full sm:w-auto justify-end">
                     <button
                       onClick={() => handleAccept(req.id)}
                       disabled={isSubmitting}
-                      className="rounded-full bg-[#5B58E6] px-5 py-2 text-xs font-medium text-white hover:bg-[#4A46DC] transition-all disabled:opacity-50 min-h-[38px] shadow-sm shadow-[#5B58E6]/25"
+                      className="rounded-lg bg-[#5B58E6] px-3.5 py-1.5 text-xs font-medium text-white hover:bg-[#4A46DC] transition-colors disabled:opacity-50 shadow-xs"
                     >
                       Accept & Link
                     </button>
                     <button
                       onClick={() => handleDecline(req.id)}
-                      className="rounded-full border border-theme px-4 py-2 text-xs text-theme-muted hover:text-theme-primary min-h-[38px]"
+                      className="rounded-lg border border-theme px-3 py-1.5 text-xs text-theme-muted hover:text-theme-primary"
                     >
                       Decline
                     </button>
@@ -247,63 +247,63 @@ export const ConnectionHub: React.FC = () => {
         )}
 
         {/* Pairing Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Card 1: Your Key */}
-          <div className="rounded-3xl border border-theme bg-theme-card p-6 sm:p-7 shadow-sm flex flex-col justify-between">
+          <div className="rounded-xl border border-theme bg-theme-card p-4 sm:p-5 shadow-xs flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-mono uppercase tracking-widest text-theme-muted">
+                <span className="text-[10px] font-mono uppercase tracking-wider text-theme-muted font-medium">
                   Your Secret Key
                 </span>
                 <button
                   onClick={handleRegenerateCode}
                   title="Regenerate key"
-                  className="text-theme-muted hover:text-theme-primary p-1.5 transition-colors rounded-full hover:bg-theme-input"
+                  className="text-theme-muted hover:text-theme-primary p-1 transition-colors rounded hover:bg-theme-input"
                 >
-                  <RefreshCw className="h-4 w-4" />
+                  <RefreshCw className="h-3.5 w-3.5" />
                 </button>
               </div>
 
-              <h3 className="mt-3.5 font-serif text-xl font-bold text-theme-primary">
+              <h3 className="mt-2 font-serif text-base font-bold text-theme-primary">
                 Share with your favorite
               </h3>
-              <p className="mt-1 text-xs sm:text-sm text-theme-secondary leading-relaxed">
+              <p className="mt-0.5 text-xs text-theme-secondary leading-relaxed">
                 Send this secret code to your partner so they can link directly to your space.
               </p>
 
-              <div className="mt-6 rounded-3xl border border-theme bg-theme-input p-5 text-center shadow-inner">
-                <span className="font-mono text-2xl sm:text-3xl font-bold tracking-widest text-theme-primary">
+              <div className="mt-4 rounded-lg border border-theme bg-theme-input p-3 text-center">
+                <span className="font-mono text-xl sm:text-2xl font-bold tracking-widest text-theme-primary">
                   {profile?.duo_code || 'DUO-......'}
                 </span>
               </div>
             </div>
 
-            <div className="mt-6">
+            <div className="mt-4">
               <button
                 onClick={handleCopyCode}
-                className="w-full flex items-center justify-center space-x-2 rounded-full border border-theme bg-theme-input py-3 text-xs sm:text-sm font-medium text-theme-primary hover:bg-theme-card transition-all min-h-[42px]"
+                className="w-full flex items-center justify-center space-x-1.5 rounded-lg border border-theme bg-theme-input py-2 text-xs font-medium text-theme-primary hover:bg-theme-card transition-colors"
               >
-                {copied ? <Check className="h-4 w-4 text-[#00D26A]" /> : <Copy className="h-4 w-4 text-theme-muted" />}
+                {copied ? <Check className="h-3.5 w-3.5 text-[#00D26A]" /> : <Copy className="h-3.5 w-3.5 text-theme-muted" />}
                 <span>{copied ? 'Copied to clipboard' : 'Copy Secret Key'}</span>
               </button>
             </div>
           </div>
 
           {/* Card 2: Connect with Partner Key */}
-          <div className="rounded-3xl border border-theme bg-theme-card p-6 sm:p-7 shadow-sm flex flex-col justify-between">
+          <div className="rounded-xl border border-theme bg-theme-card p-4 sm:p-5 shadow-xs flex flex-col justify-between">
             <div>
-              <span className="text-[10px] font-mono uppercase tracking-widest text-theme-muted">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-theme-muted font-medium">
                 Enter Partner's Key
               </span>
 
-              <h3 className="mt-3.5 font-serif text-xl font-bold text-theme-primary">
+              <h3 className="mt-2 font-serif text-base font-bold text-theme-primary">
                 Join partner's room
               </h3>
-              <p className="mt-1 text-xs sm:text-sm text-theme-secondary leading-relaxed">
+              <p className="mt-0.5 text-xs text-theme-secondary leading-relaxed">
                 Paste the secret key your partner shared with you to connect.
               </p>
 
-              <form onSubmit={handleConnect} className="mt-6 space-y-4">
+              <form onSubmit={handleConnect} className="mt-4 space-y-3">
                 <div>
                   <input
                     type="text"
@@ -312,26 +312,26 @@ export const ConnectionHub: React.FC = () => {
                     placeholder="e.g. DUO-7K4P2M"
                     maxLength={15}
                     disabled={hasActiveDuo}
-                    className="w-full rounded-full border border-theme bg-theme-input px-5 py-3 text-center font-mono text-lg font-bold tracking-widest text-theme-primary uppercase placeholder-theme-muted focus:border-[#5B58E6] focus:bg-theme-card focus:outline-none focus:ring-2 focus:ring-[#5B58E6]/20 disabled:opacity-40"
+                    className="w-full rounded-lg border border-theme bg-theme-input px-3 py-2 text-center font-mono text-base font-bold tracking-widest text-theme-primary uppercase placeholder-theme-muted focus:border-[#5B58E6] focus:bg-theme-card focus:outline-none disabled:opacity-40"
                   />
                 </div>
 
                 <button
                   type="submit"
                   disabled={isSubmitting || !partnerCode.trim() || hasActiveDuo}
-                  className="flex w-full items-center justify-center space-x-2 rounded-full bg-[#5B58E6] py-3 text-xs sm:text-sm font-medium text-white hover:bg-[#4A46DC] transition-all disabled:opacity-40 min-h-[42px] shadow-sm shadow-[#5B58E6]/25"
+                  className="flex w-full items-center justify-center space-x-1.5 rounded-lg bg-[#5B58E6] py-2 text-xs font-medium text-white hover:bg-[#4A46DC] transition-colors disabled:opacity-40 shadow-xs"
                 >
                   <span>{isSubmitting ? 'Linking...' : 'Send Pairing Request'}</span>
-                  <ArrowRight className="h-4 w-4" />
+                  <ArrowRight className="h-3.5 w-3.5" />
                 </button>
               </form>
             </div>
 
             {outgoingRequests.length > 0 && (
-              <div className="mt-6 pt-4 border-t border-theme">
-                <span className="text-xs font-mono text-theme-muted">Sent Request:</span>
+              <div className="mt-4 pt-3 border-t border-theme">
+                <span className="text-[10px] font-mono text-theme-muted">Sent Request:</span>
                 {outgoingRequests.map((req) => (
-                  <div key={req.id} className="mt-2 flex items-center justify-between rounded-full bg-theme-input border border-theme px-4 py-2 text-xs">
+                  <div key={req.id} className="mt-1.5 flex items-center justify-between rounded-lg bg-theme-input border border-theme px-3 py-1.5 text-xs">
                     <span className="text-theme-secondary">Sent to <strong className="text-theme-primary">{req.receiver.name}</strong></span>
                     <button
                       onClick={() => handleCancel(req.id)}

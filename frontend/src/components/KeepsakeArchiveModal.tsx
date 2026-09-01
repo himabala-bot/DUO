@@ -91,50 +91,50 @@ export const KeepsakeArchiveModal: React.FC<KeepsakeArchiveModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3 sm:p-6 backdrop-blur-[4px] overflow-y-auto">
-      <div className="relative w-full max-w-4xl rounded-3xl border border-theme bg-theme-card shadow-2xl overflow-hidden flex flex-col max-h-[90vh] transition-colors">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3 sm:p-6 backdrop-blur-[3px] overflow-y-auto">
+      <div className="relative w-full max-w-4xl rounded-xl border border-theme bg-theme-card shadow-xl overflow-hidden flex flex-col max-h-[85vh] transition-colors">
         {/* Top Header */}
-        <div className="flex items-center justify-between border-b border-theme bg-theme-page px-6 py-4 shrink-0">
+        <div className="flex items-center justify-between border-b border-theme bg-theme-page px-5 py-3.5 shrink-0">
           <div className="flex items-center space-x-2">
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#5B58E6] text-white">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#5B58E6] text-white">
               <BookOpen className="h-3.5 w-3.5" />
             </span>
             <div>
-              <h2 className="font-serif text-xl sm:text-2xl font-bold text-theme-primary">Keepsake Archive</h2>
-              <p className="text-[11px] font-mono text-theme-muted">Past daily love prompts answered together</p>
+              <h2 className="font-serif text-base sm:text-lg font-bold text-theme-primary leading-none">Keepsake Archive</h2>
+              <p className="text-[10px] font-mono text-theme-muted mt-0.5">Past daily love prompts answered together</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="rounded-full p-1.5 text-theme-secondary hover:text-theme-primary hover:bg-theme-card transition-colors"
+            className="rounded-md p-1.5 text-theme-secondary hover:text-theme-primary hover:bg-theme-card transition-colors"
           >
-            <X className="h-5 w-5" />
+            <X className="h-4 w-4" />
           </button>
         </div>
 
         {/* Content Body */}
-        <div className="flex-1 overflow-y-auto p-5 sm:p-7 bg-theme-card">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-theme-card">
           {isLoading ? (
-            <div className="flex h-64 items-center justify-center text-xs sm:text-sm font-mono text-theme-muted">
-              Opening scrapbook...
+            <div className="flex h-64 items-center justify-center text-xs font-mono text-theme-muted">
+              Loading archive...
             </div>
           ) : historyList.length === 0 ? (
-            <div className="rounded-3xl border border-theme bg-theme-input p-8 text-center space-y-2">
-              <Heart className="h-8 w-8 text-[#5B58E6] mx-auto mb-1" />
-              <h4 className="font-serif text-xl text-theme-primary font-bold">No past reflections yet</h4>
-              <p className="text-xs sm:text-sm text-theme-secondary max-w-sm mx-auto">
-                Submit today's daily prompts together to begin your lifelong archive!
+            <div className="rounded-lg border border-theme bg-theme-input p-8 text-center space-y-2">
+              <Heart className="h-6 w-6 text-[#5B58E6] mx-auto mb-1" />
+              <h4 className="font-serif text-base text-theme-primary font-bold">No past reflections yet</h4>
+              <p className="text-xs text-theme-secondary max-w-sm mx-auto">
+                Submit today's daily prompts together to begin your shared keepsake archive.
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-start">
               {/* Timeline Sidebar (Desktop 4 cols) */}
-              <div className="md:col-span-4 space-y-2.5">
-                <span className="text-[10px] font-mono uppercase tracking-widest text-theme-muted">
-                  Dates ({historyList.length})
+              <div className="md:col-span-4 space-y-2">
+                <span className="text-[10px] font-mono uppercase tracking-wider text-theme-muted font-medium">
+                  Entries ({historyList.length})
                 </span>
 
-                <div className="flex md:flex-col gap-2 overflow-x-auto md:overflow-x-visible md:max-h-[500px] md:overflow-y-auto pr-1">
+                <div className="flex md:flex-col gap-1.5 overflow-x-auto md:overflow-x-visible md:max-h-[460px] md:overflow-y-auto pr-1">
                   {historyList.map((item) => {
                     const isSelected = selectedDate === item.date;
                     const formatted = format(parseISO(item.date), 'MMM dd, yyyy');
@@ -143,20 +143,20 @@ export const KeepsakeArchiveModal: React.FC<KeepsakeArchiveModalProps> = ({
                       <button
                         key={item.date}
                         onClick={() => setSelectedDate(item.date)}
-                        className={`min-w-[160px] md:min-w-0 md:w-full text-left rounded-2xl p-3.5 transition-all flex items-center justify-between border shrink-0 ${
+                        className={`min-w-[150px] md:min-w-0 md:w-full text-left rounded-lg p-2.5 transition-all flex items-center justify-between border shrink-0 ${
                           isSelected
-                            ? 'border-[#5B58E6] bg-[#5B58E6]/10 shadow-sm ring-2 ring-[#5B58E6]/30 font-semibold text-theme-primary'
+                            ? 'border-[#5B58E6] bg-[#5B58E6]/10 text-theme-primary font-semibold'
                             : 'border-theme bg-theme-input hover:bg-theme-card-hover text-theme-secondary'
                         }`}
                       >
                         <div className="truncate">
-                          <div className="text-xs sm:text-sm font-mono flex items-center gap-1.5">
+                          <div className="text-xs font-mono flex items-center gap-1.5">
                             <Heart className="h-3 w-3 text-[#5B58E6] fill-current" />
                             {formatted}
                           </div>
-                          <p className="mt-0.5 text-[11px] text-theme-muted truncate">{item.summary}</p>
+                          <p className="mt-0.5 text-[10px] text-theme-muted truncate">{item.summary}</p>
                         </div>
-                        <ChevronRight className={`h-4 w-4 shrink-0 ${isSelected ? 'text-[#5B58E6]' : 'text-theme-muted'}`} />
+                        <ChevronRight className={`h-3.5 w-3.5 shrink-0 ${isSelected ? 'text-[#5B58E6]' : 'text-theme-muted'}`} />
                       </button>
                     );
                   })}
@@ -166,19 +166,19 @@ export const KeepsakeArchiveModal: React.FC<KeepsakeArchiveModalProps> = ({
               {/* Day Responses Details (Desktop 8 cols) */}
               <div className="md:col-span-8">
                 {isLoadingDetails ? (
-                  <div className="flex h-64 items-center justify-center rounded-3xl border border-theme bg-theme-input text-xs font-mono text-theme-muted">
-                    Opening entry...
+                  <div className="flex h-64 items-center justify-center rounded-lg border border-theme bg-theme-input text-xs font-mono text-theme-muted">
+                    Loading answers...
                   </div>
                 ) : dateResponses ? (
-                  <div className="space-y-4">
-                    <div className="pb-3 border-b border-theme flex items-center space-x-2">
-                      <Calendar className="h-4 w-4 text-[#5B58E6]" />
-                      <h3 className="font-serif text-lg sm:text-xl font-bold text-theme-primary">
+                  <div className="space-y-3.5">
+                    <div className="pb-2.5 border-b border-theme flex items-center space-x-2">
+                      <Calendar className="h-3.5 w-3.5 text-[#5B58E6]" />
+                      <h3 className="font-serif text-sm sm:text-base font-bold text-theme-primary">
                         {selectedDate ? format(parseISO(selectedDate), 'EEEE, MMMM dd, yyyy') : ''}
                       </h3>
                     </div>
 
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                       {dateResponses.questions.map((q, idx) => {
                         const myAns = dateResponses.my_responses.find((r) => r.question_id === q.id);
                         const partnerAns = dateResponses.partner_responses.find((r) => r.question_id === q.id);
@@ -186,24 +186,24 @@ export const KeepsakeArchiveModal: React.FC<KeepsakeArchiveModalProps> = ({
                         return (
                           <div
                             key={q.id}
-                            className="rounded-3xl border border-theme bg-theme-page p-4 sm:p-5 space-y-3"
+                            className="rounded-lg border border-theme bg-theme-page p-3.5 space-y-2.5"
                           >
-                            <h4 className="font-serif text-sm sm:text-base font-bold text-theme-primary">
+                            <h4 className="font-serif text-xs sm:text-sm font-bold text-theme-primary">
                               {idx + 1}. {q.question}
                             </h4>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
                               {/* My Answer */}
-                              <div className="rounded-2xl border border-theme bg-theme-card p-3.5 text-xs text-theme-primary">
-                                <span className="text-[10px] font-mono uppercase tracking-widest text-theme-muted block mb-1">
+                              <div className="rounded-lg border border-theme bg-theme-card p-3 text-xs text-theme-primary">
+                                <span className="text-[10px] font-mono uppercase tracking-wider text-theme-muted block mb-1 font-medium">
                                   You:
                                 </span>
                                 {renderAnswerContent(myAns?.answer, true)}
                               </div>
 
                               {/* Partner's Answer */}
-                              <div className="rounded-2xl border border-[#5B58E6]/20 bg-[#5B58E6]/5 p-3.5 text-xs text-theme-primary">
-                                <span className="text-[10px] font-mono uppercase tracking-widest text-[#5B58E6] block mb-1">
+                              <div className="rounded-lg border border-[#5B58E6]/20 bg-[#5B58E6]/5 p-3 text-xs text-theme-primary">
+                                <span className="text-[10px] font-mono uppercase tracking-wider text-[#5B58E6] block mb-1 font-medium">
                                   {partner?.name || 'Partner'}:
                                 </span>
                                 {renderAnswerContent(partnerAns?.answer, false)}

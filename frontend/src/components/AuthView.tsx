@@ -46,19 +46,19 @@ export const AuthView: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF7F2] text-[#422F0E] flex flex-col justify-between selection:bg-[#FCC4C0] selection:text-[#422F0E]">
+    <div className="min-h-screen bg-theme-page text-theme-primary flex flex-col justify-between selection:bg-[#5B58E6] selection:text-white transition-colors duration-200">
       {/* Top Bar */}
-      <header className="border-b border-[#EFE8DC] bg-[#FAF7F2]/95 backdrop-blur-md sticky top-0 z-30">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6 sm:px-8 lg:px-10">
+      <header className="border-b border-theme bg-theme-page/95 backdrop-blur-md sticky top-0 z-30">
+        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-6 sm:px-8">
           <div className="flex items-center space-x-2">
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#FCC4C0] text-[#EA5E86]">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#5B58E6] text-white shadow-xs">
               <Heart className="h-3.5 w-3.5 fill-current" />
             </span>
-            <span className="font-serif text-2xl sm:text-3xl font-normal tracking-tight text-[#422F0E]">Duo</span>
+            <span className="font-serif text-xl font-bold tracking-tight text-theme-primary">Duo</span>
           </div>
           <a
             href="#auth-section"
-            className="rounded-full bg-[#422F0E] px-5 py-2 text-xs font-medium text-[#FAF7F2] hover:bg-[#EA5E86] transition-all shadow-sm"
+            className="rounded-lg bg-[#5B58E6] px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#4A46DC] transition-colors shadow-xs"
           >
             Sign in &rarr;
           </a>
@@ -68,67 +68,67 @@ export const AuthView: React.FC = () => {
       {/* Main Landing Page Content */}
       <main className="flex-1">
         {/* Hero Narrative Section */}
-        <section className="mx-auto max-w-5xl px-6 sm:px-8 lg:px-10 pt-16 pb-12 sm:pt-24 sm:pb-16 text-center sm:text-left">
-          <div className="inline-flex items-center space-x-2 rounded-full border border-[#FCC4C0] bg-[#FFF5F5] px-4 py-1.5 text-xs font-medium text-[#EA5E86] mb-6 shadow-sm">
-            <Heart className="h-3.5 w-3.5 fill-current" />
-            <span>A little sanctuary made for two</span>
+        <section className="mx-auto max-w-4xl px-6 sm:px-8 pt-12 pb-10 sm:pt-20 sm:pb-14 text-center sm:text-left">
+          <div className="inline-flex items-center space-x-1.5 rounded px-2.5 py-1 text-xs font-mono font-medium text-[#5B58E6] bg-[#5B58E6]/10 border border-[#5B58E6]/25 mb-4">
+            <Heart className="h-3 w-3 fill-current" />
+            <span>A shared space made for two</span>
           </div>
 
-          <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-normal tracking-tight text-[#422F0E] leading-[1.14]">
-            A private, cozy space on the internet for <span className="italic font-serif text-[#EA5E86]">you two</span>.
+          <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-theme-primary leading-tight">
+            A private, quiet space on the internet for <span className="text-[#5B58E6]">you two</span>.
           </h1>
 
-          <p className="mt-6 max-w-3xl text-base sm:text-lg md:text-xl text-[#6B5E4E] leading-relaxed font-sans font-light">
-            No public feeds, no followers, no noise. Duo is your secret garden where you share daily love prompts, playful drawings, and real-time thoughts.
+          <p className="mt-4 max-w-2xl text-sm sm:text-base text-theme-secondary leading-relaxed font-sans">
+            No public feeds, no followers, no noise. Duo is your private sanctuary to share daily love prompts, playful drawings, and real-time thoughts.
           </p>
         </section>
 
         {/* 3 Pillars: How it works */}
-        <section className="mx-auto max-w-5xl px-6 sm:px-8 lg:px-10 py-8 sm:py-12">
-          <div className="border-t border-[#EFE8DC] pt-12">
-            <h2 className="text-[10px] font-mono uppercase tracking-widest text-[#A89F91] mb-8">
+        <section className="mx-auto max-w-4xl px-6 sm:px-8 py-6 sm:py-8">
+          <div className="border-t border-theme pt-8">
+            <h2 className="text-[10px] font-mono uppercase tracking-wider text-theme-muted mb-6 font-medium">
               How our space works
             </h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Feature 1 */}
-              <div className="rounded-3xl border border-[#EFE8DC] bg-[#FFFFFF] p-6 sm:p-7 shadow-[0_2px_12px_rgba(66,47,14,0.03)] flex flex-col justify-between">
+              <div className="rounded-xl border border-theme bg-theme-card p-5 shadow-xs flex flex-col justify-between">
                 <div>
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#AECFD0]/30 text-[#037F71] mb-5">
-                    <KeyRound className="h-5 w-5" />
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#5B58E6]/10 text-[#5B58E6] mb-4">
+                    <KeyRound className="h-4.5 w-4.5" />
                   </div>
-                  <span className="text-xs font-mono text-[#A89F91]">01 / Secret Key</span>
-                  <h3 className="mt-2 text-lg font-serif font-medium text-[#422F0E]">Private Pairing</h3>
-                  <p className="mt-2 text-xs sm:text-sm text-[#6B5E4E] leading-relaxed">
-                    Generate your unique DUO secret code and share it with your partner. Once connected, your room is sealed forever.
+                  <span className="text-[11px] font-mono text-theme-muted">01 / Secret Key</span>
+                  <h3 className="mt-1 text-sm font-serif font-bold text-theme-primary">Private Pairing</h3>
+                  <p className="mt-1 text-xs text-theme-secondary leading-relaxed">
+                    Generate your unique DUO secret code and share it with your partner. Once connected, your room is linked forever.
                   </p>
                 </div>
               </div>
 
               {/* Feature 2 */}
-              <div className="rounded-3xl border border-[#EFE8DC] bg-[#FFFFFF] p-6 sm:p-7 shadow-[0_2px_12px_rgba(66,47,14,0.03)] flex flex-col justify-between">
+              <div className="rounded-xl border border-theme bg-theme-card p-5 shadow-xs flex flex-col justify-between">
                 <div>
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#DDF2B8]/50 text-[#037F71] mb-5">
-                    <PenTool className="h-5 w-5" />
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#00D26A]/10 text-[#00D26A] mb-4">
+                    <PenTool className="h-4.5 w-4.5" />
                   </div>
-                  <span className="text-xs font-mono text-[#A89F91]">02 / Live Doodles</span>
-                  <h3 className="mt-2 text-lg font-serif font-medium text-[#422F0E]">Notes & Drawing Studio</h3>
-                  <p className="mt-2 text-xs sm:text-sm text-[#6B5E4E] leading-relaxed">
+                  <span className="text-[11px] font-mono text-theme-muted">02 / Live Doodles</span>
+                  <h3 className="mt-1 text-sm font-serif font-bold text-theme-primary">Notes & Drawing Studio</h3>
+                  <p className="mt-1 text-xs text-theme-secondary leading-relaxed">
                     Instant messaging with real-time ink canvas to leave sweet sketches, doodle reactions, and heartfelt love letters.
                   </p>
                 </div>
               </div>
 
               {/* Feature 3 */}
-              <div className="rounded-3xl border border-[#EFE8DC] bg-[#FFFFFF] p-6 sm:p-7 shadow-[0_2px_12px_rgba(66,47,14,0.03)] flex flex-col justify-between">
+              <div className="rounded-xl border border-theme bg-theme-card p-5 shadow-xs flex flex-col justify-between">
                 <div>
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#FCC4C0]/40 text-[#EA5E86] mb-5">
-                    <BookOpen className="h-5 w-5" />
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#FB923C]/10 text-[#FB923C] mb-4">
+                    <BookOpen className="h-4.5 w-4.5" />
                   </div>
-                  <span className="text-xs font-mono text-[#A89F91]">03 / Love Prompts</span>
-                  <h3 className="mt-2 text-lg font-serif font-medium text-[#422F0E]">Daily Questions</h3>
-                  <p className="mt-2 text-xs sm:text-sm text-[#6B5E4E] leading-relaxed">
-                    Thoughtful prompts every day. Answers remain sealed in private drafts until both of you reveal, creating a lifelong scrapbook.
+                  <span className="text-[11px] font-mono text-theme-muted">03 / Love Prompts</span>
+                  <h3 className="mt-1 text-sm font-serif font-bold text-theme-primary">Daily Questions</h3>
+                  <p className="mt-1 text-xs text-theme-secondary leading-relaxed">
+                    Thoughtful prompts every day. Answers remain sealed in private drafts until both of you reveal, creating a shared archive.
                   </p>
                 </div>
               </div>
@@ -137,17 +137,17 @@ export const AuthView: React.FC = () => {
         </section>
 
         {/* Auth Entry Form Section */}
-        <section id="auth-section" className="mx-auto max-w-md px-6 py-16 sm:py-24">
-          <div className="rounded-3xl border border-[#EFE8DC] bg-[#FFFFFF] p-8 sm:p-10 shadow-[0_12px_36px_rgba(66,47,14,0.06)]">
-            <div className="text-center mb-6">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#FCC4C0]/40 text-[#EA5E86] mx-auto mb-3">
-                <Heart className="h-5 w-5 fill-current" />
+        <section id="auth-section" className="mx-auto max-w-md px-6 py-12 sm:py-16">
+          <div className="rounded-xl border border-theme bg-theme-card p-6 sm:p-8 shadow-md">
+            <div className="text-center mb-5">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#5B58E6]/10 text-[#5B58E6] mx-auto mb-2.5">
+                <Heart className="h-4.5 w-4.5 fill-current" />
               </div>
-              <h2 className="font-serif text-2xl sm:text-3xl font-normal text-[#422F0E]">
-                {isLogin ? 'Welcome back, love' : 'Start your shared room'}
+              <h2 className="font-serif text-xl sm:text-2xl font-bold text-theme-primary">
+                {isLogin ? 'Welcome back' : 'Start your shared room'}
               </h2>
-              <p className="mt-1.5 text-xs sm:text-sm text-[#6B5E4E]">
-                {isLogin ? 'Enter your private space' : 'Begin your intimate memories together'}
+              <p className="mt-1 text-xs text-theme-secondary">
+                {isLogin ? 'Enter your private space' : 'Begin your shared memories together'}
               </p>
             </div>
 
@@ -155,7 +155,7 @@ export const AuthView: React.FC = () => {
             <button
               onClick={handleGoogleAuth}
               type="button"
-              className="flex w-full items-center justify-center space-x-3 rounded-full border border-[#EFE8DC] bg-[#FAF7F2] px-5 py-3 text-xs sm:text-sm font-medium text-[#422F0E] transition-all hover:bg-[#F2ECE1] hover:border-[#FCC4C0] shadow-sm"
+              className="flex w-full items-center justify-center space-x-2.5 rounded-lg border border-theme bg-theme-input px-4 py-2 text-xs sm:text-sm font-medium text-theme-primary transition-colors hover:bg-theme-card hover:border-[#5B58E6] shadow-xs"
             >
               <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24">
                 <path
@@ -178,25 +178,25 @@ export const AuthView: React.FC = () => {
               <span>Continue with Google</span>
             </button>
 
-            <div className="relative my-6 flex items-center justify-center">
-              <div className="w-full border-t border-[#EFE8DC]" />
-              <span className="absolute bg-[#FFFFFF] px-3 text-[10px] font-mono uppercase tracking-wider text-[#A89F91]">
+            <div className="relative my-4 flex items-center justify-center">
+              <div className="w-full border-t border-theme" />
+              <span className="absolute bg-theme-card px-2.5 text-[10px] font-mono uppercase tracking-wider text-theme-muted">
                 or with email
               </span>
             </div>
 
             {/* Toggle Sign In / Create Account */}
-            <div className="flex rounded-full border border-[#EFE8DC] bg-[#FAF7F2] p-1 mb-5">
+            <div className="flex rounded-lg border border-theme bg-theme-input p-0.5 mb-4">
               <button
                 onClick={() => {
                   setIsLogin(true);
                   setErrorMsg(null);
                 }}
                 type="button"
-                className={`w-1/2 rounded-full py-2 text-xs sm:text-sm font-medium transition-all ${
+                className={`w-1/2 rounded-md py-1.5 text-xs font-medium transition-all ${
                   isLogin
-                    ? 'bg-[#422F0E] text-[#FAF7F2] shadow-sm font-semibold'
-                    : 'text-[#6B5E4E] hover:text-[#422F0E]'
+                    ? 'bg-theme-card text-theme-primary shadow-xs font-semibold'
+                    : 'text-theme-secondary hover:text-theme-primary'
                 }`}
               >
                 Sign In
@@ -207,10 +207,10 @@ export const AuthView: React.FC = () => {
                   setErrorMsg(null);
                 }}
                 type="button"
-                className={`w-1/2 rounded-full py-2 text-xs sm:text-sm font-medium transition-all ${
+                className={`w-1/2 rounded-md py-1.5 text-xs font-medium transition-all ${
                   !isLogin
-                    ? 'bg-[#422F0E] text-[#FAF7F2] shadow-sm font-semibold'
-                    : 'text-[#6B5E4E] hover:text-[#422F0E]'
+                    ? 'bg-theme-card text-theme-primary shadow-xs font-semibold'
+                    : 'text-theme-secondary hover:text-theme-primary'
                 }`}
               >
                 Create Room
@@ -218,54 +218,54 @@ export const AuthView: React.FC = () => {
             </div>
 
             {errorMsg && (
-              <div className="mb-4 rounded-2xl border border-[#FCC4C0] bg-[#FFF5F5] p-3.5 text-xs text-[#EA5E86]">
+              <div className="mb-3 rounded-lg border border-[#F43F5E]/30 bg-[#F43F5E]/10 p-2.5 text-xs text-[#F43F5E]">
                 {errorMsg}
               </div>
             )}
 
             {isSuccessRegistration && (
-              <div className="mb-4 rounded-2xl border border-[#DDF2B8] bg-[#F5FBEF] p-3.5 text-xs text-[#037F71]">
+              <div className="mb-3 rounded-lg border border-[#00D26A]/30 bg-[#00D26A]/10 p-2.5 text-xs text-[#00D26A]">
                 Account created! If email confirmation is enabled on your Supabase project, check your inbox.
               </div>
             )}
 
             {/* Form */}
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-3">
               {!isLogin && (
                 <div>
-                  <label className="block text-xs font-medium text-[#6B5E4E] mb-1">Your Name</label>
+                  <label className="block text-xs font-medium text-theme-secondary mb-1">Your Name</label>
                   <input
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="e.g. Alex"
-                    className="w-full rounded-full border border-[#EFE8DC] bg-[#FAF7F2] px-5 py-2.5 text-xs sm:text-sm text-[#422F0E] placeholder-[#A89F91] focus:border-[#EA5E86] focus:bg-[#FFFFFF] focus:outline-none focus:ring-2 focus:ring-[#FCC4C0]/40"
+                    className="w-full rounded-lg border border-theme bg-theme-input px-3 py-1.5 text-xs sm:text-sm text-theme-primary placeholder-theme-muted focus:border-[#5B58E6] focus:bg-theme-card focus:outline-none"
                     required
                   />
                 </div>
               )}
 
               <div>
-                <label className="block text-xs font-medium text-[#6B5E4E] mb-1">Email Address</label>
+                <label className="block text-xs font-medium text-theme-secondary mb-1">Email Address</label>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@domain.com"
-                  className="w-full rounded-full border border-[#EFE8DC] bg-[#FAF7F2] px-5 py-2.5 text-xs sm:text-sm text-[#422F0E] placeholder-[#A89F91] focus:border-[#EA5E86] focus:bg-[#FFFFFF] focus:outline-none focus:ring-2 focus:ring-[#FCC4C0]/40"
+                  className="w-full rounded-lg border border-theme bg-theme-input px-3 py-1.5 text-xs sm:text-sm text-theme-primary placeholder-theme-muted focus:border-[#5B58E6] focus:bg-theme-card focus:outline-none"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-[#6B5E4E] mb-1">Password</label>
+                <label className="block text-xs font-medium text-theme-secondary mb-1">Password</label>
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   minLength={6}
-                  className="w-full rounded-full border border-[#EFE8DC] bg-[#FAF7F2] px-5 py-2.5 text-xs sm:text-sm text-[#422F0E] placeholder-[#A89F91] focus:border-[#EA5E86] focus:bg-[#FFFFFF] focus:outline-none focus:ring-2 focus:ring-[#FCC4C0]/40"
+                  className="w-full rounded-lg border border-theme bg-theme-input px-3 py-1.5 text-xs sm:text-sm text-theme-primary placeholder-theme-muted focus:border-[#5B58E6] focus:bg-theme-card focus:outline-none"
                   required
                 />
               </div>
@@ -273,10 +273,10 @@ export const AuthView: React.FC = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="mt-2 flex w-full items-center justify-center space-x-2 rounded-full bg-[#422F0E] py-3 text-xs sm:text-sm font-medium text-[#FAF7F2] transition-all hover:bg-[#EA5E86] disabled:opacity-40 shadow-sm"
+                className="mt-1 flex w-full items-center justify-center space-x-1.5 rounded-lg bg-[#5B58E6] py-2 text-xs sm:text-sm font-medium text-white transition-colors hover:bg-[#4A46DC] disabled:opacity-40 shadow-xs"
               >
                 <span>{isLoading ? 'Opening space...' : isLogin ? 'Enter Room' : 'Create Room'}</span>
-                <ArrowRight className="h-4 w-4 text-[#FCC4C0]" />
+                <ArrowRight className="h-3.5 w-3.5" />
               </button>
             </form>
           </div>
@@ -284,8 +284,8 @@ export const AuthView: React.FC = () => {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-[#EFE8DC] py-8 text-center text-xs font-mono text-[#A89F91]">
-        DUO &mdash; crafted for love & quiet intimacy
+      <footer className="border-t border-theme py-6 text-center text-xs font-mono text-theme-muted">
+        DUO &mdash; crafted for quiet intimacy
       </footer>
     </div>
   );

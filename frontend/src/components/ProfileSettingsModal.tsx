@@ -264,25 +264,25 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3 sm:p-6 backdrop-blur-[4px] overflow-y-auto">
-      <div className="relative w-full max-w-2xl rounded-3xl border border-theme bg-theme-card shadow-2xl overflow-hidden flex flex-col max-h-[90vh] transition-colors">
+      <div className="relative w-full max-w-2xl rounded-xl border border-theme bg-theme-card shadow-2xl overflow-hidden flex flex-col max-h-[88vh] transition-colors">
         {/* Modal Top Header */}
-        <div className="flex items-center justify-between border-b border-theme bg-theme-page px-6 py-4 shrink-0">
+        <div className="flex items-center justify-between border-b border-theme bg-theme-page px-5 py-3 shrink-0">
           <div className="flex items-center space-x-2">
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#5B58E6] text-white">
+            <span className="flex h-6 w-6 items-center justify-center rounded-md bg-[#5B58E6] text-white">
               <Heart className="h-3.5 w-3.5 fill-current" />
             </span>
-            <h2 className="font-serif text-xl sm:text-2xl font-bold text-theme-primary">Room Settings</h2>
+            <h2 className="font-serif text-base sm:text-lg font-bold text-theme-primary">Room Settings</h2>
           </div>
           <button
             onClick={onClose}
-            className="rounded-full p-1.5 text-theme-secondary hover:text-theme-primary hover:bg-theme-card transition-colors"
+            className="rounded p-1 text-theme-secondary hover:text-theme-primary hover:bg-theme-card transition-colors"
           >
-            <X className="h-5 w-5" />
+            <X className="h-4 w-4" />
           </button>
         </div>
 
         {/* Section Navigation Tabs */}
-        <div className="flex border-b border-theme bg-theme-page px-4 sm:px-6 overflow-x-auto shrink-0 gap-1.5 scrollbar-none py-2">
+        <div className="flex border-b border-theme bg-theme-page px-4 sm:px-5 overflow-x-auto shrink-0 gap-1 scrollbar-none py-1.5">
           {[
             { id: 'profile', label: 'Profile', icon: User },
             { id: 'duo', label: 'Our Space', icon: Heart },
@@ -296,9 +296,9 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
               <button
                 key={sec.id}
                 onClick={() => setActiveSection(sec.id as any)}
-                className={`flex items-center space-x-2 py-2 px-3.5 text-xs sm:text-sm font-medium rounded-full transition-all whitespace-nowrap ${
+                className={`flex items-center space-x-1.5 py-1.5 px-3 text-xs font-medium rounded-lg transition-all whitespace-nowrap ${
                   isActive
-                    ? 'bg-[#5B58E6] text-white font-semibold shadow-md shadow-[#5B58E6]/25'
+                    ? 'bg-[#5B58E6] text-white font-semibold shadow-xs'
                     : 'text-theme-secondary hover:bg-theme-card hover:text-theme-primary'
                 }`}
               >
@@ -310,31 +310,31 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
         </div>
 
         {/* Content Body */}
-        <div className="flex-1 overflow-y-auto p-5 sm:p-7 space-y-6 bg-theme-card">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 bg-theme-card">
           {/* Action Message Banner */}
           {actionMessage && (
             <div
-              className={`flex items-center space-x-2 rounded-2xl p-3.5 text-xs ${
-                actionMessage.type === 'success' ? 'bg-[#F5FBEF] text-[#037F71] border border-[#DDF2B8]' : 'bg-[#FFF5F5] text-[#EA5E86] border border-[#FCC4C0]'
+              className={`flex items-center space-x-2 rounded-lg p-2.5 text-xs ${
+                actionMessage.type === 'success' ? 'bg-[#00D26A]/10 text-[#00D26A] border border-[#00D26A]/25' : 'bg-[#F43F5E]/10 text-[#F43F5E] border border-[#F43F5E]/25'
               }`}
             >
-              <Check className="h-4 w-4" />
+              <Check className="h-3.5 w-3.5" />
               <span>{actionMessage.msg}</span>
             </div>
           )}
 
           {/* SECTION 1: PROFILE */}
           {activeSection === 'profile' && (
-            <div className="space-y-6">
+            <div className="space-y-4">
               {/* Profile Card & Avatar */}
-              <div className="rounded-3xl border border-[#EFE8DC] bg-[#FAF7F2] p-5 flex flex-col sm:flex-row items-center gap-5">
-                <Avatar src={selectedAvatar} name={name} size="lg" />
+              <div className="rounded-xl border border-theme bg-theme-input p-4 flex flex-col sm:flex-row items-center gap-4">
+                <Avatar src={selectedAvatar} name={name} size="md" />
 
                 <div className="flex-1 text-center sm:text-left">
-                  <h3 className="font-serif text-lg font-medium text-[#422F0E]">{profile?.name}</h3>
-                  <p className="text-xs font-mono text-[#A89F91]">{profile?.email}</p>
-                  <div className="mt-2 inline-flex items-center space-x-1.5 rounded-full bg-[#FFFFFF] border border-[#EFE8DC] px-3 py-0.5 text-[11px] font-mono text-[#6B5E4E]">
-                    <span className={`h-1.5 w-1.5 rounded-full ${hasActiveDuo ? 'bg-[#037F71]' : 'bg-[#D4C3AD]'}`} />
+                  <h3 className="font-serif text-sm font-bold text-theme-primary">{profile?.name}</h3>
+                  <p className="text-xs font-mono text-theme-muted">{profile?.email}</p>
+                  <div className="mt-1.5 inline-flex items-center space-x-1.5 rounded bg-theme-card border border-theme px-2.5 py-0.5 text-[10px] font-mono text-theme-secondary">
+                    <span className={`h-1.5 w-1.5 rounded-full ${hasActiveDuo ? 'bg-[#00D26A]' : 'bg-theme-muted'}`} />
                     <span>{hasActiveDuo ? `Paired with ${partner?.name || 'Partner'}` : 'Unconnected Room'}</span>
                   </div>
                 </div>
@@ -342,10 +342,10 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 
               {/* Avatar Selector */}
               <div>
-                <label className="block text-[10px] font-mono uppercase tracking-widest text-[#A89F91] mb-2.5">
+                <label className="block text-[10px] font-mono uppercase tracking-wider text-theme-muted mb-2 font-medium">
                   Choose Your Monster Avatar
                 </label>
-                <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
+                <div className="grid grid-cols-4 sm:grid-cols-6 gap-2.5">
                   {AVATAR_OPTIONS.map((avatarPath, index) => (
                     <button
                       key={avatarPath}
@@ -354,10 +354,10 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                         setSelectedAvatar(avatarPath);
                         setCustomAvatarUrl('');
                       }}
-                      className={`relative aspect-square rounded-full p-1 border-2 transition-all hover:scale-105 ${
+                      className={`relative aspect-square rounded-full p-0.5 border-2 transition-all hover:scale-105 ${
                         selectedAvatar === avatarPath
-                          ? 'border-[#EA5E86] ring-2 ring-[#FCC4C0] shadow-md scale-105'
-                          : 'border-[#EFE8DC] bg-[#FAF7F2] hover:border-[#FCC4C0]'
+                          ? 'border-[#5B58E6] ring-2 ring-[#5B58E6]/40 shadow-xs scale-105'
+                          : 'border-theme bg-theme-input hover:border-[#5B58E6]'
                       }`}
                     >
                       <img
@@ -371,40 +371,40 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
               </div>
 
               {/* Edit Form */}
-              <form onSubmit={handleSaveProfile} className="space-y-4">
+              <form onSubmit={handleSaveProfile} className="space-y-3">
                 <div>
-                  <label className="block text-xs font-medium text-[#6B5E4E] mb-1.5">Display Name</label>
+                  <label className="block text-xs font-medium text-theme-secondary mb-1">Display Name</label>
                   <input
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Your name"
-                    className="w-full rounded-full border border-[#EFE8DC] bg-[#FAF7F2] px-5 py-2.5 text-xs sm:text-sm text-[#422F0E] focus:border-[#EA5E86] focus:bg-[#FFFFFF] focus:outline-none focus:ring-2 focus:ring-[#FCC4C0]/40"
+                    className="w-full rounded-lg border border-theme bg-theme-input px-3 py-1.5 text-xs sm:text-sm text-theme-primary placeholder-theme-muted focus:border-[#5B58E6] focus:bg-theme-card focus:outline-none"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-[#6B5E4E] mb-1.5">Custom Photo URL (optional)</label>
+                  <label className="block text-xs font-medium text-theme-secondary mb-1">Custom Photo URL (optional)</label>
                   <input
                     type="url"
                     value={customAvatarUrl}
                     onChange={(e) => setCustomAvatarUrl(e.target.value)}
                     placeholder="https://example.com/avatar.jpg"
-                    className="w-full rounded-full border border-[#EFE8DC] bg-[#FAF7F2] px-5 py-2.5 text-xs text-[#422F0E] focus:border-[#EA5E86] focus:bg-[#FFFFFF] focus:outline-none focus:ring-2 focus:ring-[#FCC4C0]/40"
+                    className="w-full rounded-lg border border-theme bg-theme-input px-3 py-1.5 text-xs text-theme-primary placeholder-theme-muted focus:border-[#5B58E6] focus:bg-theme-card focus:outline-none"
                   />
                 </div>
 
-                <div className="flex items-center justify-between pt-2">
+                <div className="flex items-center justify-between pt-1">
                   {profileSaveSuccess && (
-                    <span className="text-xs font-mono text-[#037F71] flex items-center gap-1">
-                      <Check className="h-3.5 w-3.5" /> Profile updated
+                    <span className="text-xs font-mono text-[#00D26A] flex items-center gap-1">
+                      <Check className="h-3 w-3" /> Profile updated
                     </span>
                   )}
                   <button
                     type="submit"
                     disabled={isSavingProfile || !name.trim()}
-                    className="ml-auto flex items-center space-x-2 rounded-full bg-[#422F0E] px-6 py-2.5 text-xs sm:text-sm font-medium text-[#FAF7F2] hover:bg-[#EA5E86] disabled:opacity-40 transition-all shadow-sm"
+                    className="ml-auto flex items-center space-x-1.5 rounded-lg bg-[#5B58E6] px-4 py-1.5 text-xs font-medium text-white hover:bg-[#4A46DC] disabled:opacity-40 transition-colors shadow-xs"
                   >
                     <span>{isSavingProfile ? 'Saving...' : 'Save Profile'}</span>
                   </button>
@@ -415,36 +415,36 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 
           {/* SECTION 2: DUO CONNECTION */}
           {activeSection === 'duo' && (
-            <div className="space-y-6">
+            <div className="space-y-4">
               {/* Partner Card */}
               {hasActiveDuo && partner ? (
-                <div className="rounded-3xl border border-[#EFE8DC] bg-[#FAF7F2] p-5 space-y-4">
+                <div className="rounded-xl border border-theme bg-theme-input p-4 space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-mono uppercase tracking-widest text-[#A89F91]">Connected Partner</span>
-                    <span className="text-xs font-mono text-[#037F71] flex items-center gap-1.5">
-                      <span className="h-2 w-2 rounded-full bg-[#037F71]" />
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-theme-muted font-medium">Connected Partner</span>
+                    <span className="text-[11px] font-mono text-[#00D26A] flex items-center gap-1">
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#00D26A]" />
                       Paired
                     </span>
                   </div>
 
-                  <div className="flex items-center space-x-4">
-                    <Avatar src={partner.avatar_url} name={partner.name} size="md" />
+                  <div className="flex items-center space-x-3">
+                    <Avatar src={partner.avatar_url} name={partner.name} size="sm" />
                     <div>
-                      <h4 className="font-serif text-base sm:text-lg font-medium text-[#422F0E]">{partner.name}</h4>
-                      <p className="text-xs font-mono text-[#A89F91]">{partner.email}</p>
+                      <h4 className="font-serif text-sm font-bold text-theme-primary">{partner.name}</h4>
+                      <p className="text-xs font-mono text-theme-muted">{partner.email}</p>
                     </div>
                   </div>
 
                   {connectedDateFormatted && (
-                    <div className="flex items-center space-x-2 text-xs font-mono text-[#6B5E4E] pt-2 border-t border-[#EFE8DC]">
-                      <Calendar className="h-3.5 w-3.5 text-[#EA5E86]" />
+                    <div className="flex items-center space-x-1.5 text-[11px] font-mono text-theme-secondary pt-2 border-t border-theme">
+                      <Calendar className="h-3 w-3 text-[#5B58E6]" />
                       <span>Paired since {connectedDateFormatted}</span>
                     </div>
                   )}
                 </div>
               ) : (
-                <div className="rounded-3xl border border-[#EFE8DC] bg-[#FAF7F2] p-6 text-center">
-                  <p className="text-xs sm:text-sm text-[#6B5E4E]">
+                <div className="rounded-xl border border-theme bg-theme-input p-5 text-center">
+                  <p className="text-xs text-theme-secondary">
                     You are not currently paired in an active room.
                   </p>
                   {onNavigateTab && (
@@ -453,7 +453,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                         onClose();
                         onNavigateTab('duo');
                       }}
-                      className="mt-3 inline-flex items-center space-x-2 rounded-full bg-[#422F0E] px-5 py-2 text-xs font-medium text-white hover:bg-[#EA5E86] transition-all"
+                      className="mt-2.5 inline-flex items-center space-x-1.5 rounded-lg bg-[#5B58E6] px-4 py-1.5 text-xs font-medium text-white hover:bg-[#4A46DC] transition-colors shadow-xs"
                     >
                       <span>Pair Secret Keys</span>
                     </button>
@@ -462,66 +462,66 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
               )}
 
               {/* Your Duo Key Card */}
-              <div className="rounded-3xl border border-[#EFE8DC] bg-[#FFFFFF] p-5 shadow-sm space-y-3">
+              <div className="rounded-xl border border-theme bg-theme-card p-4 shadow-xs space-y-2.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-mono uppercase tracking-widest text-[#A89F91]">Your Secret Key</span>
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-theme-muted font-medium">Your Secret Key</span>
                   <button
                     onClick={handleRegenerateCode}
                     title="Regenerate key"
-                    className="p-1 text-[#A89F91] hover:text-[#422F0E] rounded-full hover:bg-[#F2ECE1]"
+                    className="p-1 text-theme-muted hover:text-theme-primary rounded hover:bg-theme-input transition-colors"
                   >
-                    <RefreshCw className="h-3.5 w-3.5" />
+                    <RefreshCw className="h-3 w-3" />
                   </button>
                 </div>
 
-                <div className="rounded-2xl border border-[#EFE8DC] bg-[#FAF7F2] p-4 text-center">
-                  <span className="font-mono text-2xl font-medium tracking-widest text-[#422F0E]">
+                <div className="rounded-lg border border-theme bg-theme-input p-3 text-center">
+                  <span className="font-mono text-xl font-bold tracking-widest text-theme-primary">
                     {profile?.duo_code}
                   </span>
                 </div>
 
                 <button
                   onClick={handleCopyCode}
-                  className="w-full flex items-center justify-center space-x-2 rounded-full border border-[#EFE8DC] bg-[#FAF7F2] py-2.5 text-xs font-medium text-[#422F0E] hover:bg-[#F2ECE1] hover:border-[#FCC4C0] transition-all"
+                  className="w-full flex items-center justify-center space-x-1.5 rounded-lg border border-theme bg-theme-input py-2 text-xs font-medium text-theme-primary hover:bg-theme-card transition-colors"
                 >
-                  {copiedCode ? <Check className="h-4 w-4 text-[#037F71]" /> : <Copy className="h-4 w-4 text-[#A89F91]" />}
+                  {copiedCode ? <Check className="h-3.5 w-3.5 text-[#00D26A]" /> : <Copy className="h-3.5 w-3.5 text-theme-muted" />}
                   <span>{copiedCode ? 'Key copied to clipboard' : 'Copy Secret Key'}</span>
                 </button>
               </div>
 
               {/* Disconnect / Leave Duo */}
               {hasActiveDuo && (
-                <div className="rounded-3xl border border-[#FCC4C0] bg-[#FFF5F5] p-5 space-y-3">
-                  <h4 className="text-xs font-semibold text-[#EA5E86] uppercase tracking-wider font-mono">
+                <div className="rounded-xl border border-[#F43F5E]/25 bg-[#F43F5E]/10 p-4 space-y-2.5">
+                  <h4 className="text-xs font-semibold text-[#F43F5E] uppercase tracking-wider font-mono">
                     Disconnect Room
                   </h4>
-                  <p className="text-xs text-[#6B5E4E]">
+                  <p className="text-xs text-theme-secondary">
                     Disconnecting will un-pair you and {partner?.name}. You will need to exchange keys to connect again.
                   </p>
 
                   {!confirmLeaveDuo ? (
                     <button
                       onClick={() => setConfirmLeaveDuo(true)}
-                      className="rounded-full border border-[#FCC4C0] bg-[#FFFFFF] px-5 py-2 text-xs font-medium text-[#EA5E86] hover:bg-[#FFF8FA] transition-all"
+                      className="rounded-lg border border-[#F43F5E]/30 bg-theme-card px-3.5 py-1.5 text-xs font-medium text-[#F43F5E] hover:bg-[#F43F5E]/10 transition-colors"
                     >
                       Disconnect from Duo
                     </button>
                   ) : (
-                    <div className="space-y-2 pt-2">
-                      <p className="text-xs font-semibold text-[#EA5E86]">
+                    <div className="space-y-2 pt-1">
+                      <p className="text-xs font-semibold text-[#F43F5E]">
                         Are you sure you want to disconnect?
                       </p>
                       <div className="flex gap-2">
                         <button
                           onClick={handleLeaveDuo}
                           disabled={actionLoading}
-                          className="rounded-full bg-[#EA5E86] px-5 py-2 text-xs font-medium text-white hover:bg-[#D94E76] transition-all disabled:opacity-50"
+                          className="rounded-lg bg-[#F43F5E] px-3.5 py-1.5 text-xs font-medium text-white hover:bg-[#E11D48] transition-colors disabled:opacity-50"
                         >
                           {actionLoading ? 'Disconnecting...' : 'Yes, Disconnect'}
                         </button>
                         <button
                           onClick={() => setConfirmLeaveDuo(false)}
-                          className="rounded-full border border-[#EFE8DC] bg-[#FFFFFF] px-4 py-2 text-xs text-[#6B5E4E]"
+                          className="rounded-lg border border-theme bg-theme-card px-3 py-1.5 text-xs text-theme-secondary"
                         >
                           Cancel
                         </button>
@@ -535,72 +535,72 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 
           {/* SECTION 3: CHAT PREFERENCES */}
           {activeSection === 'chat' && (
-            <div className="space-y-6">
-              <div className="space-y-4">
+            <div className="space-y-4">
+              <div className="space-y-3">
                 {/* Enter to Send Toggle */}
-                <div className="flex items-center justify-between rounded-3xl border border-[#EFE8DC] bg-[#FAF7F2] p-4">
+                <div className="flex items-center justify-between rounded-xl border border-theme bg-theme-input p-3.5">
                   <div>
-                    <h4 className="text-xs sm:text-sm font-medium text-[#422F0E]">Press Enter to Send</h4>
-                    <p className="text-xs text-[#6B5E4E]">
-                      When enabled, pressing <kbd className="font-mono bg-[#FFFFFF] px-1.5 py-0.5 rounded-full border border-[#EFE8DC] text-[10px]">Enter</kbd> sends immediately. Shift+Enter creates a new line.
+                    <h4 className="text-xs sm:text-sm font-medium text-theme-primary">Press Enter to Send</h4>
+                    <p className="text-xs text-theme-secondary">
+                      When enabled, pressing <kbd className="font-mono bg-theme-card px-1 py-0.2 rounded border border-theme text-[10px]">Enter</kbd> sends immediately. Shift+Enter creates a new line.
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={() => handleTogglePreference('enter_to_send', !enterToSend)}
-                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                      enterToSend ? 'bg-[#422F0E]' : 'bg-[#D4C3AD]'
+                    className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                      enterToSend ? 'bg-[#5B58E6]' : 'bg-theme-muted'
                     }`}
                   >
                     <span
-                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
-                        enterToSend ? 'translate-x-5' : 'translate-x-0'
+                      className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-xs transition duration-200 ease-in-out ${
+                        enterToSend ? 'translate-x-4' : 'translate-x-0'
                       }`}
                     />
                   </button>
                 </div>
 
                 {/* Read Receipts Toggle */}
-                <div className="flex items-center justify-between rounded-3xl border border-[#EFE8DC] bg-[#FAF7F2] p-4">
+                <div className="flex items-center justify-between rounded-xl border border-theme bg-theme-input p-3.5">
                   <div>
-                    <h4 className="text-xs sm:text-sm font-medium text-[#422F0E]">Read Receipts</h4>
-                    <p className="text-xs text-[#6B5E4E]">
+                    <h4 className="text-xs sm:text-sm font-medium text-theme-primary">Read Receipts</h4>
+                    <p className="text-xs text-theme-secondary">
                       Show double-check icons when messages have been seen by your partner.
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={() => handleTogglePreference('read_receipts', !readReceipts)}
-                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                      readReceipts ? 'bg-[#422F0E]' : 'bg-[#D4C3AD]'
+                    className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                      readReceipts ? 'bg-[#5B58E6]' : 'bg-theme-muted'
                     }`}
                   >
                     <span
-                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
-                        readReceipts ? 'translate-x-5' : 'translate-x-0'
+                      className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-xs transition duration-200 ease-in-out ${
+                        readReceipts ? 'translate-x-4' : 'translate-x-0'
                       }`}
                     />
                   </button>
                 </div>
 
                 {/* Message Notifications Toggle */}
-                <div className="flex items-center justify-between rounded-3xl border border-[#EFE8DC] bg-[#FAF7F2] p-4">
+                <div className="flex items-center justify-between rounded-xl border border-theme bg-theme-input p-3.5">
                   <div>
-                    <h4 className="text-xs sm:text-sm font-medium text-[#422F0E]">Message Notifications</h4>
-                    <p className="text-xs text-[#6B5E4E]">
-                      Display sweet Instagram-style popout alerts when new drawings and messages arrive.
+                    <h4 className="text-xs sm:text-sm font-medium text-theme-primary">Message Notifications</h4>
+                    <p className="text-xs text-theme-secondary">
+                      Display toast popout alerts when new drawings and messages arrive.
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={() => handleTogglePreference('notifications_enabled', !notificationsEnabled)}
-                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                      notificationsEnabled ? 'bg-[#422F0E]' : 'bg-[#D4C3AD]'
+                    className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                      notificationsEnabled ? 'bg-[#5B58E6]' : 'bg-theme-muted'
                     }`}
                   >
                     <span
-                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
-                        notificationsEnabled ? 'translate-x-5' : 'translate-x-0'
+                      className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-xs transition duration-200 ease-in-out ${
+                        notificationsEnabled ? 'translate-x-4' : 'translate-x-0'
                       }`}
                     />
                   </button>
@@ -608,38 +608,38 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
               </div>
 
               {/* Clear Chat History */}
-              <div className="rounded-3xl border border-[#EFE8DC] bg-[#FFFFFF] p-5 space-y-3">
-                <div className="flex items-center space-x-2">
-                  <Trash2 className="h-4 w-4 text-[#EA5E86]" />
-                  <h4 className="text-xs sm:text-sm font-medium text-[#422F0E]">Clear Chat History</h4>
+              <div className="rounded-xl border border-theme bg-theme-card p-4 space-y-2.5 shadow-xs">
+                <div className="flex items-center space-x-1.5">
+                  <Trash2 className="h-3.5 w-3.5 text-[#F43F5E]" />
+                  <h4 className="text-xs font-medium text-theme-primary">Clear Chat History</h4>
                 </div>
-                <p className="text-xs text-[#6B5E4E] leading-relaxed">
+                <p className="text-xs text-theme-secondary leading-relaxed">
                   Permanently wipe all messages exchanged in this room.
                 </p>
 
                 {!confirmClearChat ? (
                   <button
                     onClick={() => setConfirmClearChat(true)}
-                    className="rounded-full border border-[#EFE8DC] bg-[#FAF7F2] px-5 py-2 text-xs font-medium text-[#EA5E86] hover:bg-[#FFF5F5] transition-all"
+                    className="rounded-lg border border-theme bg-theme-input px-3.5 py-1.5 text-xs font-medium text-[#F43F5E] hover:bg-[#F43F5E]/10 transition-colors"
                   >
                     Clear All Messages
                   </button>
                 ) : (
-                  <div className="rounded-2xl border border-[#FCC4C0] bg-[#FFF5F5] p-4 space-y-2.5">
-                    <p className="text-xs font-semibold text-[#EA5E86]">
+                  <div className="rounded-lg border border-[#F43F5E]/25 bg-[#F43F5E]/10 p-3 space-y-2">
+                    <p className="text-xs font-semibold text-[#F43F5E]">
                       Are you sure? This will delete all chat history for both of you.
                     </p>
                     <div className="flex gap-2">
                       <button
                         onClick={handleClearChat}
                         disabled={actionLoading}
-                        className="rounded-full bg-[#EA5E86] px-5 py-2 text-xs font-medium text-white hover:bg-[#D94E76] transition-all disabled:opacity-50"
+                        className="rounded-lg bg-[#F43F5E] px-3.5 py-1.5 text-xs font-medium text-white hover:bg-[#E11D48] transition-colors disabled:opacity-50"
                       >
                         {actionLoading ? 'Clearing...' : 'Yes, Delete Everything'}
                       </button>
                       <button
                         onClick={() => setConfirmClearChat(false)}
-                        className="rounded-full border border-[#EFE8DC] bg-[#FFFFFF] px-4 py-2 text-xs text-[#6B5E4E]"
+                        className="rounded-lg border border-theme bg-theme-card px-3 py-1.5 text-xs text-theme-secondary"
                       >
                         Cancel
                       </button>
@@ -652,15 +652,15 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 
           {/* SECTION 4: PERSONALIZATION & THEME */}
           {activeSection === 'theme' && (
-            <div className="space-y-6">
+            <div className="space-y-4">
               <div>
-                <h3 className="font-serif text-lg font-bold text-theme-primary">Appearances: Dark & Light Mode</h3>
-                <p className="text-xs text-theme-secondary mt-1">
+                <h3 className="font-serif text-sm font-bold text-theme-primary">Appearances: Dark & Light Mode</h3>
+                <p className="text-xs text-theme-secondary mt-0.5">
                   Select your preferred color theme for the entire workspace.
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {[
                   {
                     id: 'light',
@@ -668,15 +668,13 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                     desc: 'Crisp cool slate, pure white cards & indigo buttons',
                     icon: Sun,
                     previewBg: 'bg-[#F4F5F9] text-[#191C26] border-[#E8EAF0]',
-                    pillColor: 'bg-[#5B58E6] text-white',
                   },
                   {
                     id: 'dark',
                     label: 'Dark Mode',
-                    desc: 'Deep midnight slate, neon glow & elevated cards',
+                    desc: 'Deep midnight slate, clean borders & elevated cards',
                     icon: Moon,
                     previewBg: 'bg-[#161822] text-[#FFFFFF] border-[#2C3042]',
-                    pillColor: 'bg-[#5B58E6] text-white',
                   },
                   {
                     id: 'system',
@@ -684,7 +682,6 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                     desc: 'Automatically matches your device settings',
                     icon: Laptop,
                     previewBg: 'bg-theme-input text-theme-primary border-theme',
-                    pillColor: 'bg-theme-card text-theme-primary',
                   },
                 ].map((item) => {
                   const Icon = item.icon;
@@ -693,24 +690,24 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                     <button
                       key={item.id}
                       onClick={() => handleThemeChange(item.id as any)}
-                      className={`flex flex-col items-start p-4 rounded-3xl border text-left transition-all relative overflow-hidden ${
+                      className={`flex flex-col items-start p-3.5 rounded-xl border text-left transition-all relative overflow-hidden ${
                         isSelected
-                          ? 'border-[#5B58E6] bg-[#5B58E6]/10 ring-2 ring-[#5B58E6]/40 shadow-md scale-[1.02]'
-                          : 'border-theme bg-theme-card hover:bg-theme-card-hover'
+                          ? 'border-[#5B58E6] bg-[#5B58E6]/10 ring-2 ring-[#5B58E6]/40 shadow-xs'
+                          : 'border-theme bg-theme-input hover:bg-theme-card'
                       }`}
                     >
-                      <div className="flex items-center justify-between w-full mb-3">
-                        <div className={`p-2 rounded-2xl ${item.previewBg} border shadow-sm`}>
-                          <Icon className="h-4.5 w-4.5 text-[#5B58E6]" />
+                      <div className="flex items-center justify-between w-full mb-2.5">
+                        <div className={`p-1.5 rounded-lg ${item.previewBg} border shadow-xs`}>
+                          <Icon className="h-4 w-4 text-[#5B58E6]" />
                         </div>
                         {isSelected && (
-                          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#5B58E6] text-white">
-                            <Check className="h-3 w-3" />
+                          <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#5B58E6] text-white">
+                            <Check className="h-2.5 w-2.5" />
                           </span>
                         )}
                       </div>
-                      <span className="text-xs sm:text-sm font-bold text-theme-primary">{item.label}</span>
-                      <span className="text-[11px] text-theme-secondary mt-1 leading-snug">{item.desc}</span>
+                      <span className="text-xs font-bold text-theme-primary">{item.label}</span>
+                      <span className="text-[11px] text-theme-secondary mt-0.5 leading-snug">{item.desc}</span>
                     </button>
                   );
                 })}
@@ -720,59 +717,59 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 
           {/* SECTION 5: SECURITY & PRIVACY */}
           {activeSection === 'security' && (
-            <div className="space-y-6">
+            <div className="space-y-4">
               {/* Account Status Card */}
-              <div className="rounded-3xl border border-[#EFE8DC] bg-[#FAF7F2] p-5 space-y-3">
-                <span className="text-[10px] font-mono uppercase tracking-widest text-[#A89F91]">Authentication</span>
+              <div className="rounded-xl border border-theme bg-theme-input p-3.5 space-y-2">
+                <span className="text-[10px] font-mono uppercase tracking-wider text-theme-muted font-medium">Authentication</span>
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-xs font-medium text-[#422F0E]">{profile?.email}</span>
-                    <p className="text-[11px] text-[#6B5E4E] mt-0.5">Encrypted with Supabase Auth</p>
+                    <span className="text-xs font-medium text-theme-primary">{profile?.email}</span>
+                    <p className="text-[11px] text-theme-muted mt-0.5">Encrypted with Supabase Auth</p>
                   </div>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-[#DDF2B8] px-3 py-0.5 text-[10px] font-mono text-[#037F71]">
-                    <Check className="h-3 w-3" /> Active
+                  <span className="inline-flex items-center gap-1 rounded bg-[#00D26A]/10 px-2 py-0.5 text-[10px] font-mono text-[#00D26A] border border-[#00D26A]/25">
+                    <Check className="h-2.5 w-2.5" /> Active
                   </span>
                 </div>
               </div>
 
               {/* Change Password Form */}
-              <form onSubmit={handleChangePassword} className="rounded-3xl border border-[#EFE8DC] bg-[#FFFFFF] p-5 space-y-4 shadow-sm">
-                <div className="flex items-center space-x-2">
-                  <Lock className="h-4 w-4 text-[#EA5E86]" />
-                  <h4 className="text-xs sm:text-sm font-medium text-[#422F0E]">Change Password</h4>
+              <form onSubmit={handleChangePassword} className="rounded-xl border border-theme bg-theme-card p-4 space-y-3 shadow-xs">
+                <div className="flex items-center space-x-1.5">
+                  <Lock className="h-3.5 w-3.5 text-[#5B58E6]" />
+                  <h4 className="text-xs font-medium text-theme-primary">Change Password</h4>
                 </div>
 
                 {passwordStatus && (
                   <div
-                    className={`rounded-2xl p-3 text-xs ${
-                      passwordStatus.type === 'success' ? 'bg-[#F5FBEF] text-[#037F71] border border-[#DDF2B8]' : 'bg-[#FFF5F5] text-[#EA5E86] border border-[#FCC4C0]'
+                    className={`rounded-lg p-2.5 text-xs ${
+                      passwordStatus.type === 'success' ? 'bg-[#00D26A]/10 text-[#00D26A] border border-[#00D26A]/25' : 'bg-[#F43F5E]/10 text-[#F43F5E] border border-[#F43F5E]/25'
                     }`}
                   >
                     {passwordStatus.msg}
                   </div>
                 )}
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   <div>
-                    <label className="block text-[11px] font-medium text-[#6B5E4E] mb-1">New Password</label>
+                    <label className="block text-[11px] font-medium text-theme-secondary mb-1">New Password</label>
                     <input
                       type="password"
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       placeholder="••••••••"
                       minLength={6}
-                      className="w-full rounded-full border border-[#EFE8DC] bg-[#FAF7F2] px-4 py-2 text-xs text-[#422F0E] focus:border-[#EA5E86] focus:outline-none focus:ring-2 focus:ring-[#FCC4C0]/40"
+                      className="w-full rounded-lg border border-theme bg-theme-input px-3 py-1.5 text-xs text-theme-primary focus:border-[#5B58E6] focus:bg-theme-card focus:outline-none"
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-medium text-[#6B5E4E] mb-1">Confirm Password</label>
+                    <label className="block text-[11px] font-medium text-theme-secondary mb-1">Confirm Password</label>
                     <input
                       type="password"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="••••••••"
                       minLength={6}
-                      className="w-full rounded-full border border-[#EFE8DC] bg-[#FAF7F2] px-4 py-2 text-xs text-[#422F0E] focus:border-[#EA5E86] focus:outline-none focus:ring-2 focus:ring-[#FCC4C0]/40"
+                      className="w-full rounded-lg border border-theme bg-theme-input px-3 py-1.5 text-xs text-theme-primary focus:border-[#5B58E6] focus:bg-theme-card focus:outline-none"
                     />
                   </div>
                 </div>
@@ -781,7 +778,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                   <button
                     type="submit"
                     disabled={passwordLoading || !newPassword || !confirmPassword}
-                    className="rounded-full bg-[#422F0E] px-5 py-2 text-xs font-medium text-[#FAF7F2] hover:bg-[#EA5E86] disabled:opacity-40 transition-all"
+                    className="rounded-lg bg-[#5B58E6] px-4 py-1.5 text-xs font-medium text-white hover:bg-[#4A46DC] disabled:opacity-40 transition-colors shadow-xs"
                   >
                     {passwordLoading ? 'Updating...' : 'Update Password'}
                   </button>
@@ -789,27 +786,27 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
               </form>
 
               {/* Danger Zone: Delete Account */}
-              <div className="rounded-3xl border border-[#FCC4C0] bg-[#FFF5F5] p-5 space-y-3">
-                <div className="flex items-center space-x-2">
-                  <AlertTriangle className="h-4 w-4 text-[#EA5E86]" />
-                  <h4 className="text-xs sm:text-sm font-semibold text-[#EA5E86] uppercase tracking-wider font-mono">
+              <div className="rounded-xl border border-[#F43F5E]/25 bg-[#F43F5E]/10 p-4 space-y-2.5">
+                <div className="flex items-center space-x-1.5">
+                  <AlertTriangle className="h-3.5 w-3.5 text-[#F43F5E]" />
+                  <h4 className="text-xs font-semibold text-[#F43F5E] uppercase tracking-wider font-mono">
                     Danger Zone &mdash; Delete Account
                   </h4>
                 </div>
-                <p className="text-xs text-[#6B5E4E] leading-relaxed">
+                <p className="text-xs text-theme-secondary leading-relaxed">
                   Permanently delete your DUO account, disconnect from your room, and erase your profile records.
                 </p>
 
                 {!confirmDeleteAccount ? (
                   <button
                     onClick={() => setConfirmDeleteAccount(true)}
-                    className="rounded-full bg-[#EA5E86] px-5 py-2 text-xs font-medium text-white hover:bg-[#D94E76] transition-all"
+                    className="rounded-lg bg-[#F43F5E] px-3.5 py-1.5 text-xs font-medium text-white hover:bg-[#E11D48] transition-colors"
                   >
                     Delete Account
                   </button>
                 ) : (
-                  <div className="rounded-2xl border border-[#FCC4C0] bg-[#FFFFFF] p-4 space-y-3">
-                    <p className="text-xs font-semibold text-[#EA5E86]">
+                  <div className="rounded-lg border border-[#F43F5E]/25 bg-theme-card p-3 space-y-2.5">
+                    <p className="text-xs font-semibold text-[#F43F5E]">
                       Type <strong>DELETE</strong> to confirm permanent account deletion:
                     </p>
                     <input
@@ -817,13 +814,13 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                       value={deleteConfirmText}
                       onChange={(e) => setDeleteConfirmText(e.target.value)}
                       placeholder="Type DELETE"
-                      className="w-full rounded-full border border-[#FCC4C0] px-4 py-2 text-xs font-mono text-[#EA5E86] focus:outline-none focus:ring-2 focus:ring-[#EA5E86]/40"
+                      className="w-full rounded-lg border border-[#F43F5E]/30 bg-theme-input px-3 py-1.5 text-xs font-mono text-[#F43F5E] focus:outline-none"
                     />
                     <div className="flex gap-2">
                       <button
                         onClick={handleDeleteAccount}
                         disabled={deleteConfirmText !== 'DELETE' || actionLoading}
-                        className="rounded-full bg-[#EA5E86] px-5 py-2 text-xs font-medium text-white hover:bg-[#D94E76] disabled:opacity-40 transition-all"
+                        className="rounded-lg bg-[#F43F5E] px-3.5 py-1.5 text-xs font-medium text-white hover:bg-[#E11D48] disabled:opacity-40 transition-colors"
                       >
                         {actionLoading ? 'Deleting...' : 'Permanently Delete Account'}
                       </button>
@@ -832,7 +829,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                           setConfirmDeleteAccount(false);
                           setDeleteConfirmText('');
                         }}
-                        className="rounded-full border border-[#EFE8DC] px-4 py-2 text-xs text-[#6B5E4E]"
+                        className="rounded-lg border border-theme px-3 py-1.5 text-xs text-theme-secondary"
                       >
                         Cancel
                       </button>
