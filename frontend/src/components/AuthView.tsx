@@ -1,8 +1,32 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { KeyRound, PenTool, BookOpen, ArrowRight, ShieldCheck, Mail, User as UserIcon, Lock, Heart, Sparkles } from 'lucide-react';
+import { duoApi } from '@/lib/api';
+import { PairingSession } from '@/types';
+import { Avatar } from './Avatar';
+import {
+  KeyRound,
+  PenTool,
+  BookOpen,
+  ArrowRight,
+  ShieldCheck,
+  Mail,
+  User as UserIcon,
+  Lock,
+  Heart,
+  Sparkles,
+  QrCode,
+  Smartphone,
+  CheckCircle2,
+  FolderOpen,
+  ListTodo,
+  Layers,
+  MessageCircle,
+  Volume2,
+  Flame,
+  Check,
+} from 'lucide-react';
 
 export const AuthView: React.FC = () => {
   const { loginWithEmail, registerWithEmail, loginWithGoogle } = useAuth();
@@ -13,6 +37,30 @@ export const AuthView: React.FC = () => {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccessRegistration, setIsSuccessRegistration] = useState(false);
+
+  // QR Pairing session state on landing page
+  const [pairingSession, setPairingSession] = useState<PairingSession | null>(null);
+  const [activeFeatureTab, setActiveFeatureTab] = useState<'daily' | 'notes' | 'canvas' | 'chat' | 'todo' | 'deck' | 'qr'>('daily');
+
+  // Check if landing page was opened via QR scan (?pair=...)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('pair') || localStorage.getItem('pending_pair_token');
+
+    if (token) {
+      localStorage.setItem('pending_pair_token', token);
+      duoApi.getPairingSession({ token })
+        .then((res) => {
+          if (res.success && res.session) {
+            setPairingSession(res.session);
+          }
+        })
+        .catch(() => {
+          // Token might be expired or invalid
+        });
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,79 +104,484 @@ export const AuthView: React.FC = () => {
             </span>
             <span className="font-serif text-xl font-bold tracking-tight text-theme-primary">Duo</span>
           </div>
-          <a
-            href="#auth-section"
-            className="rounded-full bg-[#125CB9] px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#0E4B99] transition-colors shadow-xs"
-          >
-            Sign in &rarr;
-          </a>
+
+          <div className="flex items-center space-x-3">
+            <a
+              href="#features"
+              className="hidden sm:inline-block text-xs font-medium text-theme-secondary hover:text-theme-primary transition-colors"
+            >
+              Explore Features
+            </a>
+            <a
+              href="#auth-section"
+              className="rounded-full bg-[#125CB9] px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#0E4B99] transition-colors shadow-xs"
+            >
+              Sign In &rarr;
+            </a>
+          </div>
         </div>
       </header>
 
       {/* Main Landing Page Content */}
-      <main className="flex-1">
+      <main className="flex-1 pb-16">
+        {/* QR Pairing Scanned Banner (If opened via phone camera scan) */}
+        {pairingSession && (
+          <div className="mx-auto max-w-4xl px-4 sm:px-8 pt-6">
+            <div className="rounded-3xl border border-[#125CB9]/40 bg-[#125CB9]/10 p-5 sm:p-6 shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4 animate-in slide-in-from-top-4 duration-300">
+              <div className="flex items-center space-x-4 text-center sm:text-left">
+                <Avatar
+                  src={pairingSession.creator.avatar_url}
+                  name={pairingSession.creator.name}
+                  size="lg"
+                />
+                <div>
+                  <div className="inline-flex items-center space-x-1.5 text-xs font-mono font-bold text-[#125CB9]">
+                    <Sparkles className="h-3.5 w-3.5" />
+                    <span>QR PAIRING INVITE ACTIVE</span>
+                  </div>
+                  <h3 className="font-serif text-lg sm:text-xl font-bold text-theme-primary mt-0.5">
+                    {pairingSession.creator.name} invited you to Duo
+                  </h3>
+                  <p className="text-xs text-theme-secondary">
+                    Sign in below with Google to instantly link your devices into the same shared room.
+                  </p>
+                </div>
+              </div>
+
+              <a
+                href="#auth-section"
+                className="rounded-full bg-[#125CB9] px-6 py-2.5 text-xs font-semibold text-white hover:bg-[#0E4B99] transition-all shadow-md shrink-0 flex items-center space-x-1.5"
+              >
+                <span>Accept & Sign In</span>
+                <ArrowRight className="h-3.5 w-3.5" />
+              </a>
+            </div>
+          </div>
+        )}
+
         {/* Hero Narrative Section */}
-        <section className="mx-auto max-w-4xl px-6 sm:px-8 pt-12 pb-10 sm:pt-20 sm:pb-14 text-center sm:text-left">
-          <div className="inline-flex items-center space-x-1.5 rounded-full px-3 py-1 text-xs font-mono font-medium text-[#125CB9] bg-[#125CB9]/10 border border-[#125CB9]/25 mb-4">
-            <Heart className="h-3 w-3 fill-current" />
-            <span>A shared space made for two</span>
+        <section className="mx-auto max-w-4xl px-6 sm:px-8 pt-10 pb-8 sm:pt-16 sm:pb-12 text-center">
+          <div className="inline-flex items-center space-x-2 rounded-full px-3.5 py-1 text-xs font-mono font-medium text-[#125CB9] bg-[#125CB9]/10 border border-[#125CB9]/25 mb-4">
+            <Heart className="h-3.5 w-3.5 fill-current" />
+            <span>Strictly Two People &bull; Zero Noise</span>
           </div>
 
-          <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-theme-primary leading-tight">
-            A private, quiet space on the internet for <span className="text-[#125CB9]">you two</span>.
+          <h1 className="font-serif text-3xl sm:text-5xl md:text-6xl font-bold tracking-tight text-theme-primary leading-tight max-w-3xl mx-auto">
+            A private, quiet universe for <span className="text-[#125CB9]">you two</span>.
           </h1>
 
-          <p className="mt-4 max-w-2xl text-sm sm:text-base text-theme-secondary leading-relaxed font-sans">
-            No public feeds, no followers, no noise. Duo is your private sanctuary to share daily love prompts, playful drawings, and real-time thoughts.
+          <p className="mt-4 max-w-2xl text-sm sm:text-base text-theme-secondary leading-relaxed font-sans mx-auto">
+            No public algorithms, no followers, no third wheels. Duo is a dedicated digital sanctuary for couples and best friends to answer daily love prompts, draw in real-time, leave voice notes in tactile file folders, and stay deeply connected.
           </p>
+
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+            <a
+              href="#auth-section"
+              className="rounded-full bg-[#125CB9] px-7 py-3 text-sm font-semibold text-white hover:bg-[#0E4B99] transition-all shadow-md active:scale-98 flex items-center space-x-2"
+            >
+              <span>Enter Your Room</span>
+              <ArrowRight className="h-4 w-4" />
+            </a>
+            <a
+              href="#qr-pairing-demo"
+              className="rounded-full border border-theme bg-theme-input px-5 py-3 text-sm font-medium text-theme-primary hover:bg-theme-card transition-colors flex items-center space-x-2"
+            >
+              <QrCode className="h-4 w-4 text-[#125CB9]" />
+              <span>Instant 2-Device Pairing</span>
+            </a>
+          </div>
         </section>
 
-        {/* 3 Pillars: How it works */}
+        {/* Instant QR Pairing Feature Spotlight */}
+        <section id="qr-pairing-demo" className="mx-auto max-w-4xl px-6 sm:px-8 py-6">
+          <div className="rounded-[32px] border border-theme bg-gradient-to-br from-theme-card via-theme-card to-theme-input/40 p-6 sm:p-8 shadow-sm">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+              <div className="space-y-3 text-center md:text-left">
+                <div className="inline-flex items-center space-x-1.5 rounded-full px-3 py-1 text-xs font-mono font-medium text-[#00D26A] bg-[#00D26A]/10 border border-[#00D26A]/25">
+                  <Smartphone className="h-3.5 w-3.5" />
+                  <span>Portfolio-Ready Live Demo</span>
+                </div>
+                <h2 className="font-serif text-2xl sm:text-3xl font-bold text-theme-primary">
+                  Pair your phone in seconds with QR.
+                </h2>
+                <p className="text-xs sm:text-sm text-theme-secondary leading-relaxed">
+                  Testing on desktop and want to see the 2-person experience? Open Duo, click <strong>Create a Duo</strong>, and scan the QR code with your phone's camera. Both devices sync instantly over Supabase Realtime!
+                </p>
+                <div className="pt-2 flex flex-wrap items-center justify-center md:justify-start gap-4 text-xs font-mono text-theme-muted">
+                  <span className="flex items-center space-x-1">
+                    <Check className="h-3.5 w-3.5 text-[#00D26A]" />
+                    <span>10-min single-use token</span>
+                  </span>
+                  <span className="flex items-center space-x-1">
+                    <Check className="h-3.5 w-3.5 text-[#00D26A]" />
+                    <span>6-char fallback code</span>
+                  </span>
+                  <span className="flex items-center space-x-1">
+                    <Check className="h-3.5 w-3.5 text-[#00D26A]" />
+                    <span>Zero sensitive data exposed</span>
+                  </span>
+                </div>
+              </div>
+
+              {/* Visual Mockup Card */}
+              <div className="flex justify-center">
+                <div className="w-full max-w-xs rounded-3xl border border-theme bg-theme-input p-5 shadow-inner text-center space-y-3">
+                  <div className="flex items-center justify-between text-[11px] font-mono text-theme-muted">
+                    <span className="flex items-center space-x-1">
+                      <span className="h-2 w-2 rounded-full bg-[#00D26A] animate-pulse" />
+                      <span>Live Sync Ready</span>
+                    </span>
+                    <span>DUO-PAIR</span>
+                  </div>
+                  <div className="rounded-2xl border-2 border-theme bg-white p-3 shadow-xs mx-auto w-36 h-36 flex items-center justify-center">
+                    <QrCode className="h-28 w-28 text-black" />
+                  </div>
+                  <div className="rounded-xl border border-theme bg-theme-card py-1.5 px-3">
+                    <span className="text-xs font-mono font-bold tracking-widest text-theme-primary">
+                      CODE: 7K4P2M
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-theme-muted">
+                    Point camera &rarr; Tap link &rarr; Automatically paired!
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Deep Dive: The Entire Duo Universe (Interactive Feature Tabs) */}
+        <section id="features" className="mx-auto max-w-4xl px-6 sm:px-8 py-8">
+          <div className="border-t border-theme pt-8">
+            <div className="text-center space-y-2 mb-8">
+              <span className="text-[11px] font-mono uppercase tracking-wider text-[#125CB9] font-semibold">
+                Designed with Intention
+              </span>
+              <h2 className="font-serif text-2xl sm:text-4xl font-bold text-theme-primary">
+                Everything inside your private space
+              </h2>
+              <p className="text-xs sm:text-sm text-theme-secondary max-w-lg mx-auto">
+                Explore each bespoke room designed specifically for two people.
+              </p>
+            </div>
+
+            {/* Interactive Feature Category Pills */}
+            <div className="flex flex-wrap items-center justify-center gap-2 mb-6">
+              {[
+                { id: 'daily', label: '💌 Daily Prompts', icon: BookOpen },
+                { id: 'notes', label: '📂 File Notes', icon: FolderOpen },
+                { id: 'canvas', label: '🎨 Live Canvas', icon: PenTool },
+                { id: 'chat', label: '💬 Whisper Chat', icon: MessageCircle },
+                { id: 'todo', label: '🗂️ Duo Kanban', icon: ListTodo },
+                { id: 'deck', label: '🃏 Swipe Deck', icon: Layers },
+              ].map((tab) => {
+                const Icon = tab.icon;
+                const isActive = activeFeatureTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveFeatureTab(tab.id as any)}
+                    className={`flex items-center space-x-1.5 rounded-full px-4 py-2 text-xs font-medium transition-all ${
+                      isActive
+                        ? 'bg-[#125CB9] text-white shadow-md font-semibold scale-105'
+                        : 'border border-theme bg-theme-card text-theme-secondary hover:text-theme-primary hover:bg-theme-input'
+                    }`}
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                    <span>{tab.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Active Tab Detailed Showcase Card */}
+            <div className="rounded-3xl border border-theme bg-theme-card p-6 sm:p-8 shadow-sm transition-all duration-300">
+              {activeFeatureTab === 'daily' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                  <div className="space-y-3">
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-[#FB923C] font-semibold">
+                      Feature 01 &bull; Sealed Questions
+                    </span>
+                    <h3 className="font-serif text-2xl font-bold text-theme-primary">
+                      Daily Love Prompts with Voice & Vaults
+                    </h3>
+                    <p className="text-xs sm:text-sm text-theme-secondary leading-relaxed">
+                      Every day at midnight, you and your partner each receive a thoughtful, tailored prompt. Neither question repeats for your duo ever. Answers stay sealed in private vaults until both partners answer, building an intimate multi-year diary.
+                    </p>
+                    <ul className="space-y-1.5 text-xs text-theme-secondary pt-1">
+                      <li className="flex items-center space-x-2">
+                        <CheckCircle2 className="h-3.5 w-3.5 text-[#00D26A]" />
+                        <span>Strictly 1 question per day with Duo-wide uniqueness</span>
+                      </li>
+                      <li className="flex items-center space-x-2">
+                        <CheckCircle2 className="h-3.5 w-3.5 text-[#00D26A]" />
+                        <span>Voice recording reflections alongside text</span>
+                      </li>
+                      <li className="flex items-center space-x-2">
+                        <CheckCircle2 className="h-3.5 w-3.5 text-[#00D26A]" />
+                        <span>Calendar archive to look back on past reflections</span>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div className="rounded-2xl border border-theme bg-theme-input p-5 space-y-3">
+                    <div className="flex items-center justify-between text-[11px] font-mono text-theme-muted">
+                      <span>TODAY'S PROMPT</span>
+                      <span className="text-[#FB923C] font-bold">LOCKED UNTIL SHARED</span>
+                    </div>
+                    <h4 className="font-serif text-sm sm:text-base font-bold text-theme-primary">
+                      "What is a tiny gesture from me this week that secretly made you feel loved?"
+                    </h4>
+                    <div className="rounded-xl border border-theme bg-theme-card p-3 text-xs text-theme-secondary italic">
+                      "When you left that sticky note on my coffee mug on Tuesday..."
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeFeatureTab === 'notes' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                  <div className="space-y-3">
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-[#C9A6D0] font-semibold">
+                      Feature 02 &bull; Tactile Digital Objects
+                    </span>
+                    <h3 className="font-serif text-2xl font-bold text-theme-primary">
+                      Little Notes in Physical File Folders
+                    </h3>
+                    <p className="text-xs sm:text-sm text-theme-secondary leading-relaxed">
+                      Say goodbye to flat lists. Little Notes are organized into tactile digital file folders with notched tab geometry, soft pastel palettes, and papers that tilt on hover.
+                    </p>
+                    <ul className="space-y-1.5 text-xs text-theme-secondary pt-1">
+                      <li className="flex items-center space-x-2">
+                        <CheckCircle2 className="h-3.5 w-3.5 text-[#00D26A]" />
+                        <span>4 curated genres: Text Whispers, Photos, Audio Notes, Doodles</span>
+                      </li>
+                      <li className="flex items-center space-x-2">
+                        <CheckCircle2 className="h-3.5 w-3.5 text-[#00D26A]" />
+                        <span>Unopened Notes Preview spotlight with live read status</span>
+                      </li>
+                      <li className="flex items-center space-x-2">
+                        <CheckCircle2 className="h-3.5 w-3.5 text-[#00D26A]" />
+                        <span>Full audio recording with waveform player</span>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="rounded-2xl border-2 border-[#242424] bg-[#FFF3A6] p-4 text-[#242424] shadow-xs">
+                      <span className="text-[10px] font-mono font-bold uppercase">Text Folder</span>
+                      <p className="text-xs font-serif font-bold mt-1">"Good morning my love &hearts;"</p>
+                    </div>
+                    <div className="rounded-2xl border-2 border-[#242424] bg-[#B8E6BE] p-4 text-[#242424] shadow-xs">
+                      <span className="text-[10px] font-mono font-bold uppercase">Audio Folder</span>
+                      <p className="text-xs font-serif font-bold mt-1">Voice note (0:42)</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeFeatureTab === 'canvas' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                  <div className="space-y-3">
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-[#00D26A] font-semibold">
+                      Feature 03 &bull; Shared Ink Studio
+                    </span>
+                    <h3 className="font-serif text-2xl font-bold text-theme-primary">
+                      Real-Time Live Drawing Canvas
+                    </h3>
+                    <p className="text-xs sm:text-sm text-theme-secondary leading-relaxed">
+                      Doodle together across oceans in real-time. Brush strokes flow between screens with zero latency over Supabase Realtime channels.
+                    </p>
+                    <ul className="space-y-1.5 text-xs text-theme-secondary pt-1">
+                      <li className="flex items-center space-x-2">
+                        <CheckCircle2 className="h-3.5 w-3.5 text-[#00D26A]" />
+                        <span>Smooth Bézier stroke smoothing & custom ink palette</span>
+                      </li>
+                      <li className="flex items-center space-x-2">
+                        <CheckCircle2 className="h-3.5 w-3.5 text-[#00D26A]" />
+                        <span>Eraser, stroke width adjustment & clear canvas</span>
+                      </li>
+                      <li className="flex items-center space-x-2">
+                        <CheckCircle2 className="h-3.5 w-3.5 text-[#00D26A]" />
+                        <span>Export keepsakes directly into your Little Notes file</span>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div className="rounded-2xl border border-theme bg-white p-6 shadow-inner text-center">
+                    <PenTool className="h-10 w-10 text-[#125CB9] mx-auto mb-2" />
+                    <span className="text-xs font-mono text-gray-500 font-bold">Collaborative Live Ink</span>
+                    <p className="text-[11px] text-gray-400 mt-1">Both cursors draw simultaneously in real-time</p>
+                  </div>
+                </div>
+              )}
+
+              {activeFeatureTab === 'chat' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                  <div className="space-y-3">
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-[#125CB9] font-semibold">
+                      Feature 04 &bull; Private Messaging
+                    </span>
+                    <h3 className="font-serif text-2xl font-bold text-theme-primary">
+                      Whisper Chat & Live Presence
+                    </h3>
+                    <p className="text-xs sm:text-sm text-theme-secondary leading-relaxed">
+                      An intimate chat room with live typing bubbles, read receipts, message replies, and quick photo/voice attachments.
+                    </p>
+                    <ul className="space-y-1.5 text-xs text-theme-secondary pt-1">
+                      <li className="flex items-center space-x-2">
+                        <CheckCircle2 className="h-3.5 w-3.5 text-[#00D26A]" />
+                        <span>Live typing indicators & read receipts</span>
+                      </li>
+                      <li className="flex items-center space-x-2">
+                        <CheckCircle2 className="h-3.5 w-3.5 text-[#00D26A]" />
+                        <span>Threaded replies & emoji reactions</span>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="rounded-2xl bg-[#125CB9] text-white p-3 text-xs max-w-xs ml-auto rounded-br-none shadow-xs">
+                      "Can't wait to see you tonight &hearts;"
+                    </div>
+                    <div className="rounded-2xl bg-theme-input text-theme-primary p-3 text-xs max-w-xs mr-auto rounded-bl-none border border-theme shadow-xs">
+                      "Counting down the hours!"
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeFeatureTab === 'todo' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                  <div className="space-y-3">
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-[#8EAFE3] font-semibold">
+                      Feature 05 &bull; Couple Kanban
+                    </span>
+                    <h3 className="font-serif text-2xl font-bold text-theme-primary">
+                      Shared Duo Lists & Kanban Boards
+                    </h3>
+                    <p className="text-xs sm:text-sm text-theme-secondary leading-relaxed">
+                      Plan date nights, grocery runs, bucket list travel destinations, and everyday chores with draggable Kanban columns.
+                    </p>
+                    <ul className="space-y-1.5 text-xs text-theme-secondary pt-1">
+                      <li className="flex items-center space-x-2">
+                        <CheckCircle2 className="h-3.5 w-3.5 text-[#00D26A]" />
+                        <span>To Do, In Progress, and Completed columns</span>
+                      </li>
+                      <li className="flex items-center space-x-2">
+                        <CheckCircle2 className="h-3.5 w-3.5 text-[#00D26A]" />
+                        <span>Live synchronization when items are added or checked off</span>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div className="rounded-2xl border border-theme bg-theme-input p-4 space-y-2">
+                    <div className="flex items-center justify-between text-xs font-mono font-bold text-theme-primary">
+                      <span>Date Night Bucket List</span>
+                      <span className="text-[#00D26A]">2/3 Done</span>
+                    </div>
+                    <div className="space-y-1.5 text-xs">
+                      <div className="flex items-center space-x-2 line-through text-theme-muted">
+                        <Check className="h-3.5 w-3.5 text-[#00D26A]" />
+                        <span>Cook handmade pasta together</span>
+                      </div>
+                      <div className="flex items-center space-x-2 line-through text-theme-muted">
+                        <Check className="h-3.5 w-3.5 text-[#00D26A]" />
+                        <span>Stargazing on the roof</span>
+                      </div>
+                      <div className="flex items-center space-x-2 text-theme-primary font-medium">
+                        <span className="h-3.5 w-3.5 rounded-full border border-theme" />
+                        <span>Weekend pottery workshop</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeFeatureTab === 'deck' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                  <div className="space-y-3">
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-[#F56B9C] font-semibold">
+                      Feature 06 &bull; Physical Micro-Interactions
+                    </span>
+                    <h3 className="font-serif text-2xl font-bold text-theme-primary">
+                      Swipeable Notification Deck
+                    </h3>
+                    <p className="text-xs sm:text-sm text-theme-secondary leading-relaxed">
+                      No boring dropdowns. When your partner leaves a note or answers a prompt, tap the bell to open a physical card deck. Swipe cards left or right to dismiss them with 60fps spring physics.
+                    </p>
+                    <ul className="space-y-1.5 text-xs text-theme-secondary pt-1">
+                      <li className="flex items-center space-x-2">
+                        <CheckCircle2 className="h-3.5 w-3.5 text-[#00D26A]" />
+                        <span>Stacked physical depth with offset layers</span>
+                      </li>
+                      <li className="flex items-center space-x-2">
+                        <CheckCircle2 className="h-3.5 w-3.5 text-[#00D26A]" />
+                        <span>Tinder/Apple swipe-to-dismiss gesture support</span>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div className="flex justify-center py-2">
+                    <div className="relative w-56 h-32">
+                      <div className="absolute inset-0 translate-y-3 scale-90 rounded-2xl bg-theme-input border border-theme opacity-50" />
+                      <div className="absolute inset-0 translate-y-1.5 scale-95 rounded-2xl bg-theme-card border border-theme shadow-xs" />
+                      <div className="absolute inset-0 rounded-2xl bg-theme-card border-2 border-[#125CB9]/40 p-3 shadow-md flex flex-col justify-between">
+                        <span className="text-[10px] font-mono text-[#125CB9] font-bold">New Notification</span>
+                        <p className="text-xs font-serif font-bold text-theme-primary">"Partner answered Daily Prompt!"</p>
+                        <span className="text-[10px] font-mono text-theme-muted">&larr; Swipe to dismiss &rarr;</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* 3 Pillars Summary */}
         <section className="mx-auto max-w-4xl px-6 sm:px-8 py-6 sm:py-8">
           <div className="border-t border-theme pt-8">
             <h2 className="text-[10px] font-mono uppercase tracking-wider text-theme-muted mb-6 font-medium">
-              How our space works
+              The 3 Pillars of Duo
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Feature 1 */}
               <div className="rounded-2xl border border-theme bg-theme-card p-5 shadow-xs flex flex-col justify-between">
                 <div>
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#125CB9]/10 text-[#125CB9] mb-4">
                     <KeyRound className="h-5 w-5" />
                   </div>
-                  <span className="text-[11px] font-mono text-theme-muted">01 / Secret Key</span>
-                  <h3 className="mt-1 text-sm font-serif font-bold text-theme-primary">Private Pairing</h3>
+                  <span className="text-[11px] font-mono text-theme-muted">01 / Pairing</span>
+                  <h3 className="mt-1 text-sm font-serif font-bold text-theme-primary">QR & Secret Keys</h3>
                   <p className="mt-1 text-xs text-theme-secondary leading-relaxed">
-                    Generate your unique DUO secret code and share it with your partner. Once connected, your room is linked forever.
+                    Instantly pair 2 devices via camera scan or 6-character code. One relationship per account.
                   </p>
                 </div>
               </div>
 
-              {/* Feature 2 */}
               <div className="rounded-2xl border border-theme bg-theme-card p-5 shadow-xs flex flex-col justify-between">
                 <div>
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#00D26A]/10 text-[#00D26A] mb-4">
                     <PenTool className="h-5 w-5" />
                   </div>
-                  <span className="text-[11px] font-mono text-theme-muted">02 / Live Doodles</span>
-                  <h3 className="mt-1 text-sm font-serif font-bold text-theme-primary">Notes & Drawing Studio</h3>
+                  <span className="text-[11px] font-mono text-theme-muted">02 / Live Space</span>
+                  <h3 className="mt-1 text-sm font-serif font-bold text-theme-primary">Real-Time Together</h3>
                   <p className="mt-1 text-xs text-theme-secondary leading-relaxed">
-                    Instant messaging with real-time ink canvas to leave sweet sketches, doodle reactions, and heartfelt love letters.
+                    Live drawing, whisper chat, typing presence, and instant note sync powered by Supabase.
                   </p>
                 </div>
               </div>
 
-              {/* Feature 3 */}
               <div className="rounded-2xl border border-theme bg-theme-card p-5 shadow-xs flex flex-col justify-between">
                 <div>
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#FB923C]/10 text-[#FB923C] mb-4">
                     <BookOpen className="h-5 w-5" />
                   </div>
-                  <span className="text-[11px] font-mono text-theme-muted">03 / Love Prompts</span>
-                  <h3 className="mt-1 text-sm font-serif font-bold text-theme-primary">Daily Questions</h3>
+                  <span className="text-[11px] font-mono text-theme-muted">03 / Intimacy</span>
+                  <h3 className="mt-1 text-sm font-serif font-bold text-theme-primary">Daily Rituals</h3>
                   <p className="mt-1 text-xs text-theme-secondary leading-relaxed">
-                    Thoughtful prompts every day. Answers remain sealed in private drafts until both of you reveal, creating a shared archive.
+                    One daily prompt, sealed drafts, voice reflections, and playful physical file folders.
                   </p>
                 </div>
               </div>
@@ -137,17 +590,21 @@ export const AuthView: React.FC = () => {
         </section>
 
         {/* Auth Entry Form Section */}
-        <section id="auth-section" className="mx-auto max-w-md px-6 py-12 sm:py-16">
-          <div className="rounded-2xl border border-theme bg-theme-card p-6 sm:p-8 shadow-xl">
+        <section id="auth-section" className="mx-auto max-w-md px-6 py-10 sm:py-14">
+          <div className="rounded-3xl border border-theme bg-theme-card p-6 sm:p-8 shadow-xl">
             <div className="text-center mb-5">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#125CB9]/10 text-[#125CB9] mx-auto mb-2.5">
                 <Heart className="h-5 w-5 fill-current" />
               </div>
               <h2 className="font-serif text-xl sm:text-2xl font-bold text-theme-primary">
-                {isLogin ? 'Welcome back' : 'Start your shared room'}
+                {isLogin ? 'Welcome back to Duo' : 'Start your shared room'}
               </h2>
               <p className="mt-1 text-xs text-theme-secondary">
-                {isLogin ? 'Enter your private space' : 'Begin your shared memories together'}
+                {pairingSession
+                  ? `Sign in to connect with ${pairingSession.creator.name}`
+                  : isLogin
+                  ? 'Enter your private space'
+                  : 'Begin your shared memories together'}
               </p>
             </div>
 
@@ -285,7 +742,7 @@ export const AuthView: React.FC = () => {
 
       {/* Footer */}
       <footer className="border-t border-theme py-6 text-center text-xs font-mono text-theme-muted">
-        DUO &mdash; crafted for quiet intimacy
+        DUO &mdash; crafted with love for quiet intimacy
       </footer>
     </div>
   );
