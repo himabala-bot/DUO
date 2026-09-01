@@ -115,16 +115,16 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const getToastStyles = (type?: ToastType) => {
     switch (type) {
       case 'success':
-        return 'border-[#DDF2B8] bg-[#F5FBEF] text-[#037F71] shadow-[0_8px_24px_rgba(3,127,113,0.12)]';
+        return 'border-[#00D26A]/30 bg-theme-card text-theme-primary shadow-lg ring-1 ring-[#00D26A]/20';
       case 'error':
-        return 'border-[#FCC4C0] bg-[#FFF5F5] text-[#EA5E86] shadow-[0_8px_24px_rgba(234,94,134,0.12)]';
+        return 'border-[#F43F5E]/30 bg-theme-card text-theme-primary shadow-lg ring-1 ring-[#F43F5E]/20';
       case 'info':
-        return 'border-[#FFD094] bg-[#FFF9EE] text-[#422F0E] shadow-[0_8px_24px_rgba(244,150,37,0.12)]';
+        return 'border-[#FB923C]/30 bg-theme-card text-theme-primary shadow-lg ring-1 ring-[#FB923C]/20';
       case 'drawing':
-        return 'border-[#AECFD0] bg-[#F2F9F9] text-[#037F71] shadow-[0_8px_24px_rgba(87,177,168,0.12)]';
+        return 'border-[#00D0FF]/30 bg-theme-card text-theme-primary shadow-lg ring-1 ring-[#00D0FF]/20';
       case 'love':
       default:
-        return 'border-[#FCC4C0] bg-[#FFF8FA] text-[#422F0E] shadow-[0_8px_24px_rgba(234,94,134,0.12)]';
+        return 'border-[#5B58E6]/30 bg-theme-card text-theme-primary shadow-lg ring-1 ring-[#5B58E6]/20';
     }
   };
 
@@ -153,24 +153,24 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
               t.type
             )}`}
           >
-            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white shadow-sm shrink-0">
+            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-theme-input shadow-sm shrink-0">
               {getToastIcon(t.type)}
             </div>
 
             <div className="flex flex-col pr-1">
               {t.title && (
-                <span className="text-[11px] font-mono font-semibold uppercase tracking-wider leading-none mb-0.5">
+                <span className="text-[11px] font-mono font-semibold uppercase tracking-wider leading-none mb-0.5 text-theme-muted">
                   {t.title}
                 </span>
               )}
-              <span className="text-xs sm:text-sm font-medium leading-snug">
+              <span className="text-xs sm:text-sm font-medium leading-snug text-theme-primary">
                 {t.message}
               </span>
             </div>
 
             <button
               onClick={() => t.id && removeToast(t.id)}
-              className="rounded-full p-1 text-[#A89F91] hover:text-[#422F0E] hover:bg-black/5 transition-colors"
+              className="rounded-full p-1 text-theme-muted hover:text-theme-primary hover:bg-black/5 transition-colors"
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -180,20 +180,20 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
       {/* Cute Confirmation Modal Dialog */}
       {confirmDialog && (
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/35 p-4 backdrop-blur-[3px] animate-in fade-in duration-150">
-          <div className="w-full max-w-sm rounded-3xl border border-[#EFE8DC] bg-[#FFFFFF] p-6 shadow-[0_16px_48px_rgba(66,47,14,0.14)] text-center animate-in zoom-in-95 duration-200">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#FCC4C0]/40 text-[#EA5E86] mb-3">
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 p-4 backdrop-blur-[4px] animate-in fade-in duration-150">
+          <div className="w-full max-w-sm rounded-3xl border border-theme bg-theme-card p-6 shadow-2xl text-center animate-in zoom-in-95 duration-200">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#5B58E6]/15 text-[#5B58E6] mb-3">
               {confirmDialog.options.type === 'danger' ? (
-                <Trash2 className="h-6 w-6" />
+                <Trash2 className="h-6 w-6 text-[#F43F5E]" />
               ) : (
-                <Heart className="h-6 w-6 fill-current" />
+                <Heart className="h-6 w-6 fill-current text-[#5B58E6]" />
               )}
             </div>
 
-            <h3 className="font-serif text-xl font-normal text-[#422F0E]">
+            <h3 className="font-serif text-xl font-bold text-theme-primary">
               {confirmDialog.options.title}
             </h3>
-            <p className="mt-1.5 text-xs sm:text-sm text-[#6B5E4E] leading-relaxed">
+            <p className="mt-1.5 text-xs sm:text-sm text-theme-secondary leading-relaxed">
               {confirmDialog.options.message}
             </p>
 
@@ -201,7 +201,7 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
               <button
                 type="button"
                 onClick={() => handleConfirmClose(false)}
-                className="flex-1 rounded-full border border-[#EFE8DC] bg-[#FAF7F2] py-2.5 text-xs sm:text-sm font-medium text-[#6B5E4E] hover:bg-[#F2ECE1] transition-all min-h-[40px]"
+                className="flex-1 rounded-full border border-theme bg-theme-input py-2.5 text-xs sm:text-sm font-medium text-theme-secondary hover:bg-theme-card hover:text-theme-primary transition-all min-h-[40px]"
               >
                 {confirmDialog.options.cancelText || 'Cancel'}
               </button>
@@ -211,8 +211,8 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 onClick={() => handleConfirmClose(true)}
                 className={`flex-1 rounded-full py-2.5 text-xs sm:text-sm font-medium text-white shadow-sm transition-all min-h-[40px] ${
                   confirmDialog.options.type === 'danger'
-                    ? 'bg-[#EA5E86] hover:bg-[#D94E76]'
-                    : 'bg-[#422F0E] hover:bg-[#EA5E86]'
+                    ? 'bg-[#F43F5E] hover:bg-[#E11D48]'
+                    : 'bg-[#5B58E6] hover:bg-[#4A46DC] shadow-[#5B58E6]/25'
                 }`}
               >
                 {confirmDialog.options.confirmText || 'Confirm'}

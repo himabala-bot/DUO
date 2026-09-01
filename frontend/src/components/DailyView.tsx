@@ -200,53 +200,80 @@ export const DailyView: React.FC = () => {
           </div>
         </div>
 
-        {/* Privacy Banner */}
-        <div className="rounded-3xl border border-[#EFE8DC] bg-[#FFFFFF] p-4 sm:p-5 text-xs sm:text-sm text-[#6B5E4E] flex items-center gap-3.5 shadow-sm">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#FCC4C0]/30 text-[#EA5E86] shrink-0">
-            <Lock className="h-4 w-4" />
+        {/* Partner Progress Overview Card */}
+        <div className="rounded-3xl border border-theme bg-theme-card p-4 sm:p-5 flex items-center justify-between shadow-sm">
+          <div className="flex items-center space-x-3">
+            <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-[#5B58E6]/15 text-[#5B58E6]">
+              <Heart className="h-4.5 w-4.5 fill-current" />
+            </span>
+            <div>
+              <h4 className="font-serif text-sm sm:text-base font-bold text-theme-primary">
+                {partner ? `${partner.name}'s Status` : 'Partner Status'}
+              </h4>
+              <p className="text-xs text-theme-secondary font-mono">
+                {partnerStatus === 'SUBMITTED'
+                  ? 'Answered today • Reflections unlocked'
+                  : 'Has not answered yet today'}
+              </p>
+            </div>
           </div>
-          <span className="leading-relaxed">
-            <strong className="text-[#422F0E]">Private by default:</strong> Pressing <strong>Draft</strong> keeps your answer hidden from {partner?.name}. Only when you press <strong>Send</strong> is your love note revealed!
+
+          <span
+            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-medium ${
+              partnerStatus === 'SUBMITTED'
+                ? 'bg-[#00D26A]/15 border border-[#00D26A]/30 text-[#00D26A]'
+                : 'bg-theme-input border border-theme text-theme-muted'
+            }`}
+          >
+            {partnerStatus === 'SUBMITTED' ? (
+              <>
+                <CheckCircle2 className="h-3.5 w-3.5" /> Ready
+              </>
+            ) : (
+              <>
+                <Clock className="h-3.5 w-3.5" /> Waiting
+              </>
+            )}
           </span>
         </div>
 
-        {/* Questions Cards Stream */}
+        {/* Daily Questions List */}
         <div className="space-y-6">
           {questions.map((q, idx) => {
-            const partnerAns = partnerResponses.find((r) => r.question_id === q.id);
             const status = questionStatuses[q.id] || 'NOT_STARTED';
             const actionState = activeActions[q.id];
             const isFeedback = feedbackMsg?.id === q.id;
+            const partnerAns = partnerResponses.find((r) => r.question_id === q.id);
             const currentAns = answers[q.id] || '';
             const isVoiceAns = currentAns.startsWith('[voice:');
 
             return (
               <div
                 key={q.id}
-                className="rounded-3xl border border-[#EFE8DC] bg-[#FFFFFF] p-5 sm:p-7 shadow-[0_2px_12px_rgba(66,47,14,0.03)] transition-all"
+                className="rounded-3xl border border-theme bg-theme-card p-5 sm:p-7 shadow-sm transition-all"
               >
                 {/* Question Header & Status */}
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-baseline space-x-3">
-                    <span className="font-mono text-xs sm:text-sm text-[#A89F91] font-medium">
+                    <span className="font-mono text-xs sm:text-sm text-theme-muted font-medium">
                       {String(idx + 1).padStart(2, '0')} /
                     </span>
-                    <h3 className="font-serif text-lg sm:text-xl font-normal text-[#422F0E] leading-snug">
+                    <h3 className="font-serif text-lg sm:text-xl font-bold text-theme-primary leading-snug">
                       {q.question}
                     </h3>
                   </div>
 
                   <div className="shrink-0">
                     {status === 'SUBMITTED' ? (
-                      <span className="inline-flex items-center gap-1.5 rounded-full border border-[#DDF2B8] bg-[#F5FBEF] px-3 py-1 text-xs font-mono font-medium text-[#037F71]">
+                      <span className="inline-flex items-center gap-1.5 rounded-full border border-[#00D26A]/30 bg-[#00D26A]/15 px-3 py-1 text-xs font-mono font-medium text-[#00D26A]">
                         <Check className="h-3 w-3" /> Shared
                       </span>
                     ) : status === 'DRAFT' ? (
-                      <span className="inline-flex items-center gap-1.5 rounded-full border border-[#FFD094] bg-[#FFF9EE] px-3 py-1 text-xs font-mono font-medium text-[#F49625]">
+                      <span className="inline-flex items-center gap-1.5 rounded-full border border-[#FB923C]/30 bg-[#FB923C]/15 px-3 py-1 text-xs font-mono font-medium text-[#FB923C]">
                         <Bookmark className="h-3 w-3" /> Draft
                       </span>
                     ) : (
-                      <span className="inline-flex items-center rounded-full bg-[#FAF7F2] border border-[#EFE8DC] px-3 py-1 text-xs font-mono text-[#A89F91]">
+                      <span className="inline-flex items-center rounded-full bg-theme-input border border-theme px-3 py-1 text-xs font-mono text-theme-muted">
                         Unwritten
                       </span>
                     )}
@@ -256,9 +283,9 @@ export const DailyView: React.FC = () => {
                 {/* Answer Input or Voice Preview */}
                 <div className="mt-4">
                   {isVoiceAns ? (
-                    <div className="rounded-2xl border border-[#EFE8DC] bg-[#FAF7F2] p-4 flex items-center justify-between">
+                    <div className="rounded-2xl border border-theme bg-theme-input p-4 flex items-center justify-between">
                       <div>
-                        <span className="text-[10px] font-mono uppercase tracking-widest text-[#A89F91] block mb-1">
+                        <span className="text-[10px] font-mono uppercase tracking-widest text-theme-muted block mb-1">
                           Your Voice Reflection:
                         </span>
                         {renderAnswerBody(currentAns, true)}
@@ -266,7 +293,7 @@ export const DailyView: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setAnswers((prev) => ({ ...prev, [q.id]: '' }))}
-                        className="text-xs text-[#EA5E86] hover:underline font-mono"
+                        className="text-xs text-[#5B58E6] hover:underline font-mono"
                       >
                         Change to text
                       </button>
@@ -277,13 +304,13 @@ export const DailyView: React.FC = () => {
                       onChange={(e) => handleAnswerChange(q.id, e.target.value)}
                       placeholder="Write a sweet reflection..."
                       rows={3}
-                      className="w-full rounded-2xl border border-[#EFE8DC] bg-[#FAF7F2] p-4 text-xs sm:text-sm md:text-base text-[#422F0E] placeholder-[#A89F91] focus:border-[#EA5E86] focus:bg-[#FFFFFF] focus:outline-none focus:ring-2 focus:ring-[#FCC4C0]/40 leading-relaxed"
+                      className="w-full rounded-2xl border border-theme bg-theme-input p-4 text-xs sm:text-sm md:text-base text-theme-primary placeholder-theme-muted focus:border-[#5B58E6] focus:bg-theme-card focus:outline-none focus:ring-2 focus:ring-[#5B58E6]/20 leading-relaxed"
                     />
                   )}
                 </div>
 
                 {/* Action Toolbar */}
-                <div className="mt-4 flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-[#F5EFE6]">
+                <div className="mt-4 flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-theme-subtle">
                   <div className="flex items-center space-x-2">
                     {/* Voice Note Option */}
                     {!isVoiceAns && (
@@ -295,7 +322,7 @@ export const DailyView: React.FC = () => {
                     {isFeedback && (
                       <span
                         className={`text-xs font-mono flex items-center gap-1.5 ${
-                          feedbackMsg.type === 'success' ? 'text-[#037F71]' : 'text-[#F49625]'
+                          feedbackMsg.type === 'success' ? 'text-[#00D26A]' : 'text-[#FB923C]'
                         }`}
                       >
                         {feedbackMsg.type === 'success' ? (
@@ -314,7 +341,7 @@ export const DailyView: React.FC = () => {
                       onClick={() => handleSaveQuestionDraft(q.id)}
                       disabled={actionState === 'saving' || actionState === 'submitting'}
                       title="Save Draft (Private)"
-                      className="flex items-center space-x-2 rounded-full border border-[#EFE8DC] bg-[#FAF7F2] px-4 py-2 text-xs sm:text-sm font-medium text-[#6B5E4E] hover:bg-[#F2ECE1] hover:text-[#422F0E] disabled:opacity-40 transition-all min-h-[40px]"
+                      className="flex items-center space-x-2 rounded-full border border-theme bg-theme-input px-4 py-2 text-xs sm:text-sm font-medium text-theme-secondary hover:bg-theme-card hover:text-theme-primary disabled:opacity-40 transition-all min-h-[40px]"
                     >
                       <Bookmark className="h-3.5 w-3.5" />
                       <span>{actionState === 'saving' ? 'Saving...' : 'Draft'}</span>
@@ -325,7 +352,7 @@ export const DailyView: React.FC = () => {
                       onClick={() => handleSendQuestion(q.id)}
                       disabled={actionState === 'submitting' || actionState === 'saving'}
                       title="Send answer to partner"
-                      className="flex items-center space-x-2 rounded-full bg-[#422F0E] px-5 py-2 text-xs sm:text-sm font-medium text-[#FAF7F2] hover:bg-[#EA5E86] disabled:opacity-40 transition-all min-h-[40px] shadow-sm"
+                      className="flex items-center space-x-2 rounded-full bg-[#5B58E6] px-5 py-2 text-xs sm:text-sm font-medium text-white hover:bg-[#4A46DC] disabled:opacity-40 transition-all min-h-[40px] shadow-sm shadow-[#5B58E6]/25"
                     >
                       <Send className="h-3.5 w-3.5" />
                       <span>{actionState === 'submitting' ? 'Sending...' : status === 'SUBMITTED' ? 'Update & Share' : 'Send'}</span>
@@ -335,21 +362,21 @@ export const DailyView: React.FC = () => {
 
                 {/* Partner's Submitted Response */}
                 {partnerStatus === 'SUBMITTED' && partnerAns ? (
-                  <div className="mt-5 rounded-3xl border border-[#FCC4C0]/40 bg-[#FFF8FA] p-4 sm:p-5 space-y-1">
-                    <div className="flex items-center space-x-1.5 text-[11px] font-mono text-[#EA5E86] font-medium">
+                  <div className="mt-5 rounded-3xl border border-[#5B58E6]/20 bg-[#5B58E6]/5 p-4 sm:p-5 space-y-1">
+                    <div className="flex items-center space-x-1.5 text-[11px] font-mono text-[#5B58E6] font-medium">
                       <Heart className="h-3 w-3 fill-current" />
                       <span>{partner?.name}'s response:</span>
                     </div>
                     <div className="pt-1">
                       {renderAnswerBody(partnerAns.answer, false) || (
-                        <p className="text-xs sm:text-sm md:text-base text-[#422F0E] italic font-serif">
+                        <p className="text-xs sm:text-sm md:text-base text-theme-primary italic font-serif">
                           "(Left blank)"
                         </p>
                       )}
                     </div>
                   </div>
                 ) : (
-                  <div className="mt-3.5 flex items-center space-x-2 text-[11px] font-mono text-[#A89F91]">
+                  <div className="mt-3.5 flex items-center space-x-2 text-[11px] font-mono text-theme-muted">
                     <Clock className="h-3.5 w-3.5" />
                     <span>{partner?.name}'s note will appear here once shared.</span>
                   </div>

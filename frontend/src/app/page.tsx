@@ -18,10 +18,10 @@ export default function Home() {
 
   if (isLoading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-[#FAF7F2] text-[#422F0E]">
+      <div className="flex h-screen items-center justify-center bg-theme-page text-theme-primary">
         <div className="text-center">
-          <span className="font-serif text-3xl font-bold text-[#422F0E]">Duo</span>
-          <p className="mt-2 text-xs font-mono text-[#A89F91]">Opening our room...</p>
+          <span className="font-serif text-3xl font-bold text-theme-primary">Duo</span>
+          <p className="mt-2 text-xs font-mono text-theme-muted">Opening our room...</p>
         </div>
       </div>
     );
@@ -35,7 +35,7 @@ export default function Home() {
   // Signed in, but not in an active paired room
   if (!hasActiveDuo) {
     return (
-      <div className="min-h-screen bg-[#FAF7F2] text-[#422F0E] flex flex-col lg:flex-row">
+      <div className="min-h-screen bg-theme-page text-theme-primary flex flex-col lg:flex-row">
         <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
         <main className="flex-1 min-h-0 pb-20 lg:pb-0 flex flex-col justify-center overflow-y-auto">
           <ConnectionHub />
@@ -46,7 +46,7 @@ export default function Home() {
 
   // Signed in and in an active paired room
   return (
-    <div className="h-screen bg-[#FAF7F2] text-[#422F0E] flex flex-col lg:flex-row overflow-hidden">
+    <div className="h-screen bg-theme-page text-theme-primary flex flex-col lg:flex-row overflow-hidden">
       {/* Navigation: Desktop Sidebar (left) / Mobile & Tablet Header + Pill Bar */}
       <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
 

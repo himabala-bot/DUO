@@ -368,41 +368,41 @@ export const DrawingCanvas: React.FC = () => {
       {/* Studio Workspace (~1200–1320px) */}
       <div className="w-full max-w-[1200px] lg:max-w-[1320px] space-y-6 sm:space-y-8">
         {/* Subheader & Mode Switcher */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#EFE8DC] pb-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-theme pb-5">
           <div>
-            <div className="flex items-center space-x-1.5 text-xs font-mono text-[#A89F91]">
-              <Heart className="h-3.5 w-3.5 text-[#EA5E86] fill-current" />
+            <div className="flex items-center space-x-1.5 text-xs font-mono text-theme-muted">
+              <Heart className="h-3.5 w-3.5 text-[#5B58E6] fill-current" />
               <span>Doodle Studio</span>
             </div>
-            <h2 className="mt-1 font-serif text-2xl sm:text-3xl font-normal text-[#422F0E]">
+            <h2 className="mt-1 font-serif text-2xl sm:text-3xl font-bold text-theme-primary">
               Shared Canvas
             </h2>
-            <p className="mt-1 text-xs sm:text-sm text-[#6B5E4E]">
+            <p className="mt-1 text-xs sm:text-sm text-theme-secondary">
               Draw a sweet sketch or love note in real-time with {partner?.name}.
             </p>
           </div>
 
-          <div className="flex items-center space-x-1 border border-[#EFE8DC] rounded-full bg-[#F2ECE1] p-1 self-start sm:self-auto shadow-sm">
+          <div className="flex items-center space-x-1 border border-theme rounded-full bg-theme-input p-1 self-start sm:self-auto shadow-sm">
             <button
               onClick={() => setActiveTab('canvas')}
               className={`flex items-center space-x-2 rounded-full px-4 py-1.5 text-xs sm:text-sm font-medium transition-all ${
                 activeTab === 'canvas'
-                  ? 'bg-[#422F0E] text-[#FAF7F2] shadow-sm font-semibold'
-                  : 'text-[#6B5E4E] hover:text-[#422F0E]'
+                  ? 'bg-[#5B58E6] text-white shadow-sm font-semibold'
+                  : 'text-theme-secondary hover:text-theme-primary'
               }`}
             >
-              <Palette className="h-4 w-4 text-[#FCC4C0]" />
+              <Palette className="h-4 w-4" />
               <span>Canvas</span>
             </button>
             <button
               onClick={() => setActiveTab('gallery')}
               className={`flex items-center space-x-2 rounded-full px-4 py-1.5 text-xs sm:text-sm font-medium transition-all ${
                 activeTab === 'gallery'
-                  ? 'bg-[#422F0E] text-[#FAF7F2] shadow-sm font-semibold'
-                  : 'text-[#6B5E4E] hover:text-[#422F0E]'
+                  ? 'bg-[#5B58E6] text-white shadow-sm font-semibold'
+                  : 'text-theme-secondary hover:text-theme-primary'
               }`}
             >
-              <Archive className="h-4 w-4 text-[#FFD094]" />
+              <Archive className="h-4 w-4" />
               <span>Gallery ({drawings.length})</span>
             </button>
           </div>
@@ -412,7 +412,7 @@ export const DrawingCanvas: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
             {/* Canvas Viewport (Desktop 8-9 cols) */}
             <div className="lg:col-span-8 xl:col-span-9 flex flex-col items-center">
-              <div className="w-full overflow-hidden rounded-3xl border border-[#EFE8DC] bg-[#FFFFFF] p-2.5 sm:p-3 shadow-[0_4px_20px_rgba(66,47,14,0.04)]">
+              <div className="w-full overflow-hidden rounded-3xl border border-theme bg-theme-card p-2.5 sm:p-3 shadow-md">
                 <canvas
                   ref={canvasRef}
                   width={800}
@@ -436,30 +436,30 @@ export const DrawingCanvas: React.FC = () => {
                   onChange={(e) => setCaption(e.target.value)}
                   placeholder="Add a sweet caption (optional)..."
                   maxLength={100}
-                  className="flex-1 rounded-full border border-[#EFE8DC] bg-[#FFFFFF] px-5 py-3 text-xs sm:text-sm text-[#422F0E] placeholder-[#A89F91] focus:border-[#EA5E86] focus:outline-none focus:ring-2 focus:ring-[#FCC4C0]/40 shadow-sm"
+                  className="flex-1 rounded-full border border-theme bg-theme-input px-5 py-3 text-xs sm:text-sm text-theme-primary placeholder-theme-muted focus:border-[#5B58E6] focus:bg-theme-card focus:outline-none focus:ring-2 focus:ring-[#5B58E6]/20 shadow-sm"
                 />
                 <button
                   onClick={handleSendDrawing}
                   disabled={isSending}
-                  className="flex items-center justify-center space-x-2 rounded-full bg-[#422F0E] px-6 py-3 text-xs sm:text-sm font-medium text-[#FAF7F2] hover:bg-[#EA5E86] transition-all disabled:opacity-40 min-h-[44px] shadow-sm shrink-0"
+                  className="flex items-center justify-center space-x-2 rounded-full bg-[#5B58E6] px-6 py-3 text-xs sm:text-sm font-medium text-white hover:bg-[#4A46DC] transition-all disabled:opacity-40 min-h-[44px] shadow-sm shadow-[#5B58E6]/25 shrink-0"
                 >
                   <span>{isSending ? 'Sending doodle...' : `Send to ${partner?.name || 'Partner'}`}</span>
-                  <ArrowRight className="h-4 w-4 text-[#FCC4C0]" />
+                  <ArrowRight className="h-4 w-4" />
                 </button>
               </div>
             </div>
 
             {/* Tools & Palette Sidebar (Desktop 4-3 cols) */}
-            <div className="lg:col-span-4 xl:col-span-3 rounded-3xl border border-[#EFE8DC] bg-[#FFFFFF] p-5 sm:p-6 shadow-[0_2px_12px_rgba(66,47,14,0.03)] flex flex-col gap-5">
+            <div className="lg:col-span-4 xl:col-span-3 rounded-3xl border border-theme bg-theme-card p-5 sm:p-6 shadow-sm flex flex-col gap-5">
               {/* History Actions */}
               <div>
-                <span className="text-[10px] font-mono uppercase tracking-widest text-[#A89F91]">Actions</span>
+                <span className="text-[10px] font-mono uppercase tracking-widest text-theme-muted">Actions</span>
                 <div className="mt-2 flex gap-2">
                   <button
                     onClick={handleUndo}
                     disabled={historyIndex <= 0}
                     title="Undo"
-                    className="flex-1 flex items-center justify-center rounded-full border border-[#EFE8DC] bg-[#FAF7F2] p-2.5 text-[#6B5E4E] hover:bg-[#F2ECE1] disabled:opacity-30 min-h-[40px] transition-all"
+                    className="flex-1 flex items-center justify-center rounded-full border border-theme bg-theme-input p-2.5 text-theme-secondary hover:bg-theme-card disabled:opacity-30 min-h-[40px] transition-all"
                   >
                     <RotateCcw className="h-4 w-4" />
                   </button>
@@ -467,14 +467,14 @@ export const DrawingCanvas: React.FC = () => {
                     onClick={handleRedo}
                     disabled={historyIndex >= history.length - 1}
                     title="Redo"
-                    className="flex-1 flex items-center justify-center rounded-full border border-[#EFE8DC] bg-[#FAF7F2] p-2.5 text-[#6B5E4E] hover:bg-[#F2ECE1] disabled:opacity-30 min-h-[40px] transition-all"
+                    className="flex-1 flex items-center justify-center rounded-full border border-theme bg-theme-input p-2.5 text-theme-secondary hover:bg-theme-card disabled:opacity-30 min-h-[40px] transition-all"
                   >
                     <RotateCw className="h-4 w-4" />
                   </button>
                   <button
                     onClick={handleClear}
                     title="Clear Canvas"
-                    className="flex-1 flex items-center justify-center rounded-full border border-[#EFE8DC] bg-[#FAF7F2] p-2.5 text-[#A89F91] hover:text-[#EA5E86] hover:bg-[#FCC4C0]/20 min-h-[40px] transition-all"
+                    className="flex-1 flex items-center justify-center rounded-full border border-theme bg-theme-input p-2.5 text-theme-muted hover:text-[#F43F5E] hover:bg-[#F43F5E]/10 min-h-[40px] transition-all"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -483,7 +483,7 @@ export const DrawingCanvas: React.FC = () => {
 
               {/* Inks / Colors */}
               <div>
-                <span className="text-[10px] font-mono uppercase tracking-widest text-[#A89F91]">Cute Palette</span>
+                <span className="text-[10px] font-mono uppercase tracking-widest text-theme-muted">Ink Palette</span>
                 <div className="mt-2.5 grid grid-cols-4 gap-2">
                   {COLORS.map((c) => (
                     <button
@@ -495,13 +495,13 @@ export const DrawingCanvas: React.FC = () => {
                       title={c.name}
                       className={`relative h-9 w-full rounded-full border transition-all ${
                         !isEraser && color === c.value
-                          ? 'border-[#422F0E] ring-2 ring-[#422F0E]/20 scale-105 shadow-sm'
-                          : 'border-[#EFE8DC] hover:scale-105'
+                          ? 'border-[#5B58E6] ring-2 ring-[#5B58E6]/40 scale-105 shadow-sm'
+                          : 'border-theme hover:scale-105'
                       }`}
                       style={{ backgroundColor: c.value }}
                     >
                       {!isEraser && color === c.value && (
-                        <Check className={`h-3.5 w-3.5 mx-auto ${c.value === '#FFFFFF' || c.value === '#F7E9B2' || c.value === '#FFD094' || c.value === '#DDF2B8' || c.value === '#F9D4F8' || c.value === '#FCC4C0' ? 'text-[#422F0E]' : 'text-white'}`} />
+                        <Check className={`h-3.5 w-3.5 mx-auto ${c.value === '#FFFFFF' || c.value === '#F7E9B2' || c.value === '#FFD094' || c.value === '#DDF2B8' || c.value === '#F9D4F8' || c.value === '#FCC4C0' ? 'text-[#191C26]' : 'text-white'}`} />
                       )}
                     </button>
                   ))}
@@ -510,7 +510,7 @@ export const DrawingCanvas: React.FC = () => {
 
               {/* Nib Sizes */}
               <div>
-                <span className="text-[10px] font-mono uppercase tracking-widest text-[#A89F91]">Brush Size</span>
+                <span className="text-[10px] font-mono uppercase tracking-widest text-theme-muted">Brush Size</span>
                 <div className="mt-2 grid grid-cols-2 lg:grid-cols-1 gap-1.5">
                   {SIZES.map((s) => (
                     <button
@@ -518,13 +518,13 @@ export const DrawingCanvas: React.FC = () => {
                       onClick={() => setBrushSize(s.value)}
                       className={`flex items-center justify-between rounded-full px-3.5 py-2 text-xs font-medium transition-all ${
                         brushSize === s.value
-                          ? 'bg-[#F2ECE1] text-[#422F0E] font-semibold border border-[#E5DAC9]'
-                          : 'text-[#6B5E4E] hover:bg-[#FAF7F2] border border-transparent'
+                          ? 'bg-[#5B58E6]/15 text-[#5B58E6] font-bold border border-[#5B58E6]/30'
+                          : 'text-theme-secondary hover:bg-theme-input border border-transparent'
                       }`}
                     >
                       <span>{s.name}</span>
                       <div
-                        className="rounded-full bg-[#422F0E]"
+                        className="rounded-full bg-current"
                         style={{ width: `${s.value + 3}px`, height: `${s.value + 3}px` }}
                       />
                     </button>
@@ -538,8 +538,8 @@ export const DrawingCanvas: React.FC = () => {
                   onClick={() => setIsEraser(!isEraser)}
                   className={`flex w-full items-center justify-center space-x-2 rounded-full py-2.5 text-xs sm:text-sm font-medium transition-all min-h-[40px] ${
                     isEraser
-                      ? 'bg-[#422F0E] text-[#FAF7F2] shadow-sm'
-                      : 'border border-[#EFE8DC] bg-[#FAF7F2] text-[#6B5E4E] hover:bg-[#F2ECE1]'
+                      ? 'bg-[#5B58E6] text-white shadow-sm'
+                      : 'border border-theme bg-theme-input text-theme-secondary hover:bg-theme-card'
                   }`}
                 >
                   <Eraser className="h-4 w-4" />

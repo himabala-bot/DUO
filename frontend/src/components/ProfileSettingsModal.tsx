@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
+import { useTheme } from '@/context/ThemeContext';
 import { supabase } from '@/lib/supabase';
 import { authApi, messagesApi, duoApi } from '@/lib/api';
 import {
@@ -40,6 +41,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 }) => {
   const { profile, partner, hasActiveDuo, refreshProfile, logout } = useAuth();
   const { toast, confirm: confirmModal } = useToast();
+  const { theme: currentTheme, setTheme: setGlobalTheme } = useTheme();
 
   const [activeSection, setActiveSection] = useState<'profile' | 'duo' | 'chat' | 'theme' | 'security'>('profile');
 
@@ -54,7 +56,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
   const [enterToSend, setEnterToSend] = useState(profile?.enter_to_send ?? true);
   const [readReceipts, setReadReceipts] = useState(profile?.read_receipts ?? true);
   const [notificationsEnabled, setNotificationsEnabled] = useState(profile?.notifications_enabled ?? true);
-  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>(profile?.theme || 'system');
+  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>(currentTheme || 'system');
 
   // Copy code feedback
   const [copiedCode, setCopiedCode] = useState(false);
@@ -132,6 +134,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
   // Change Theme
   const handleThemeChange = async (newTheme: 'light' | 'dark' | 'system') => {
     setTheme(newTheme);
+    setGlobalTheme(newTheme);
     try {
       await authApi.updateProfile({ theme: newTheme });
       await refreshProfile();
@@ -260,26 +263,26 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
     : null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-3 sm:p-6 backdrop-blur-[3px] overflow-y-auto">
-      <div className="relative w-full max-w-2xl rounded-3xl border border-[#EFE8DC] bg-[#FFFFFF] shadow-[0_16px_48px_rgba(66,47,14,0.12)] overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3 sm:p-6 backdrop-blur-[4px] overflow-y-auto">
+      <div className="relative w-full max-w-2xl rounded-3xl border border-theme bg-theme-card shadow-2xl overflow-hidden flex flex-col max-h-[90vh] transition-colors">
         {/* Modal Top Header */}
-        <div className="flex items-center justify-between border-b border-[#EFE8DC] bg-[#FAF7F2] px-6 py-4 shrink-0">
+        <div className="flex items-center justify-between border-b border-theme bg-theme-page px-6 py-4 shrink-0">
           <div className="flex items-center space-x-2">
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#FCC4C0] text-[#EA5E86]">
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#5B58E6] text-white">
               <Heart className="h-3.5 w-3.5 fill-current" />
             </span>
-            <h2 className="font-serif text-xl sm:text-2xl font-normal text-[#422F0E]">Room Settings</h2>
+            <h2 className="font-serif text-xl sm:text-2xl font-bold text-theme-primary">Room Settings</h2>
           </div>
           <button
             onClick={onClose}
-            className="rounded-full p-1.5 text-[#A89F91] hover:text-[#422F0E] hover:bg-[#F2ECE1] transition-colors"
+            className="rounded-full p-1.5 text-theme-secondary hover:text-theme-primary hover:bg-theme-card transition-colors"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
         {/* Section Navigation Tabs */}
-        <div className="flex border-b border-[#EFE8DC] bg-[#FAF7F2] px-4 sm:px-6 overflow-x-auto shrink-0 gap-1.5 scrollbar-none py-2">
+        <div className="flex border-b border-theme bg-theme-page px-4 sm:px-6 overflow-x-auto shrink-0 gap-1.5 scrollbar-none py-2">
           {[
             { id: 'profile', label: 'Profile', icon: User },
             { id: 'duo', label: 'Our Space', icon: Heart },
@@ -295,11 +298,11 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                 onClick={() => setActiveSection(sec.id as any)}
                 className={`flex items-center space-x-2 py-2 px-3.5 text-xs sm:text-sm font-medium rounded-full transition-all whitespace-nowrap ${
                   isActive
-                    ? 'bg-[#422F0E] text-[#FAF7F2] font-semibold shadow-sm'
-                    : 'text-[#6B5E4E] hover:bg-[#F2ECE1]'
+                    ? 'bg-[#5B58E6] text-white font-semibold shadow-md shadow-[#5B58E6]/25'
+                    : 'text-theme-secondary hover:bg-theme-card hover:text-theme-primary'
                 }`}
               >
-                <Icon className={`h-3.5 w-3.5 ${isActive ? 'text-[#FCC4C0]' : 'text-[#A89F91]'}`} />
+                <Icon className={`h-3.5 w-3.5 ${isActive ? 'text-white' : 'text-theme-muted'}`} />
                 <span>{sec.label}</span>
               </button>
             );
@@ -307,7 +310,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
         </div>
 
         {/* Content Body */}
-        <div className="flex-1 overflow-y-auto p-5 sm:p-7 space-y-6 bg-[#FFFFFF]">
+        <div className="flex-1 overflow-y-auto p-5 sm:p-7 space-y-6 bg-theme-card">
           {/* Action Message Banner */}
           {actionMessage && (
             <div
@@ -651,17 +654,38 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
           {activeSection === 'theme' && (
             <div className="space-y-6">
               <div>
-                <h3 className="font-serif text-lg font-medium text-[#422F0E]">Theme & Appearance</h3>
-                <p className="text-xs text-[#6B5E4E] mt-1">
-                  Choose how your shared space looks.
+                <h3 className="font-serif text-lg font-bold text-theme-primary">Appearances: Dark & Light Mode</h3>
+                <p className="text-xs text-theme-secondary mt-1">
+                  Select your preferred color theme for the entire workspace.
                 </p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {[
-                  { id: 'light', label: 'Warm Cream', desc: 'Cozy paper, soft blush & pastel ink', icon: Sun },
-                  { id: 'dark', label: 'Night Owl', desc: 'Muted nocturnal warmth & soft glow', icon: Moon },
-                  { id: 'system', label: 'System Default', desc: 'Syncs with device appearance', icon: Laptop },
+                  {
+                    id: 'light',
+                    label: 'Light Mode',
+                    desc: 'Crisp cool slate, pure white cards & indigo buttons',
+                    icon: Sun,
+                    previewBg: 'bg-[#F4F5F9] text-[#191C26] border-[#E8EAF0]',
+                    pillColor: 'bg-[#5B58E6] text-white',
+                  },
+                  {
+                    id: 'dark',
+                    label: 'Dark Mode',
+                    desc: 'Deep midnight slate, neon glow & elevated cards',
+                    icon: Moon,
+                    previewBg: 'bg-[#161822] text-[#FFFFFF] border-[#2C3042]',
+                    pillColor: 'bg-[#5B58E6] text-white',
+                  },
+                  {
+                    id: 'system',
+                    label: 'System Sync',
+                    desc: 'Automatically matches your device settings',
+                    icon: Laptop,
+                    previewBg: 'bg-theme-input text-theme-primary border-theme',
+                    pillColor: 'bg-theme-card text-theme-primary',
+                  },
                 ].map((item) => {
                   const Icon = item.icon;
                   const isSelected = theme === item.id;
@@ -669,18 +693,24 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                     <button
                       key={item.id}
                       onClick={() => handleThemeChange(item.id as any)}
-                      className={`flex flex-col items-start p-4 rounded-3xl border text-left transition-all ${
+                      className={`flex flex-col items-start p-4 rounded-3xl border text-left transition-all relative overflow-hidden ${
                         isSelected
-                          ? 'border-[#422F0E] bg-[#FFF8FA] ring-2 ring-[#FCC4C0] shadow-sm'
-                          : 'border-[#EFE8DC] bg-[#FFFFFF] hover:bg-[#FAF7F2]'
+                          ? 'border-[#5B58E6] bg-[#5B58E6]/10 ring-2 ring-[#5B58E6]/40 shadow-md scale-[1.02]'
+                          : 'border-theme bg-theme-card hover:bg-theme-card-hover'
                       }`}
                     >
                       <div className="flex items-center justify-between w-full mb-3">
-                        <Icon className={`h-5 w-5 ${isSelected ? 'text-[#EA5E86]' : 'text-[#A89F91]'}`} />
-                        {isSelected && <Check className="h-4 w-4 text-[#037F71]" />}
+                        <div className={`p-2 rounded-2xl ${item.previewBg} border shadow-sm`}>
+                          <Icon className="h-4.5 w-4.5 text-[#5B58E6]" />
+                        </div>
+                        {isSelected && (
+                          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#5B58E6] text-white">
+                            <Check className="h-3 w-3" />
+                          </span>
+                        )}
                       </div>
-                      <span className="text-xs sm:text-sm font-semibold text-[#422F0E]">{item.label}</span>
-                      <span className="text-[11px] text-[#6B5E4E] mt-1 leading-snug">{item.desc}</span>
+                      <span className="text-xs sm:text-sm font-bold text-theme-primary">{item.label}</span>
+                      <span className="text-[11px] text-theme-secondary mt-1 leading-snug">{item.desc}</span>
                     </button>
                   );
                 })}

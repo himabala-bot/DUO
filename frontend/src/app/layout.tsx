@@ -4,6 +4,7 @@ import './globals.css';
 import { AuthProvider } from '@/context/AuthContext';
 import { RealtimeProvider } from '@/context/RealtimeContext';
 import { ToastProvider } from '@/context/ToastContext';
+import { ThemeProvider } from '@/context/ThemeContext';
 
 const workSans = Work_Sans({
   subsets: ['latin'],
@@ -37,15 +38,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${workSans.variable} ${poppins.variable} ${mono.variable}`}>
-      <body className="min-h-screen bg-[#FAF7F2] text-[#422F0E] font-sans antialiased">
-        <ToastProvider>
-          <AuthProvider>
-            <RealtimeProvider>
-              {children}
-            </RealtimeProvider>
-          </AuthProvider>
-        </ToastProvider>
+    <html lang="en" className={`${workSans.variable} ${poppins.variable} ${mono.variable}`} suppressHydrationWarning>
+      <body className="min-h-screen bg-theme-page text-theme-primary font-sans antialiased">
+        <ThemeProvider>
+          <ToastProvider>
+            <AuthProvider>
+              <RealtimeProvider>
+                {children}
+              </RealtimeProvider>
+            </AuthProvider>
+          </ToastProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

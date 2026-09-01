@@ -6,35 +6,92 @@
   --font-serif: var(--font-display), 'Poppins', sans-serif;
   --font-mono: var(--font-mono), 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  /* DUO Couple Palette */
-  --duo-pink-light: #F9D4F8;
-  --duo-pink-soft: #FCC4C0;
-  --duo-pink-vibrant: #EA5E86;
-  --duo-coral: #EF6545;
-  --duo-orange: #F49625;
-  --duo-peach: #FFD094;
-  --duo-butter: #F7E9B2;
-  --duo-matcha: #DDF2B8;
-  --duo-sage: #AECFD0;
-  --duo-teal: #57B1A8;
-  --duo-deep-teal: #037F71;
-  --duo-espresso: #422F0E;
+  /* ─────────────────────────────────────────────────────────────
+     LIGHT THEME (Modern Cool Slate & Vibrant Pill Accents)
+  ───────────────────────────────────────────────────────────── */
+  --bg-page: #F4F5F9;
+  --bg-card: #FFFFFF;
+  --bg-card-hover: #F8F9FC;
+  --bg-input: #EDF0F7;
+  --border-color: #E8EAF0;
+  --border-subtle: #F0F2F6;
+
+  --text-primary: #191C26;
+  --text-secondary: #7E8497;
+  --text-muted: #A0A6B8;
+
+  --accent-indigo: #5B58E6;
+  --accent-indigo-hover: #4A46DC;
+  --accent-indigo-light: #EEF0FC;
+
+  --accent-emerald: #00D26A;
+  --accent-emerald-light: #E6FBF0;
+  --accent-cyan: #00C4FF;
+  --accent-cyan-light: #E6F9FF;
+  --accent-orange: #F59E0B;
+  --accent-orange-light: #FEF3C7;
+  --accent-purple: #A855F7;
+  --accent-purple-light: #F3E8FF;
+  --accent-pink: #F43F5E;
+  --accent-pink-light: #FFE4E6;
+
+  /* Legacy couple palette map for retro-compatibility */
+  --duo-espresso: var(--text-primary);
+  --duo-pink-vibrant: var(--accent-indigo);
+  --duo-teal: var(--accent-cyan);
+}
+
+.dark,
+[data-theme='dark'] {
+  /* ─────────────────────────────────────────────────────────────
+     DARK THEME (Deep Midnight Slate & Neon-Glow Pill Accents)
+  ───────────────────────────────────────────────────────────── */
+  --bg-page: #161822;
+  --bg-card: #222533;
+  --bg-card-hover: #282B3B;
+  --bg-input: #191B26;
+  --border-color: #2C3042;
+  --border-subtle: #252838;
+
+  --text-primary: #FFFFFF;
+  --text-secondary: #9196AD;
+  --text-muted: #686E85;
+
+  --accent-indigo: #5B58E6;
+  --accent-indigo-hover: #6C69F5;
+  --accent-indigo-light: #282A45;
+
+  --accent-emerald: #00D26A;
+  --accent-emerald-light: #0E3324;
+  --accent-cyan: #00D0FF;
+  --accent-cyan-light: #0E2938;
+  --accent-orange: #FB923C;
+  --accent-orange-light: #382614;
+  --accent-purple: #C084FC;
+  --accent-purple-light: #2E1E3B;
+  --accent-pink: #FB7185;
+  --accent-pink-light: #381923;
+
+  --duo-espresso: var(--text-primary);
+  --duo-pink-vibrant: var(--accent-indigo);
+  --duo-teal: var(--accent-cyan);
 }
 
 @layer base {
   body {
-    background-color: #FAF7F2;
-    color: #422F0E;
+    background-color: var(--bg-page);
+    color: var(--text-primary);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    transition: background-color 0.25s ease, color 0.25s ease;
   }
 
-  /* Major Typography: Poppins Bold */
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
     font-weight: 700;
     letter-spacing: -0.02em;
+    color: var(--text-primary);
   }
 
   button {
@@ -47,24 +104,24 @@
   }
 
   ::selection {
-    background-color: #FCC4C0;
-    color: #422F0E;
+    background-color: var(--accent-indigo);
+    color: #FFFFFF;
   }
 
-  /* Cute, smooth pill scrollbar */
+  /* Sleek modern scrollbar */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
   }
   ::-webkit-scrollbar-track {
-    background: #F5EFE6;
+    background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: #E5DAC9;
+    background: rgba(145, 150, 173, 0.3);
     border-radius: 9999px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #D4C3AD;
+    background: rgba(145, 150, 173, 0.5);
   }
 }
 
@@ -85,15 +142,53 @@
   font-family: var(--font-mono);
 }
 
-/* Warm cozy subtle paper card */
-.bg-duo-cream {
-  background-color: #FAF7F2;
+/* ─────────────────────────────────────────────────────────────
+   THEME HELPER UTILITIES
+───────────────────────────────────────────────────────────── */
+.bg-theme-page {
+  background-color: var(--bg-page);
 }
 
-.bg-duo-card {
-  background-color: #FFFFFF;
+.bg-theme-card {
+  background-color: var(--bg-card);
 }
 
-.border-duo {
-  border-color: #EFE8DC;
+.bg-theme-card-hover:hover {
+  background-color: var(--bg-card-hover);
+}
+
+.bg-theme-input {
+  background-color: var(--bg-input);
+}
+
+.border-theme {
+  border-color: var(--border-color);
+}
+
+.border-theme-subtle {
+  border-color: var(--border-subtle);
+}
+
+.text-theme-primary {
+  color: var(--text-primary);
+}
+
+.text-theme-secondary {
+  color: var(--text-secondary);
+}
+
+.text-theme-muted {
+  color: var(--text-muted);
+}
+
+.bg-indigo-accent {
+  background-color: var(--accent-indigo);
+}
+
+.hover\:bg-indigo-accent-hover:hover {
+  background-color: var(--accent-indigo-hover);
+}
+
+.text-indigo-accent {
+  color: var(--accent-indigo);
 }
