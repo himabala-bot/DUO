@@ -19,6 +19,8 @@ import {
   X,
   FileText,
   Camera,
+  ArrowRight,
+  Clock,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { RealtimeChannel } from '@supabase/supabase-js';
@@ -42,6 +44,7 @@ export const LittleNotesView: React.FC = () => {
   const [notes, setNotes] = useState<LittleNote[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTabFilter, setActiveTabFilter] = useState<'ALL' | 'TEXT' | 'PHOTO' | 'VOICE' | 'DRAWING'>('ALL');
+  const [previewNote, setPreviewNote] = useState<LittleNote | null>(null);
 
   // Create Note Modal State
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -280,105 +283,136 @@ export const LittleNotesView: React.FC = () => {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredNotes.map((note) => {
               const formattedDate = format(new Date(note.created_at), 'MMM dd, hh:mm a');
+              const TypeIcon =
+                note.note_type === 'PHOTO'
+                  ? Camera
+                  : note.note_type === 'VOICE'
+                  ? Mic
+                  : note.note_type === 'DRAWING'
+                  ? PenTool
+                  : FileText;
 
               return (
                 <div
                   key={note.id}
+                  onClick={() => setPreviewNote(note)}
                   style={{ backgroundColor: note.color || '#FAF7F2' }}
                   className={cn(
-                    "group relative h-[350px] rounded-3xl border border-[#EFE8DC] p-5 shadow-sm transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-lg flex flex-col justify-between overflow-hidden",
+                    "group relative block w-full h-[360px] cursor-pointer rounded-3xl border border-[#EFE8DC] p-5 text-[#422F0E] shadow-sm transition-all duration-300 ease-in-out hover:-translate-y-1.5 hover:shadow-xl flex flex-col justify-between overflow-hidden",
                     note.is_pinned ? "ring-2 ring-[#FCC4C0]" : ""
                   )}
                 >
-                  {/* Top Bar: Author, Pin & Actions */}
-                  <div className="flex items-center justify-between shrink-0">
-                    <div className="flex items-center space-x-2">
-                      <Avatar src={note.author.avatar_url} name={note.author.name} size="xs" />
-                      <span className="text-xs font-semibold text-[#422F0E] truncate max-w-[120px]">
-                        {note.is_me ? 'You' : note.author.name}
-                      </span>
+                  <div className="flex flex-col h-full justify-between">
+                    {/* Card Header: Author and Arrow */}
+                    <div className="mb-3 flex items-center justify-between shrink-0">
+                      <div className="flex items-center space-x-2">
+                        <Avatar src={note.author.avatar_url} name={note.author.name} size="xs" />
+                        <h3 className="text-sm font-bold text-[#422F0E] truncate max-w-[120px]">
+                          {note.is_me ? 'You' : note.author.name}
+                        </h3>
+                      </div>
+
+                      <div className="flex items-center space-x-1">
+                        {/* Pin Button */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleTogglePin(note);
+                          }}
+                          className={`p-1.5 rounded-full transition-colors ${
+                            note.is_pinned
+                              ? 'text-[#EA5E86] bg-white shadow-sm'
+                              : 'text-[#A89F91] hover:text-[#422F0E] opacity-0 group-hover:opacity-100'
+                          }`}
+                          title={note.is_pinned ? 'Unpin note' : 'Pin note to top'}
+                        >
+                          <Pin className="h-3.5 w-3.5 fill-current" />
+                        </button>
+
+                        {/* Delete Button */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteNote(note);
+                          }}
+                          className="p-1.5 text-[#A89F91] hover:text-[#EA5E86] rounded-full hover:bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity"
+                          title="Delete note"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+
+                        <ArrowRight className="h-4 w-4 text-[#A89F91] transition-transform duration-300 ease-in-out group-hover:translate-x-1 group-hover:text-[#422F0E]" />
+                      </div>
                     </div>
 
-                    <div className="flex items-center space-x-1">
-                      {/* Pin Button */}
-                      <button
-                        onClick={() => handleTogglePin(note)}
-                        className={`p-1.5 rounded-full transition-colors ${
-                          note.is_pinned
-                            ? 'text-[#EA5E86] bg-white shadow-sm'
-                            : 'text-[#A89F91] hover:text-[#422F0E] opacity-0 group-hover:opacity-100'
-                        }`}
-                        title={note.is_pinned ? 'Unpin note' : 'Pin note to top'}
-                      >
-                        <Pin className="h-3.5 w-3.5 fill-current" />
-                      </button>
-
-                      {/* Delete Button */}
-                      <button
-                        onClick={() => handleDeleteNote(note)}
-                        className="p-1.5 text-[#A89F91] hover:text-[#EA5E86] rounded-full hover:bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity"
-                        title="Delete note"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
+                    {/* Stacked Images / Visual Display with Card-25 Hover Animation */}
+                    <div className="relative mb-3 h-36 w-full shrink-0">
+                      {note.note_type === 'DRAWING' && note.media_url ? (
+                        <>
+                          <div className="absolute inset-0 rounded-2xl border-2 border-white/60 bg-white/40 shadow-sm transition-all duration-300 ease-in-out group-hover:-translate-x-2 group-hover:rotate-[-3deg]" />
+                          <div className="absolute inset-0 rounded-2xl border-2 border-white/80 bg-white/70 shadow-sm transition-all duration-300 ease-in-out group-hover:translate-x-2 group-hover:rotate-[3deg]" />
+                          <div className="relative h-full w-full overflow-hidden rounded-2xl border-2 border-white bg-white p-2 shadow-md transition-all duration-300 ease-in-out group-hover:scale-[1.02] flex items-center justify-center">
+                            <img
+                              src={note.media_url}
+                              alt="Doodle"
+                              className="h-full w-full object-contain select-none"
+                            />
+                          </div>
+                        </>
+                      ) : note.note_type === 'PHOTO' && note.media_url ? (
+                        <>
+                          <div className="absolute inset-0 rounded-2xl border-2 border-white/60 bg-[#FFF5F5] shadow-sm transition-all duration-300 ease-in-out group-hover:-translate-x-2 group-hover:rotate-[-3deg]" />
+                          <div className="absolute inset-0 rounded-2xl border-2 border-white/80 bg-[#FFF8FA] shadow-sm transition-all duration-300 ease-in-out group-hover:translate-x-2 group-hover:rotate-[3deg]" />
+                          <div className="relative h-full w-full overflow-hidden rounded-2xl border-2 border-white bg-white shadow-md transition-all duration-300 ease-in-out group-hover:scale-[1.02]">
+                            <img
+                              src={note.media_url}
+                              alt="Photo"
+                              className="h-full w-full object-cover rounded-xl"
+                            />
+                          </div>
+                        </>
+                      ) : note.note_type === 'VOICE' && note.media_url ? (
+                        <div className="relative h-full w-full flex items-center justify-center">
+                          <div className="w-full rounded-2xl border-2 border-white bg-white p-4 shadow-md transition-all duration-300 ease-in-out group-hover:scale-[1.02]">
+                            <WaveformPlayer audioUrl={note.media_url} />
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="absolute inset-0 rounded-2xl border-2 border-white/60 bg-white/40 shadow-sm transition-all duration-300 ease-in-out group-hover:-translate-x-2 group-hover:rotate-[-3deg]" />
+                          <div className="absolute inset-0 rounded-2xl border-2 border-white/80 bg-white/70 shadow-sm transition-all duration-300 ease-in-out group-hover:translate-x-2 group-hover:rotate-[3deg]" />
+                          <div className="relative h-full w-full overflow-hidden rounded-2xl border-2 border-white bg-white p-4 shadow-md transition-all duration-300 ease-in-out group-hover:scale-[1.02] flex items-center">
+                            <p className="text-xs sm:text-sm text-[#422F0E] whitespace-pre-wrap leading-relaxed line-clamp-4 font-serif">
+                              {note.content}
+                            </p>
+                          </div>
+                        </>
+                      )}
                     </div>
-                  </div>
 
-                  {/* Body Content - Uniform Flex Area */}
-                  <div className="flex-1 min-h-0 py-2.5 flex flex-col justify-center overflow-hidden space-y-2">
-                    {/* Doodle / Drawing Note */}
-                    {note.note_type === 'DRAWING' && note.media_url && (
-                      <div className="flex-1 min-h-0 w-full rounded-2xl overflow-hidden border border-[#EFE8DC] bg-white p-2.5 flex items-center justify-center shadow-inner">
-                        <img
-                          src={note.media_url}
-                          alt="Doodle Note"
-                          className="w-full h-full object-contain select-none"
-                        />
+                    {/* Stats Section (card-25 style) */}
+                    <div className="mb-2 flex items-center space-x-3 text-xs text-[#8C857B] shrink-0">
+                      <div className="flex items-center space-x-1 font-mono">
+                        <Clock className="h-3.5 w-3.5 text-[#F49625]" />
+                        <span>{formattedDate}</span>
                       </div>
-                    )}
-
-                    {/* Photo Note */}
-                    {note.note_type === 'PHOTO' && note.media_url && (
-                      <div className="flex-1 min-h-0 w-full rounded-2xl overflow-hidden border border-[#EFE8DC] bg-white shadow-sm flex items-center justify-center">
-                        <img
-                          src={note.media_url}
-                          alt="Photo Note"
-                          className="w-full h-full object-cover rounded-xl"
-                        />
+                      <div className="flex items-center space-x-1 font-mono">
+                        <TypeIcon className="h-3.5 w-3.5 text-[#EA5E86]" />
+                        <span className="capitalize">{note.note_type.toLowerCase()}</span>
                       </div>
-                    )}
+                    </div>
 
-                    {/* Voice Note */}
-                    {note.note_type === 'VOICE' && note.media_url && (
-                      <div className="flex-1 min-h-0 w-full rounded-2xl border border-[#EFE8DC] bg-white p-3.5 flex flex-col justify-center shadow-sm">
-                        <WaveformPlayer audioUrl={note.media_url} />
-                      </div>
-                    )}
-
-                    {/* Text Note */}
-                    {note.note_type === 'TEXT' && note.content && (
-                      <div className="flex-1 min-h-0 w-full flex flex-col justify-center overflow-y-auto pr-1">
-                        <p className="text-xs sm:text-sm text-[#422F0E] whitespace-pre-wrap leading-relaxed">
-                          {note.content}
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Optional Caption for Photo/Doodle/Voice */}
-                    {note.content && note.note_type !== 'TEXT' && (
-                      <p className="text-[11px] text-[#6B5E4E] line-clamp-2 leading-snug shrink-0 px-0.5">
+                    {/* Description / Caption */}
+                    {note.note_type !== 'TEXT' && note.content ? (
+                      <p className="text-xs leading-relaxed text-[#6B5E4E] line-clamp-2 shrink-0">
                         {note.content}
                       </p>
+                    ) : (
+                      <div className="shrink-0 h-4" />
                     )}
-                  </div>
-
-                  {/* Bottom: Timestamp & Category */}
-                  <div className="pt-2 border-t border-black/5 flex items-center justify-between text-[10px] font-mono text-[#A89F91] shrink-0">
-                    <span>{formattedDate}</span>
-                    <span className="capitalize">{note.note_type.toLowerCase()}</span>
                   </div>
                 </div>
               );
@@ -386,6 +420,81 @@ export const LittleNotesView: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Note Preview Modal */}
+      {previewNote && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-[3px]">
+          <div
+            style={{ backgroundColor: previewNote.color || '#FFFFFF' }}
+            className="w-full max-w-md rounded-3xl border border-[#EFE8DC] p-6 shadow-2xl animate-in zoom-in-95 duration-200 space-y-4 max-h-[90vh] overflow-y-auto"
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-black/5">
+              <div className="flex items-center space-x-2">
+                <Avatar src={previewNote.author.avatar_url} name={previewNote.author.name} size="sm" />
+                <div>
+                  <h4 className="text-sm font-bold text-[#422F0E]">
+                    {previewNote.is_me ? 'You' : previewNote.author.name}
+                  </h4>
+                  <p className="text-[10px] font-mono text-[#A89F91]">
+                    {format(new Date(previewNote.created_at), 'MMMM dd, yyyy • hh:mm a')}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setPreviewNote(null)}
+                className="p-1.5 rounded-full text-[#A89F91] hover:text-[#422F0E] hover:bg-black/5"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Media Zoom */}
+            {previewNote.note_type === 'DRAWING' && previewNote.media_url && (
+              <div className="rounded-2xl border-2 border-white bg-white p-3 shadow-inner">
+                <img
+                  src={previewNote.media_url}
+                  alt="Doodle"
+                  className="w-full max-h-72 object-contain select-none"
+                />
+              </div>
+            )}
+
+            {previewNote.note_type === 'PHOTO' && previewNote.media_url && (
+              <div className="rounded-2xl border-2 border-white bg-white overflow-hidden shadow-sm">
+                <img
+                  src={previewNote.media_url}
+                  alt="Photo"
+                  className="w-full max-h-80 object-cover"
+                />
+              </div>
+            )}
+
+            {previewNote.note_type === 'VOICE' && previewNote.media_url && (
+              <div className="rounded-2xl border-2 border-white bg-white p-4 shadow-sm">
+                <WaveformPlayer audioUrl={previewNote.media_url} />
+              </div>
+            )}
+
+            {/* Full Content */}
+            {previewNote.content && (
+              <div className="p-3 bg-white/70 rounded-2xl border border-black/5">
+                <p className="text-xs sm:text-sm text-[#422F0E] whitespace-pre-wrap leading-relaxed">
+                  {previewNote.content}
+                </p>
+              </div>
+            )}
+
+            <div className="flex justify-end pt-2">
+              <button
+                onClick={() => setPreviewNote(null)}
+                className="px-5 py-2 rounded-full bg-[#422F0E] text-white text-xs font-medium hover:bg-[#EA5E86] transition-all shadow-sm"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Create Note Modal Dialog */}
       {showCreateModal && (
