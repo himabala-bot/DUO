@@ -210,20 +210,34 @@ CREATE POLICY "View own notifications" ON public.notifications
 -- SUPABASE STORAGE BUCKET & POLICIES
 -- ==============================================================================
 
--- Create private bucket 'drawings' if not exists
-INSERT INTO storage.buckets (id, name, public)
-VALUES ('drawings', 'drawings', false)
-ON CONFLICT (id) DO NOTHING;
+-- Create public bucket 'drawings' if not exists
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES ('drawings', 'drawings', true, 52428800, ARRAY['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml'])
+ON CONFLICT (id) DO UPDATE
+SET public = true,
+    file_size_limit = 52428800,
+    allowed_mime_types = ARRAY['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml'];
 
--- Storage RLS: DUO members can upload and read their drawings
-CREATE POLICY "Authenticated users can upload drawings"
+-- Storage RLS: Public/authenticated users can upload and view their drawings
+CREATE POLICY "Allow drawing uploads"
 ON storage.objects FOR INSERT
-TO authenticated
+TO public
 WITH CHECK (bucket_id = 'drawings');
 
-CREATE POLICY "Authenticated users can view drawings"
+CREATE POLICY "Allow drawing reads"
 ON storage.objects FOR SELECT
-TO authenticated
+TO public
+USING (bucket_id = 'drawings');
+
+CREATE POLICY "Allow drawing updates"
+ON storage.objects FOR UPDATE
+TO public
+USING (bucket_id = 'drawings')
+WITH CHECK (bucket_id = 'drawings');
+
+CREATE POLICY "Allow drawing deletes"
+ON storage.objects FOR DELETE
+TO public
 USING (bucket_id = 'drawings');
 
 -- ==============================================================================

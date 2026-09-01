@@ -271,21 +271,16 @@ export const DrawingCanvas: React.FC = () => {
 
     setIsSending(true);
     try {
-      const dataUrl = canvas.toDataURL('image/png');
-      let storagePath = dataUrl;
+      const blob = await new Promise<Blob | null>((resolve) =>
+        canvas.toBlob((b) => resolve(b), 'image/png')
+      );
 
-      try {
-        const blob = await new Promise<Blob | null>((resolve) =>
-          canvas.toBlob((b) => resolve(b), 'image/png')
-        );
-        if (blob) {
-          storagePath = await drawingsApi.uploadToSupabaseStorage(blob, duoId);
-        }
-      } catch (uploadErr) {
-        console.warn('Supabase storage upload bypassed, saving high-res PNG directly:', uploadErr);
-        storagePath = dataUrl;
+      if (!blob) {
+        throw new Error('Failed to generate drawing image blob.');
       }
 
+      // Upload high-resolution PNG to Supabase Storage
+      const storagePath = await drawingsApi.uploadToSupabaseStorage(blob, duoId);
       const savedDrawing = await drawingsApi.create(storagePath, caption.trim());
 
       const confirmedDrawing: Drawing = {
@@ -306,18 +301,20 @@ export const DrawingCanvas: React.FC = () => {
 
       if (partner?.id) {
         const partnerNotifChannel = supabase.channel(`user:${partner.id}`);
-        partnerNotifChannel.send({
-          type: 'broadcast',
-          event: 'new_drawing',
-          payload: confirmedDrawing,
-        });
+        if (typeof (partnerNotifChannel as any).httpSend === 'function') {
+          (partnerNotifChannel as any).httpSend({
+            type: 'broadcast',
+            event: 'new_drawing',
+            payload: confirmedDrawing,
+          });
+        }
       }
 
       setCaption('');
       initCanvas();
       toast.drawing(`Doodle sent to ${partner?.name || 'partner'}!`, 'Shared');
     } catch (err: any) {
-      console.error('Failed to send drawing:', err);
+      console.error('Failed to save drawing to Supabase Storage:', err);
       toast.error(err.message || 'Failed to send drawing. Please check your connection.', 'Error');
     } finally {
       setIsSending(false);

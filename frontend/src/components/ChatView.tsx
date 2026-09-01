@@ -280,11 +280,13 @@ export const ChatView: React.FC = () => {
 
       if (partner?.id) {
         const partnerNotifChannel = supabase.channel(`user:${partner.id}`);
-        partnerNotifChannel.send({
-          type: 'broadcast',
-          event: 'new_message',
-          payload: confirmedMsg,
-        });
+        if (typeof (partnerNotifChannel as any).httpSend === 'function') {
+          (partnerNotifChannel as any).httpSend({
+            type: 'broadcast',
+            event: 'new_message',
+            payload: confirmedMsg,
+          });
+        }
       }
     } catch (err) {
       console.error('Failed to send message:', err);
@@ -335,11 +337,13 @@ export const ChatView: React.FC = () => {
 
       if (partner?.id) {
         const partnerNotifChannel = supabase.channel(`user:${partner.id}`);
-        partnerNotifChannel.send({
-          type: 'broadcast',
-          event: 'new_message',
-          payload: confirmedMsg,
-        });
+        if (typeof (partnerNotifChannel as any).httpSend === 'function') {
+          (partnerNotifChannel as any).httpSend({
+            type: 'broadcast',
+            event: 'new_message',
+            payload: confirmedMsg,
+          });
+        }
       }
       toast.love('Voice note sent', 'Voice Note');
     } catch (err) {

@@ -209,11 +209,13 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
       const res = await messagesApi.clearHistory();
       if (profile?.active_duo_id) {
         const channel = supabase.channel(`chat:${profile.active_duo_id}`);
-        channel.send({
-          type: 'broadcast',
-          event: 'messages_cleared',
-          payload: {},
-        });
+        if (typeof (channel as any).httpSend === 'function') {
+          (channel as any).httpSend({
+            type: 'broadcast',
+            event: 'messages_cleared',
+            payload: {},
+          });
+        }
       }
       setConfirmClearChat(false);
       toast.love('Chat history cleared for both partners.', 'Chat Cleared');
