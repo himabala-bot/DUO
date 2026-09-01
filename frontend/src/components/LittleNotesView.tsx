@@ -332,12 +332,45 @@ export const LittleNotesView: React.FC = () => {
 
         {/* ─────────────────────────────────────────────────────────────
             SPECIAL "NEW / UNOPENED NOTES" PREVIEW CARD
-            Only rendered when partner has created notes that the user hasn't opened yet.
+            When unopened notes exist: shows preview with blurred background.
+            When all opened: remains on screen saying "no new notes".
             Occupies ~50% width on desktop (max-w-[640px]), centered horizontally.
         ───────────────────────────────────────────────────────────── */}
         {(() => {
           const unopenedPartnerNotes = notes.filter((n) => !n.is_me && !readNoteIds.has(n.id));
-          if (unopenedPartnerNotes.length === 0) return null;
+
+          if (unopenedPartnerNotes.length === 0) {
+            return (
+              <div className="mx-auto w-full max-w-[640px] pt-1">
+                <div className="relative w-full h-[220px] sm:h-[235px] overflow-hidden rounded-[30px] border border-theme bg-theme-card/70 dark:bg-black/25 shadow-[0_20px_50px_rgba(0,0,0,0.06)] backdrop-blur-[16px] text-left select-none p-6 sm:p-7 flex flex-col justify-between transition-all">
+                  <div className="pointer-events-none absolute inset-0 rounded-[30px] border-[2.5px] border-white/5 z-20" />
+
+                  {/* Top Row: Status Badge */}
+                  <div className="flex items-center justify-between">
+                    <span className="inline-flex items-center rounded-full border border-theme bg-theme-input/60 px-3.5 py-1 text-xs font-mono font-medium text-theme-muted backdrop-blur-md">
+                      No new notes
+                    </span>
+                  </div>
+
+                  {/* Center Text */}
+                  <div>
+                    <h3 className="max-w-[85%] font-serif text-2xl sm:text-3xl font-semibold leading-tight text-theme-primary tracking-tight">
+                      You're all caught up.
+                    </h3>
+                    <p className="text-xs text-theme-secondary mt-1">
+                      No unopened notes right now. All memories are organized below.
+                    </p>
+                  </div>
+
+                  {/* Bottom Row: Status */}
+                  <div className="flex items-center justify-between text-xs text-theme-muted font-mono">
+                    <span>{notes.length} total {notes.length === 1 ? 'memo' : 'memos'} in your space</span>
+                    <span className="text-[11px] opacity-75">Board is peaceful</span>
+                  </div>
+                </div>
+              </div>
+            );
+          }
 
           const safeIndex = unopenedIndex < unopenedPartnerNotes.length ? unopenedIndex : 0;
           const currentUnopened = unopenedPartnerNotes[safeIndex];

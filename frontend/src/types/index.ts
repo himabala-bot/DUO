@@ -123,7 +123,7 @@ export interface DailyHistoryDay {
 export interface NotificationItem {
   id: string;
   recipient_id: string;
-  type: 'CONNECTION_REQUEST' | 'CONNECTION_ACCEPTED' | 'MESSAGE' | 'DRAWING' | 'DAILY_RESPONSE';
+  type: 'CONNECTION_REQUEST' | 'CONNECTION_ACCEPTED' | 'MESSAGE' | 'DRAWING' | 'DAILY_RESPONSE' | 'NOTE';
   title: string;
   body: string;
   reference_id: string | null;

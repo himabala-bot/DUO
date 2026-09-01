@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { ProfileSettingsModal } from './ProfileSettingsModal';
 import { NotificationPopout } from './NotificationPopout';
+import { NotificationCardDeck } from './NotificationCardDeck';
 import { Avatar } from './Avatar';
 
 interface NavbarProps {
@@ -159,59 +160,17 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
             </button>
 
             <div className="flex items-center space-x-1 shrink-0">
-              {/* Notification Popover Trigger */}
-              <div className="relative">
-                <button
-                  onClick={() => setShowNotifications(!showNotifications)}
-                  className="rounded-full p-1.5 text-theme-muted hover:text-theme-primary hover:bg-theme-card relative transition-colors"
-                  title="Notifications"
-                >
-                  <Bell className="h-4 w-4" />
-                  {unreadCount > 0 && (
-                    <span className="absolute top-1 right-1 flex h-2 w-2 rounded-full bg-[#F43F5E] ring-2 ring-theme-page" />
-                  )}
-                </button>
-
-                {showNotifications && (
-                  <div className="absolute -left-40 sm:-left-36 bottom-full mb-3 w-80 max-w-[calc(100vw-2rem)] rounded-2xl border border-theme bg-theme-card p-3.5 shadow-2xl z-50 animate-in zoom-in-95 duration-150">
-                    <div className="flex items-center justify-between border-b border-theme pb-2">
-                      <span className="font-serif text-xs font-bold text-theme-primary">Notifications</span>
-                      {unreadCount > 0 && (
-                        <button
-                          onClick={markAllNotificationsAsRead}
-                          className="text-[10px] font-mono text-[#125CB9] hover:underline"
-                        >
-                          All read
-                        </button>
-                      )}
-                    </div>
-                    <div className="mt-2 max-h-60 overflow-y-auto space-y-1.5 pr-1">
-                      {notifications.length === 0 ? (
-                        <div className="py-6 text-center text-xs text-theme-muted font-mono">No updates yet</div>
-                      ) : (
-                        notifications.map((notif) => (
-                          <div
-                            key={notif.id}
-                            onClick={() => {
-                              if (!notif.is_read) markNotificationAsRead(notif.id);
-                              if (notif.type === 'MESSAGE') setActiveTab('chat');
-                              if (notif.type === 'DRAWING') setActiveTab('canvas');
-                              if (notif.type === 'DAILY_RESPONSE') setActiveTab('daily');
-                              setShowNotifications(false);
-                            }}
-                            className={`cursor-pointer rounded-xl p-2.5 text-left text-xs transition-colors ${
-                              notif.is_read ? 'bg-theme-input text-theme-secondary' : 'bg-[#125CB9]/10 border border-[#125CB9]/25 text-theme-primary'
-                            }`}
-                          >
-                            <span className="font-medium block">{notif.title}</span>
-                            <p className="text-[11px] text-theme-secondary line-clamp-1">{notif.body}</p>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </div>
+              {/* Notification Deck Trigger */}
+              <button
+                onClick={() => setShowNotifications(true)}
+                className="rounded-full p-1.5 text-theme-muted hover:text-theme-primary hover:bg-theme-card relative transition-colors"
+                title="Notifications"
+              >
+                <Bell className="h-4 w-4" />
+                {unreadCount > 0 && (
+                  <span className="absolute top-1 right-1 flex h-2 w-2 rounded-full bg-[#F43F5E] ring-2 ring-theme-page" />
                 )}
-              </div>
+              </button>
 
               {/* Settings Gear */}
               <button
@@ -280,58 +239,16 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
             </button>
 
             {/* Notification Bell */}
-            <div className="relative">
-              <button
-                onClick={() => setShowNotifications(!showNotifications)}
-                className="relative rounded-full p-1.5 text-theme-secondary hover:bg-theme-card transition-colors"
-                title="Notifications"
-              >
-                <Bell className="h-4 w-4" />
-                {unreadCount > 0 && (
-                  <span className="absolute top-1 right-1 flex h-2 w-2 rounded-full bg-[#F43F5E] ring-2 ring-theme-page" />
-                )}
-              </button>
-
-              {showNotifications && (
-                <div className="absolute right-0 top-full mt-2 w-80 max-w-[calc(100vw-2rem)] rounded-2xl border border-theme bg-theme-card p-3.5 shadow-2xl z-50 animate-in zoom-in-95 duration-150">
-                  <div className="flex items-center justify-between border-b border-theme pb-2">
-                    <span className="font-serif text-xs font-bold text-theme-primary">Notifications</span>
-                    {unreadCount > 0 && (
-                      <button
-                        onClick={markAllNotificationsAsRead}
-                        className="text-[10px] font-mono text-[#125CB9] hover:underline"
-                      >
-                        All read
-                      </button>
-                    )}
-                  </div>
-                  <div className="mt-2 max-h-60 overflow-y-auto space-y-1.5 pr-1">
-                    {notifications.length === 0 ? (
-                      <div className="py-6 text-center text-xs text-theme-muted font-mono">No updates yet</div>
-                    ) : (
-                      notifications.map((notif) => (
-                        <div
-                          key={notif.id}
-                          onClick={() => {
-                            if (!notif.is_read) markNotificationAsRead(notif.id);
-                            if (notif.type === 'MESSAGE') setActiveTab('chat');
-                            if (notif.type === 'DRAWING') setActiveTab('canvas');
-                            if (notif.type === 'DAILY_RESPONSE') setActiveTab('daily');
-                            setShowNotifications(false);
-                          }}
-                          className={`cursor-pointer rounded-xl p-2.5 text-left text-xs transition-colors ${
-                            notif.is_read ? 'bg-theme-input text-theme-secondary' : 'bg-[#125CB9]/10 border border-[#125CB9]/25 text-theme-primary'
-                          }`}
-                        >
-                          <span className="font-medium block">{notif.title}</span>
-                          <p className="text-[11px] text-theme-secondary line-clamp-1">{notif.body}</p>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
+            <button
+              onClick={() => setShowNotifications(true)}
+              className="relative rounded-full p-1.5 text-theme-secondary hover:bg-theme-card transition-colors"
+              title="Notifications"
+            >
+              <Bell className="h-4 w-4" />
+              {unreadCount > 0 && (
+                <span className="absolute top-1 right-1 flex h-2 w-2 rounded-full bg-[#F43F5E] ring-2 ring-theme-page" />
               )}
-            </div>
+            </button>
 
             {/* Settings */}
             <button
@@ -371,8 +288,18 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
         </nav>
       )}
 
-      {/* Dynamic Micro Notification Popout */}
+      {/* Dynamic Micro Notification Popout (1-second popup) */}
       <NotificationPopout activeTab={activeTab} onNavigate={setActiveTab} />
+
+      {/* Centered Notification Card Deck Modal */}
+      <NotificationCardDeck
+        isOpen={showNotifications}
+        onClose={() => setShowNotifications(false)}
+        notifications={notifications}
+        onMarkAsRead={markNotificationAsRead}
+        onMarkAllAsRead={markAllNotificationsAsRead}
+        onNavigate={setActiveTab}
+      />
 
       {/* Profile & Settings Experience Modal */}
       <ProfileSettingsModal
