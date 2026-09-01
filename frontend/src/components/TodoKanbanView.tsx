@@ -6,60 +6,45 @@ import { useToast } from '@/context/ToastContext';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { tasksApi } from '@/lib/api';
 import { Task, TaskStatus } from '@/types';
+import { Avatar } from './Avatar';
 import {
   Plus,
   CheckCircle2,
   Circle,
-  CircleDot,
   Clock,
   Trash2,
-  Edit3,
-  MoveRight,
-  MoveLeft,
-  Sparkles,
-  Heart,
-  Calendar,
-  X,
+  Pencil,
   GripVertical,
+  X,
+  Sparkles,
   ArrowRight,
-  ListTodo,
+  ArrowLeft,
+  Calendar,
 } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, isToday, isYesterday } from 'date-fns';
 import { RealtimeChannel } from '@supabase/supabase-js';
 
 interface ColumnConfig {
   id: TaskStatus;
   title: string;
-  icon: React.ComponentType<{ className?: string }>;
-  accent: string;
-  badgeBg: string;
-  borderTop: string;
+  dotColor: string;
 }
 
 const COLUMNS: ColumnConfig[] = [
   {
     id: 'TODO',
-    title: 'To Do',
-    icon: CircleDot,
-    accent: 'text-[#FB923C]',
-    badgeBg: 'bg-[#FB923C]/10 border-[#FB923C]/30 text-[#FB923C]',
-    borderTop: '#FB923C',
+    title: 'TO DO',
+    dotColor: 'bg-[#A89F91]',
   },
   {
     id: 'IN_PROGRESS',
-    title: 'In Progress',
-    icon: Clock,
-    accent: 'text-[#125CB9]',
-    badgeBg: 'bg-[#125CB9]/10 border-[#125CB9]/30 text-[#125CB9]',
-    borderTop: '#125CB9',
+    title: 'IN PROGRESS',
+    dotColor: 'bg-[#125CB9]',
   },
   {
     id: 'COMPLETED',
-    title: 'Completed',
-    icon: CheckCircle2,
-    accent: 'text-[#00D26A]',
-    badgeBg: 'bg-[#00D26A]/10 border-[#00D26A]/30 text-[#00D26A]',
-    borderTop: '#00D26A',
+    title: 'COMPLETED',
+    dotColor: 'bg-[#00D26A]',
   },
 ];
 
@@ -151,7 +136,7 @@ export const TodoKanbanView: React.FC = () => {
       setNewTitle('');
       setNewDescription('');
       setAddingToCol(null);
-      toast.love('Task added to list', 'Task Added');
+      toast.love('Task added to board', 'Task Added');
       broadcastUpdate();
     } catch (err: any) {
       toast.error(err.message || 'Failed to add task.', 'Error');
@@ -163,7 +148,6 @@ export const TodoKanbanView: React.FC = () => {
     const task = tasks.find((t) => t.id === taskId);
     if (!task || task.status === newStatus) return;
 
-    // Single source of truth update in local state - instant with zero duplicates
     setTasks((prev) =>
       prev.map((t) => (t.id === taskId ? { ...t, status: newStatus } : t))
     );
@@ -172,8 +156,6 @@ export const TodoKanbanView: React.FC = () => {
       await tasksApi.update(taskId, { status: newStatus });
       if (newStatus === 'COMPLETED') {
         toast.love(`Completed "${task.title}"`, 'Task Complete');
-      } else {
-        toast.love(`Moved to ${newStatus === 'IN_PROGRESS' ? 'In Progress' : 'To Do'}`, 'Updated');
       }
       broadcastUpdate();
     } catch (err: any) {
@@ -231,7 +213,7 @@ export const TodoKanbanView: React.FC = () => {
     }
   };
 
-  // HTML5 Drag and Drop Handlers with Visual Feedback
+  // Drag and drop handlers
   const handleDragStart = (e: React.DragEvent, taskId: string) => {
     e.dataTransfer.setData('text/plain', taskId);
     e.dataTransfer.effectAllowed = 'move';
@@ -252,7 +234,6 @@ export const TodoKanbanView: React.FC = () => {
   };
 
   const handleDragLeave = (e: React.DragEvent) => {
-    // Prevent flickering when hovering child elements
     const related = e.relatedTarget as HTMLElement;
     if (!related || !e.currentTarget.contains(related)) {
       setDragOverCol(null);
@@ -270,12 +251,22 @@ export const TodoKanbanView: React.FC = () => {
     }
   };
 
+  const formatTaskDate = (dateStr: string) => {
+    try {
+      const d = new Date(dateStr);
+      if (isToday(d)) return 'Today';
+      if (isYesterday(d)) return 'Yesterday';
+      return format(d, 'MMM d');
+    } catch {
+      return '';
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="text-center space-y-2">
-          <Heart className="h-6 w-6 text-[#EA5E86] animate-bounce mx-auto" />
-          <p className="text-xs font-mono text-[#A89F91]">Opening shared to-do board...</p>
+          <p className="text-xs font-mono text-theme-muted">Opening our to-do board...</p>
         </div>
       </div>
     );
@@ -284,64 +275,50 @@ export const TodoKanbanView: React.FC = () => {
   const completedTotal = tasks.filter((t) => t.status === 'COMPLETED').length;
 
   return (
-    <div className="w-full h-full flex flex-col p-3 sm:p-6 lg:p-8 min-h-0 overflow-hidden">
-      {/* Top Header */}
-      <div className="pb-5 border-b border-[#EFE8DC] flex flex-col sm:flex-row sm:items-baseline justify-between gap-4 shrink-0">
+    <div className="w-full h-full flex flex-col p-4 sm:p-6 lg:p-8 min-h-0 overflow-hidden">
+      {/* Board Header */}
+      <div className="pb-5 border-b border-theme flex flex-col sm:flex-row sm:items-baseline justify-between gap-4 shrink-0 max-w-6xl mx-auto w-full">
         <div>
-          <div className="flex items-center space-x-2 text-xs font-mono text-[#A89F91]">
-            <Sparkles className="h-3.5 w-3.5 text-[#F49625]" />
-            <span>Shared Couple Tasks</span>
+          <div className="flex items-center space-x-2 text-xs font-mono text-theme-muted">
+            <Sparkles className="h-3.5 w-3.5 text-[#125CB9]" />
+            <span>Shared Workspace</span>
           </div>
-          <h2 className="mt-1 font-serif text-2xl sm:text-3xl font-bold text-[#422F0E]">
+          <h1 className="mt-1 font-serif text-2xl sm:text-3xl font-bold text-theme-primary">
             Our To-Do Board
-          </h2>
-          <p className="mt-1 text-xs sm:text-sm text-[#6B5E4E]">
-            Simple, shared couple tasks synced in real time between you and {partner?.name || 'your partner'}.
+          </h1>
+          <p className="mt-1 text-xs sm:text-sm text-theme-secondary">
+            Shared tasks and plans synced in real time between you and {partner?.name || 'your partner'}.
           </p>
         </div>
 
-        {/* Top Action & Progress Pill */}
-        <div className="flex items-center gap-2.5 self-start sm:self-auto shrink-0">
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-medium border border-[#00D26A]/25 bg-[#00D26A]/10 text-[#00D26A]">
-            <CheckCircle2 className="h-3 w-3 fill-current" />
-            <span>{completedTotal} / {tasks.length} Done</span>
-          </div>
-
-          <button
-            onClick={() => {
-              setAddingToCol('TODO');
-              setNewTitle('');
-              setNewDescription('');
-            }}
-            className="flex items-center space-x-1.5 rounded-full bg-[#125CB9] px-4 py-1.5 text-xs font-medium text-white hover:bg-[#0E4B99] transition-colors shadow-xs"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            <span>Add Task</span>
-          </button>
+        {/* Counter Summary */}
+        <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
+          <span className="text-xs font-mono text-theme-secondary bg-theme-input px-3 py-1 rounded-full border border-theme">
+            {completedTotal} / {tasks.length} completed
+          </span>
         </div>
       </div>
 
-      {/* Mobile Column Tabs (<768px) */}
-      <div className="md:hidden flex gap-1.5 overflow-x-auto py-2.5 shrink-0 scrollbar-none">
+      {/* Mobile Column Switcher Tabs (<768px) */}
+      <div className="md:hidden flex gap-1.5 overflow-x-auto py-3 shrink-0 scrollbar-none max-w-6xl mx-auto w-full">
         {COLUMNS.map((col) => {
           const colTasks = tasks.filter((t) => t.status === col.id);
           const isActive = activeMobileCol === col.id;
-          const Icon = col.icon;
 
           return (
             <button
               key={col.id}
               onClick={() => setActiveMobileCol(col.id)}
-              className={`flex-1 flex items-center justify-center space-x-1.5 py-1.5 px-3 rounded-full border text-xs font-medium transition-all ${
+              className={`flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-xl border text-xs transition-all ${
                 isActive
                   ? 'border-[#125CB9] bg-[#125CB9] text-white font-semibold shadow-xs'
-                  : 'border-theme bg-theme-card text-theme-secondary hover:bg-theme-card-hover'
+                  : 'border-theme bg-theme-card text-theme-secondary hover:text-theme-primary'
               }`}
             >
-              <Icon className="h-3.5 w-3.5" />
+              <span className={`h-1.5 w-1.5 rounded-full ${isActive ? 'bg-white' : col.dotColor}`} />
               <span>{col.title}</span>
               <span
-                className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                className={`text-[10px] font-mono px-1.5 py-0.5 rounded-full ${
                   isActive ? 'bg-white/20 text-white' : 'bg-theme-input text-theme-muted'
                 }`}
               >
@@ -352,14 +329,13 @@ export const TodoKanbanView: React.FC = () => {
         })}
       </div>
 
-      {/* 3-Column Kanban Grid (Desktop side-by-side / Mobile single active tab) */}
-      <div className="flex-1 min-h-0 pt-2 overflow-x-auto overflow-y-hidden">
-        {/* Desktop 3-Column Grid */}
-        <div className="hidden md:grid md:grid-cols-3 gap-5 h-full items-start pb-4 max-w-6xl mx-auto">
+      {/* 3-Column Kanban Board */}
+      <div className="flex-1 min-h-0 pt-4 overflow-y-auto max-w-6xl mx-auto w-full">
+        {/* Desktop 3 Columns Grid */}
+        <div className="hidden md:grid md:grid-cols-3 gap-5 h-full items-start pb-6">
           {COLUMNS.map((col) => {
             const colTasks = tasks.filter((t) => t.status === col.id);
             const isDropTarget = dragOverCol === col.id;
-            const Icon = col.icon;
 
             return (
               <div
@@ -367,36 +343,34 @@ export const TodoKanbanView: React.FC = () => {
                 onDragOver={(e) => handleDragOver(e, col.id)}
                 onDragLeave={handleDragLeave}
                 onDrop={(e) => handleDrop(e, col.id)}
-                style={{ borderTopColor: col.borderTop }}
-                className={`h-full flex flex-col rounded-[45px] border border-theme border-t-4 bg-theme-card shadow-xs overflow-hidden transition-all duration-150 ${
-                  isDropTarget ? 'border-dashed border-2 border-[#125CB9] bg-[#125CB9]/10' : ''
+                className={`flex flex-col rounded-2xl border border-theme bg-theme-input/40 p-3.5 transition-all duration-150 ${
+                  isDropTarget ? 'ring-2 ring-[#125CB9]/40 bg-[#125CB9]/5 border-[#125CB9]' : ''
                 }`}
               >
                 {/* Column Header */}
-                <div className="px-3.5 py-2.5 border-b border-theme bg-theme-page flex items-center justify-between shrink-0">
+                <div className="pb-3 mb-3 border-b border-theme flex items-center justify-between shrink-0">
                   <div className="flex items-center space-x-2">
-                    <Icon className={`h-3.5 w-3.5 ${col.accent}`} />
-                    <h3 className="font-serif text-xs font-bold text-theme-primary">
+                    <span className={`h-2 w-2 rounded-full ${col.dotColor}`} />
+                    <h3 className="text-xs font-mono font-semibold tracking-wider text-theme-primary uppercase">
                       {col.title}
                     </h3>
                   </div>
 
-                  <span
-                    className={`text-[10px] font-mono font-medium px-2 py-0.2 rounded-full border ${col.badgeBg}`}
-                  >
+                  <span className="text-xs font-mono text-theme-muted">
                     {colTasks.length}
                   </span>
                 </div>
 
-                {/* Tasks List */}
-                <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-2">
+                {/* Task Cards List */}
+                <div className="space-y-2.5 min-h-[80px]">
                   {colTasks.length === 0 ? (
-                    <div className="p-6 text-center text-xs font-mono text-theme-muted border border-dashed border-theme rounded-xl">
+                    <div className="py-8 text-center text-xs text-theme-muted select-none">
                       No tasks yet
                     </div>
                   ) : (
                     colTasks.map((task) => {
                       const isBeingDragged = draggedTaskId === task.id;
+                      const creatorName = task.is_me ? (profile?.name || 'You') : task.created_by.name;
 
                       return (
                         <div
@@ -404,49 +378,49 @@ export const TodoKanbanView: React.FC = () => {
                           draggable
                           onDragStart={(e) => handleDragStart(e, task.id)}
                           onDragEnd={handleDragEnd}
-                          className={`group relative rounded-xl border p-3 transition-all duration-100 cursor-grab active:cursor-grabbing ${
+                          className={`group relative rounded-2xl border border-theme bg-theme-card p-3.5 transition-all duration-150 cursor-grab active:cursor-grabbing select-none hover:-translate-y-0.5 hover:shadow-md hover:border-theme-primary/30 ${
                             isBeingDragged
-                              ? 'opacity-35 scale-95 border-dashed border-[#125CB9] bg-[#125CB9]/15'
+                              ? 'opacity-30 scale-95 border-dashed border-[#125CB9]'
                               : task.status === 'COMPLETED'
-                              ? 'border-theme bg-theme-input/60 opacity-70 hover:opacity-100 hover:border-[#00D26A]'
-                              : 'border-theme bg-theme-card shadow-xs hover:border-[#125CB9]'
+                              ? 'opacity-75 hover:opacity-100'
+                              : 'shadow-xs'
                           }`}
                         >
-                          <div className="flex items-start gap-2">
-                            {/* Complete Toggle Checkbox */}
+                          <div className="flex items-start gap-2.5">
+                            {/* Complete Toggle Action */}
                             <button
                               type="button"
                               onClick={() => handleToggleComplete(task)}
-                              className="mt-0.5 text-[#125CB9] transition-transform shrink-0"
+                              className="mt-0.5 text-theme-muted hover:text-[#125CB9] transition-colors shrink-0"
                               title={task.status === 'COMPLETED' ? 'Mark incomplete' : 'Mark completed'}
                             >
                               {task.status === 'COMPLETED' ? (
-                                <CheckCircle2 className="h-3.5 w-3.5 fill-[#00D26A] text-white" />
+                                <CheckCircle2 className="h-4 w-4 text-[#00D26A] fill-[#00D26A]/20" />
                               ) : (
-                                <Circle className="h-3.5 w-3.5 text-theme-muted hover:text-[#125CB9]" />
+                                <Circle className="h-4 w-4 text-theme-muted hover:text-[#125CB9]" />
                               )}
                             </button>
 
-                            {/* Title & Description */}
+                            {/* Title and Description */}
                             <div className="flex-1 min-w-0">
-                              <span
-                                className={`text-xs font-medium leading-snug break-words block ${
+                              <h4
+                                className={`text-xs sm:text-sm font-medium leading-snug break-words ${
                                   task.status === 'COMPLETED'
                                     ? 'line-through text-theme-muted'
                                     : 'text-theme-primary'
                                 }`}
                               >
                                 {task.title}
-                              </span>
+                              </h4>
                               {task.description && (
-                                <p className="mt-0.5 text-[11px] text-theme-secondary leading-relaxed break-words">
+                                <p className="mt-1 text-xs text-theme-secondary leading-relaxed break-words line-clamp-2">
                                   {task.description}
                                 </p>
                               )}
                             </div>
 
-                            {/* Action Buttons (Edit / Delete) */}
-                            <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center space-x-0.5 shrink-0">
+                            {/* Card Actions (Edit / Delete) */}
+                            <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center space-x-1 shrink-0">
                               <button
                                 onClick={() => {
                                   setEditingTask(task);
@@ -454,15 +428,14 @@ export const TodoKanbanView: React.FC = () => {
                                   setEditDescription(task.description || '');
                                   setEditStatus(task.status);
                                 }}
-                                className="p-1 text-theme-muted hover:text-theme-primary rounded-full hover:bg-theme-input transition-colors"
+                                className="p-1 text-theme-muted hover:text-theme-primary rounded-lg hover:bg-theme-input transition-colors"
                                 title="Edit task"
                               >
-                                <Edit3 className="h-3 w-3" />
+                                <Pencil className="h-3 w-3" />
                               </button>
-
                               <button
                                 onClick={() => handleDeleteTask(task)}
-                                className="p-1 text-theme-muted hover:text-[#F43F5E] rounded-full hover:bg-[#F43F5E]/10 transition-colors"
+                                className="p-1 text-theme-muted hover:text-[#F43F5E] rounded-lg hover:bg-[#F43F5E]/10 transition-colors"
                                 title="Delete task"
                               >
                                 <Trash2 className="h-3 w-3" />
@@ -470,39 +443,22 @@ export const TodoKanbanView: React.FC = () => {
                             </div>
                           </div>
 
-                          {/* Drag Handle & Quick Move Links */}
-                          <div className="mt-1.5 pt-1.5 border-t border-theme-subtle flex items-center justify-between text-[10px] font-mono text-theme-muted">
-                            <span className="flex items-center gap-1">
-                              <GripVertical className="h-2.5 w-2.5 text-theme-muted" />
-                              {task.is_me ? 'You' : task.created_by.name}
-                            </span>
-
+                          {/* Footer: Assignee Avatar + Metadata Date */}
+                          <div className="mt-3 pt-2.5 border-t border-theme-subtle flex items-center justify-between text-xs text-theme-muted">
                             <div className="flex items-center space-x-1.5">
-                              {col.id !== 'TODO' && (
-                                <button
-                                  onClick={() => handleMoveStatus(task.id, 'TODO')}
-                                  className="hover:text-[#125CB9] hover:underline"
-                                >
-                                  To Do
-                                </button>
-                              )}
-                              {col.id !== 'IN_PROGRESS' && (
-                                <button
-                                  onClick={() => handleMoveStatus(task.id, 'IN_PROGRESS')}
-                                  className="hover:text-[#125CB9] hover:underline"
-                                >
-                                  In Progress
-                                </button>
-                              )}
-                              {col.id !== 'COMPLETED' && (
-                                <button
-                                  onClick={() => handleMoveStatus(task.id, 'COMPLETED')}
-                                  className="hover:text-[#00D26A] hover:underline"
-                                >
-                                  Done
-                                </button>
-                              )}
+                              <Avatar
+                                src={task.created_by.avatar_url}
+                                name={creatorName}
+                                size="xs"
+                              />
+                              <span className="text-[11px] text-theme-secondary font-medium truncate max-w-[100px]">
+                                {task.is_me ? 'You' : task.created_by.name}
+                              </span>
                             </div>
+
+                            <span className="text-[11px] font-mono text-theme-muted">
+                              {formatTaskDate(task.created_at)}
+                            </span>
                           </div>
                         </div>
                       );
@@ -510,10 +466,10 @@ export const TodoKanbanView: React.FC = () => {
                   )}
                 </div>
 
-                {/* Add Task Trigger at Column Bottom */}
-                <div className="p-2.5 border-t border-theme bg-theme-page shrink-0">
+                {/* Inline Add Task Action */}
+                <div className="mt-3 pt-2">
                   {addingToCol === col.id ? (
-                    <div className="space-y-1.5">
+                    <div className="rounded-xl border border-theme bg-theme-card p-3 space-y-2 shadow-xs">
                       <input
                         type="text"
                         value={newTitle}
@@ -524,20 +480,20 @@ export const TodoKanbanView: React.FC = () => {
                           if (e.key === 'Enter') handleAddTask(col.id);
                           if (e.key === 'Escape') setAddingToCol(null);
                         }}
-                        className="w-full rounded-xl border border-theme bg-theme-input px-3 py-1.5 text-xs text-theme-primary focus:border-[#125CB9] focus:bg-theme-card focus:outline-none"
+                        className="w-full rounded-lg border border-theme bg-theme-input px-3 py-1.5 text-xs text-theme-primary focus:border-[#125CB9] focus:bg-theme-card focus:outline-none"
                       />
                       <input
                         type="text"
                         value={newDescription}
                         onChange={(e) => setNewDescription(e.target.value)}
-                        placeholder="Optional details..."
-                        className="w-full rounded-xl border border-theme bg-theme-input px-3 py-1 text-[11px] text-theme-primary focus:border-[#125CB9] focus:bg-theme-card focus:outline-none"
+                        placeholder="Optional description..."
+                        className="w-full rounded-lg border border-theme bg-theme-input px-3 py-1 text-xs text-theme-primary focus:border-[#125CB9] focus:bg-theme-card focus:outline-none"
                       />
-                      <div className="flex gap-1.5 justify-end pt-0.5">
+                      <div className="flex items-center justify-end gap-1.5 pt-1">
                         <button
                           type="button"
                           onClick={() => setAddingToCol(null)}
-                          className="px-3 py-1 rounded-full text-xs text-theme-secondary hover:bg-theme-card"
+                          className="px-2.5 py-1 text-xs text-theme-secondary hover:text-theme-primary"
                         >
                           Cancel
                         </button>
@@ -558,9 +514,9 @@ export const TodoKanbanView: React.FC = () => {
                         setNewTitle('');
                         setNewDescription('');
                       }}
-                      className="w-full flex items-center justify-center space-x-1.5 py-1.5 rounded-xl border border-dashed border-theme hover:border-[#125CB9] hover:bg-theme-card text-xs font-medium text-theme-secondary hover:text-theme-primary transition-all"
+                      className="w-full flex items-center justify-center space-x-1.5 py-2 rounded-xl text-xs font-medium text-theme-secondary hover:text-theme-primary hover:bg-theme-card/60 transition-colors"
                     >
-                      <Plus className="h-3 w-3 text-[#125CB9]" />
+                      <Plus className="h-3.5 w-3.5" />
                       <span>Add task</span>
                     </button>
                   )}
@@ -570,133 +526,192 @@ export const TodoKanbanView: React.FC = () => {
           })}
         </div>
 
-        {/* Mobile Single Column View (<768px) */}
-        <div className="md:hidden h-full flex flex-col rounded-2xl border border-theme bg-theme-card shadow-xs overflow-hidden">
+        {/* Mobile Single Active Column (<768px) */}
+        <div className="md:hidden flex flex-col rounded-2xl border border-theme bg-theme-input/40 p-4 pb-6">
           {(() => {
             const activeColConfig = COLUMNS.find((c) => c.id === activeMobileCol) || COLUMNS[0];
             const colTasks = tasks.filter((t) => t.status === activeColConfig.id);
-            const Icon = activeColConfig.icon;
 
             return (
               <>
-                <div className="px-3.5 py-2.5 border-b border-theme bg-theme-page flex items-center justify-between shrink-0">
+                <div className="pb-3 mb-3 border-b border-theme flex items-center justify-between shrink-0">
                   <div className="flex items-center space-x-2">
-                    <Icon className={`h-3.5 w-3.5 ${activeColConfig.accent}`} />
-                    <h3 className="font-serif text-sm font-bold text-theme-primary">
+                    <span className={`h-2 w-2 rounded-full ${activeColConfig.dotColor}`} />
+                    <h3 className="text-xs font-mono font-semibold tracking-wider text-theme-primary uppercase">
                       {activeColConfig.title}
                     </h3>
                   </div>
-                  <span className={`text-[11px] font-mono font-medium px-2.5 py-0.2 rounded-full border ${activeColConfig.badgeBg}`}>
-                    {colTasks.length} tasks
+
+                  <span className="text-xs font-mono text-theme-muted">
+                    {colTasks.length}
                   </span>
                 </div>
 
-                <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-2">
+                <div className="space-y-2.5 min-h-[120px]">
                   {colTasks.length === 0 ? (
-                    <div className="p-6 text-center text-xs font-mono text-theme-muted">
-                      No tasks in {activeColConfig.title} yet.
+                    <div className="py-12 text-center text-xs text-theme-muted select-none">
+                      No tasks yet
                     </div>
                   ) : (
-                    colTasks.map((task) => (
-                      <div
-                        key={task.id}
-                        className={`rounded-xl border p-3 flex flex-col space-y-2 ${
-                          task.status === 'COMPLETED'
-                            ? 'border-theme bg-theme-input/60 opacity-70'
-                            : 'border-theme bg-theme-card shadow-xs'
-                        }`}
-                      >
-                        <div className="flex items-start gap-2.5">
-                          <button
-                            type="button"
-                            onClick={() => handleToggleComplete(task)}
-                            className="mt-0.5 text-[#125CB9] shrink-0"
-                          >
-                            {task.status === 'COMPLETED' ? (
-                              <CheckCircle2 className="h-4 w-4 fill-[#00D26A] text-white" />
-                            ) : (
-                              <Circle className="h-4 w-4 text-theme-muted" />
-                            )}
-                          </button>
+                    colTasks.map((task) => {
+                      const creatorName = task.is_me ? (profile?.name || 'You') : task.created_by.name;
 
-                          <div className="flex-1 min-w-0">
-                            <span
-                              className={`text-xs sm:text-sm font-medium ${
-                                task.status === 'COMPLETED' ? 'line-through text-theme-muted' : 'text-theme-primary'
-                              }`}
-                            >
-                              {task.title}
-                            </span>
-                            {task.description && (
-                              <p className="mt-0.5 text-[11px] text-theme-secondary leading-relaxed">
-                                {task.description}
-                              </p>
-                            )}
-                          </div>
-
-                          <div className="flex items-center space-x-1 shrink-0">
+                      return (
+                        <div
+                          key={task.id}
+                          className="rounded-2xl border border-theme bg-theme-card p-3.5 shadow-xs space-y-2"
+                        >
+                          <div className="flex items-start gap-2.5">
                             <button
-                              onClick={() => {
-                                setEditingTask(task);
-                                setEditTitle(task.title);
-                                setEditDescription(task.description || '');
-                                setEditStatus(task.status);
-                              }}
-                              className="p-1 text-theme-muted hover:text-theme-primary"
+                              type="button"
+                              onClick={() => handleToggleComplete(task)}
+                              className="mt-0.5 text-theme-muted hover:text-[#125CB9] transition-colors shrink-0"
                             >
-                              <Edit3 className="h-3.5 w-3.5" />
+                              {task.status === 'COMPLETED' ? (
+                                <CheckCircle2 className="h-4 w-4 text-[#00D26A] fill-[#00D26A]/20" />
+                              ) : (
+                                <Circle className="h-4 w-4 text-theme-muted" />
+                              )}
                             </button>
-                            <button
-                              onClick={() => handleDeleteTask(task)}
-                              className="p-1 text-theme-muted hover:text-[#F43F5E]"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
-                        </div>
 
-                        {/* Move Status Buttons for Mobile */}
-                        <div className="pt-1.5 border-t border-theme-subtle flex items-center justify-between text-[10px] font-mono">
-                          <span className="text-theme-muted">Move:</span>
-                          <div className="flex gap-1.5">
-                            {COLUMNS.filter((c) => c.id !== task.status).map((c) => (
-                              <button
-                                key={c.id}
-                                onClick={() => handleMoveStatus(task.id, c.id)}
-                                className="px-2.5 py-0.5 rounded-full border border-theme bg-theme-input text-theme-secondary hover:text-theme-primary"
+                            <div className="flex-1 min-w-0">
+                              <h4
+                                className={`text-xs sm:text-sm font-medium leading-snug break-words ${
+                                  task.status === 'COMPLETED'
+                                    ? 'line-through text-theme-muted'
+                                    : 'text-theme-primary'
+                                }`}
                               >
-                                {c.title}
+                                {task.title}
+                              </h4>
+                              {task.description && (
+                                <p className="mt-1 text-xs text-theme-secondary leading-relaxed break-words">
+                                  {task.description}
+                                </p>
+                              )}
+                            </div>
+
+                            <div className="flex items-center space-x-1 shrink-0">
+                              <button
+                                onClick={() => {
+                                  setEditingTask(task);
+                                  setEditTitle(task.title);
+                                  setEditDescription(task.description || '');
+                                  setEditStatus(task.status);
+                                }}
+                                className="p-1 text-theme-muted hover:text-theme-primary rounded-lg"
+                              >
+                                <Pencil className="h-3 w-3" />
                               </button>
-                            ))}
+                              <button
+                                onClick={() => handleDeleteTask(task)}
+                                className="p-1 text-theme-muted hover:text-[#F43F5E] rounded-lg"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Quick Mobile Status Move Buttons */}
+                          <div className="pt-2 border-t border-theme-subtle flex items-center justify-between text-xs text-theme-muted">
+                            <div className="flex items-center space-x-1.5">
+                              <Avatar
+                                src={task.created_by.avatar_url}
+                                name={creatorName}
+                                size="xs"
+                              />
+                              <span className="text-[11px] text-theme-secondary font-medium">
+                                {task.is_me ? 'You' : task.created_by.name}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center space-x-1.5 text-[11px] font-mono">
+                              {activeColConfig.id !== 'TODO' && (
+                                <button
+                                  onClick={() => handleMoveStatus(task.id, 'TODO')}
+                                  className="text-theme-muted hover:text-theme-primary underline"
+                                >
+                                  To Do
+                                </button>
+                              )}
+                              {activeColConfig.id !== 'IN_PROGRESS' && (
+                                <button
+                                  onClick={() => handleMoveStatus(task.id, 'IN_PROGRESS')}
+                                  className="text-theme-muted hover:text-theme-primary underline"
+                                >
+                                  In Progress
+                                </button>
+                              )}
+                              {activeColConfig.id !== 'COMPLETED' && (
+                                <button
+                                  onClick={() => handleMoveStatus(task.id, 'COMPLETED')}
+                                  className="text-theme-muted hover:text-[#00D26A] underline"
+                                >
+                                  Complete
+                                </button>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))
+                      );
+                    })
                   )}
                 </div>
 
-                {/* Mobile Add Task Bottom */}
-                <div className="p-2.5 border-t border-theme bg-theme-page shrink-0">
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="text"
-                      value={newTitle}
-                      onChange={(e) => setNewTitle(e.target.value)}
-                      placeholder={`Add to ${activeColConfig.title}...`}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') handleAddTask(activeColConfig.id);
-                      }}
-                      className="flex-1 rounded-full border border-theme bg-theme-input px-3.5 py-1.5 text-xs text-theme-primary focus:outline-none focus:border-[#125CB9]"
-                    />
+                {/* Mobile Add Task Action */}
+                <div className="mt-3 pt-2">
+                  {addingToCol === activeColConfig.id ? (
+                    <div className="rounded-xl border border-theme bg-theme-card p-3 space-y-2 shadow-xs">
+                      <input
+                        type="text"
+                        value={newTitle}
+                        onChange={(e) => setNewTitle(e.target.value)}
+                        placeholder="Task title..."
+                        autoFocus
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') handleAddTask(activeColConfig.id);
+                          if (e.key === 'Escape') setAddingToCol(null);
+                        }}
+                        className="w-full rounded-lg border border-theme bg-theme-input px-3 py-1.5 text-xs text-theme-primary focus:border-[#125CB9] focus:bg-theme-card focus:outline-none"
+                      />
+                      <input
+                        type="text"
+                        value={newDescription}
+                        onChange={(e) => setNewDescription(e.target.value)}
+                        placeholder="Optional description..."
+                        className="w-full rounded-lg border border-theme bg-theme-input px-3 py-1 text-xs text-theme-primary focus:border-[#125CB9] focus:bg-theme-card focus:outline-none"
+                      />
+                      <div className="flex items-center justify-end gap-1.5 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => setAddingToCol(null)}
+                          className="px-2.5 py-1 text-xs text-theme-secondary hover:text-theme-primary"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleAddTask(activeColConfig.id)}
+                          className="px-3.5 py-1 rounded-full bg-[#125CB9] text-white hover:bg-[#0E4B99] text-xs font-medium shadow-xs"
+                        >
+                          Add
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
                     <button
                       type="button"
-                      onClick={() => handleAddTask(activeColConfig.id)}
-                      disabled={!newTitle.trim()}
-                      className="rounded-full bg-[#125CB9] p-2 text-white hover:bg-[#0E4B99] disabled:opacity-30"
+                      onClick={() => {
+                        setAddingToCol(activeColConfig.id);
+                        setNewTitle('');
+                        setNewDescription('');
+                      }}
+                      className="w-full flex items-center justify-center space-x-1.5 py-2 rounded-xl text-xs font-medium text-theme-secondary hover:text-theme-primary hover:bg-theme-card transition-colors"
                     >
-                      <Plus className="h-4 w-4" />
+                      <Plus className="h-3.5 w-3.5" />
+                      <span>Add task</span>
                     </button>
-                  </div>
+                  )}
                 </div>
               </>
             );
@@ -704,54 +719,56 @@ export const TodoKanbanView: React.FC = () => {
         </div>
       </div>
 
-      {/* Edit Task Modal Dialog */}
+      {/* Edit Task Modal */}
       {editingTask && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="w-full max-w-md rounded-[45px] border border-theme bg-theme-card p-6 sm:p-7 shadow-2xl animate-in zoom-in-95 duration-150 space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-theme">
-              <h3 className="font-serif text-base font-bold text-theme-primary">Edit Task</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="relative w-full max-w-md rounded-2xl border border-theme bg-theme-card p-6 shadow-2xl space-y-4 animate-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-2 border-b border-theme">
+              <h3 className="font-serif text-lg font-bold text-theme-primary">Edit Task</h3>
               <button
                 onClick={() => setEditingTask(null)}
-                className="p-1.5 text-theme-muted hover:text-theme-primary rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+                className="p-1 text-theme-muted hover:text-theme-primary rounded-full hover:bg-theme-input transition-colors"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
 
-            <form onSubmit={handleSaveEdit} className="space-y-3">
+            <form onSubmit={handleSaveEdit} className="space-y-3.5">
               <div>
-                <label className="block text-xs font-medium text-theme-secondary mb-1">Task Title</label>
+                <label className="block text-xs font-medium text-theme-secondary mb-1">Title</label>
                 <input
                   type="text"
                   value={editTitle}
                   onChange={(e) => setEditTitle(e.target.value)}
+                  placeholder="Task title..."
                   required
-                  className="w-full rounded-xl border border-theme bg-theme-input px-3.5 py-2 text-xs text-theme-primary focus:border-[#125CB9] focus:bg-theme-card focus:outline-none"
+                  className="w-full rounded-xl border border-theme bg-theme-input px-3 py-2 text-xs sm:text-sm text-theme-primary focus:border-[#125CB9] focus:bg-theme-card focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-theme-secondary mb-1">Description (optional)</label>
+                <label className="block text-xs font-medium text-theme-secondary mb-1">Description</label>
                 <textarea
                   value={editDescription}
                   onChange={(e) => setEditDescription(e.target.value)}
-                  rows={2}
-                  className="w-full rounded-xl border border-theme bg-theme-input p-3 text-xs text-theme-primary focus:border-[#125CB9] focus:bg-theme-card focus:outline-none"
+                  placeholder="Optional details or subtasks..."
+                  rows={3}
+                  className="w-full rounded-xl border border-theme bg-theme-input px-3 py-2 text-xs sm:text-sm text-theme-primary focus:border-[#125CB9] focus:bg-theme-card focus:outline-none resize-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-theme-secondary mb-1">Column Status</label>
-                <div className="flex gap-1.5">
+                <label className="block text-xs font-medium text-theme-secondary mb-1">Status</label>
+                <div className="grid grid-cols-3 gap-2">
                   {COLUMNS.map((col) => (
                     <button
                       key={col.id}
                       type="button"
                       onClick={() => setEditStatus(col.id)}
-                      className={`flex-1 py-1.5 rounded-full border text-xs font-medium transition-all ${
+                      className={`py-1.5 px-2 rounded-xl text-xs font-medium border transition-all ${
                         editStatus === col.id
                           ? 'border-[#125CB9] bg-[#125CB9] text-white font-semibold shadow-xs'
-                          : 'border-theme bg-theme-input text-theme-secondary'
+                          : 'border-theme bg-theme-input text-theme-secondary hover:text-theme-primary'
                       }`}
                     >
                       {col.title}
@@ -760,21 +777,33 @@ export const TodoKanbanView: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex justify-end gap-2 pt-2.5 border-t border-theme">
+              <div className="flex items-center justify-between pt-3 border-t border-theme">
                 <button
                   type="button"
-                  onClick={() => setEditingTask(null)}
-                  className="px-3.5 py-1.5 rounded-full border border-theme text-xs font-medium text-theme-secondary hover:bg-theme-input"
+                  onClick={() => {
+                    if (editingTask) handleDeleteTask(editingTask);
+                    setEditingTask(null);
+                  }}
+                  className="text-xs text-[#F43F5E] hover:underline font-mono"
                 >
-                  Cancel
+                  Delete Task
                 </button>
-                <button
-                  type="submit"
-                  disabled={!editTitle.trim()}
-                  className="px-4 py-1.5 rounded-full bg-[#125CB9] text-white hover:bg-[#0E4B99] text-xs font-medium shadow-xs disabled:opacity-40"
-                >
-                  Save Changes
-                </button>
+
+                <div className="flex items-center space-x-2">
+                  <button
+                    type="button"
+                    onClick={() => setEditingTask(null)}
+                    className="px-3.5 py-1.5 rounded-full text-xs text-theme-secondary hover:bg-theme-input transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-1.5 rounded-full bg-[#125CB9] text-white hover:bg-[#0E4B99] text-xs font-semibold shadow-xs transition-colors"
+                  >
+                    Save Changes
+                  </button>
+                </div>
               </div>
             </form>
           </div>

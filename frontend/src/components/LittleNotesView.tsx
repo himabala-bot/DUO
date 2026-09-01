@@ -342,28 +342,28 @@ export const LittleNotesView: React.FC = () => {
           if (unopenedPartnerNotes.length === 0) {
             return (
               <div className="mx-auto w-full max-w-[640px] pt-1">
-                <div className="relative w-full h-[220px] sm:h-[235px] overflow-hidden rounded-[30px] border border-black/90 dark:border-white/15 bg-[#18181b] text-white shadow-[0_20px_50px_rgba(0,0,0,0.18)] text-left select-none p-6 sm:p-7 flex flex-col justify-between transition-all">
-                  <div className="pointer-events-none absolute inset-0 rounded-[30px] border-[2.5px] border-white/10 z-20" />
+                <div className="relative w-full h-[220px] sm:h-[235px] overflow-hidden rounded-[30px] border border-theme bg-theme-card/70 dark:bg-black/25 shadow-[0_20px_50px_rgba(0,0,0,0.06)] backdrop-blur-[16px] text-left select-none p-6 sm:p-7 flex flex-col justify-between transition-all">
+                  <div className="pointer-events-none absolute inset-0 rounded-[30px] border-[2.5px] border-white/5 z-20" />
 
                   {/* Top Row: Status Badge */}
                   <div className="flex items-center justify-between">
-                    <span className="inline-flex items-center rounded-full border border-white/20 bg-white/10 px-3.5 py-1 text-xs font-mono font-medium text-white/90 backdrop-blur-md">
+                    <span className="inline-flex items-center rounded-full border border-theme bg-theme-input/60 px-3.5 py-1 text-xs font-mono font-medium text-theme-muted backdrop-blur-md">
                       No new notes
                     </span>
                   </div>
 
                   {/* Center Text */}
                   <div>
-                    <h3 className="max-w-[85%] font-serif text-2xl sm:text-3xl font-semibold leading-tight text-white tracking-tight">
+                    <h3 className="max-w-[85%] font-serif text-2xl sm:text-3xl font-semibold leading-tight text-theme-primary tracking-tight">
                       You're all caught up.
                     </h3>
-                    <p className="text-xs text-gray-300 mt-1">
+                    <p className="text-xs text-theme-secondary mt-1">
                       No unopened notes right now. All memories are organized below.
                     </p>
                   </div>
 
                   {/* Bottom Row: Status */}
-                  <div className="flex items-center justify-between text-xs text-gray-400 font-mono">
+                  <div className="flex items-center justify-between text-xs text-theme-muted font-mono">
                     <span>{notes.length} total {notes.length === 1 ? 'memo' : 'memos'} in your space</span>
                     <span className="text-[11px] opacity-75">Board is peaceful</span>
                   </div>
