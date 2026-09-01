@@ -99,9 +99,9 @@ export const AuthView: React.FC = () => {
       <header className="border-b border-theme bg-theme-page/95 backdrop-blur-md sticky top-0 z-30">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-6 sm:px-8">
           <div className="flex items-center space-x-2">
-            <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-[#125CB9] text-white shadow-xs">
-              <Heart className="h-3.5 w-3.5 fill-current" />
-            </span>
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-white dark:bg-white/95 border border-theme shadow-xs overflow-hidden shrink-0 p-0.5">
+              <img src="/logo.png" alt="Duo Logo" className="w-full h-full object-contain" />
+            </div>
             <span className="font-serif text-xl font-bold tracking-tight text-theme-primary">Duo</span>
           </div>
 
@@ -539,62 +539,12 @@ export const AuthView: React.FC = () => {
           </div>
         </section>
 
-        {/* 3 Pillars Summary */}
-        <section className="mx-auto max-w-4xl px-6 sm:px-8 py-6 sm:py-8">
-          <div className="border-t border-theme pt-8">
-            <h2 className="text-[10px] font-mono uppercase tracking-wider text-theme-muted mb-6 font-medium">
-              The 3 Pillars of Duo
-            </h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="rounded-2xl border border-theme bg-theme-card p-5 shadow-xs flex flex-col justify-between">
-                <div>
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#125CB9]/10 text-[#125CB9] mb-4">
-                    <KeyRound className="h-5 w-5" />
-                  </div>
-                  <span className="text-[11px] font-mono text-theme-muted">01 / Pairing</span>
-                  <h3 className="mt-1 text-sm font-serif font-bold text-theme-primary">QR & Secret Keys</h3>
-                  <p className="mt-1 text-xs text-theme-secondary leading-relaxed">
-                    Instantly pair 2 devices via camera scan or 6-character code. One relationship per account.
-                  </p>
-                </div>
-              </div>
-
-              <div className="rounded-2xl border border-theme bg-theme-card p-5 shadow-xs flex flex-col justify-between">
-                <div>
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#00D26A]/10 text-[#00D26A] mb-4">
-                    <PenTool className="h-5 w-5" />
-                  </div>
-                  <span className="text-[11px] font-mono text-theme-muted">02 / Live Space</span>
-                  <h3 className="mt-1 text-sm font-serif font-bold text-theme-primary">Real-Time Together</h3>
-                  <p className="mt-1 text-xs text-theme-secondary leading-relaxed">
-                    Live drawing, whisper chat, typing presence, and instant note sync powered by Supabase.
-                  </p>
-                </div>
-              </div>
-
-              <div className="rounded-2xl border border-theme bg-theme-card p-5 shadow-xs flex flex-col justify-between">
-                <div>
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#FB923C]/10 text-[#FB923C] mb-4">
-                    <BookOpen className="h-5 w-5" />
-                  </div>
-                  <span className="text-[11px] font-mono text-theme-muted">03 / Intimacy</span>
-                  <h3 className="mt-1 text-sm font-serif font-bold text-theme-primary">Daily Rituals</h3>
-                  <p className="mt-1 text-xs text-theme-secondary leading-relaxed">
-                    One daily prompt, sealed drafts, voice reflections, and playful physical file folders.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
         {/* Auth Entry Form Section */}
         <section id="auth-section" className="mx-auto max-w-md px-6 py-10 sm:py-14">
           <div className="rounded-3xl border border-theme bg-theme-card p-6 sm:p-8 shadow-xl">
             <div className="text-center mb-5">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#125CB9]/10 text-[#125CB9] mx-auto mb-2.5">
-                <Heart className="h-5 w-5 fill-current" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white dark:bg-white/95 border border-theme shadow-xs overflow-hidden mx-auto mb-3 p-1">
+                <img src="/logo.png" alt="Duo Logo" className="w-full h-full object-contain" />
               </div>
               <h2 className="font-serif text-xl sm:text-2xl font-bold text-theme-primary">
                 {isLogin ? 'Welcome back to Duo' : 'Start your shared room'}

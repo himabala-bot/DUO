@@ -18,6 +18,7 @@ import {
   Smile,
   Compass,
   ArrowRight,
+  Trash2,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { supabase } from '@/lib/supabase';
@@ -390,20 +391,23 @@ export const DailyView: React.FC = () => {
                 {/* Answer Input or Voice Preview */}
                 <div className="mt-3.5">
                   {isVoiceAns ? (
-                    <div className="rounded-2xl border border-theme bg-theme-input p-3.5 flex items-center justify-between">
-                      <div>
-                        <span className="text-[10px] font-mono uppercase tracking-wider text-theme-muted block mb-1">
+                    <div className="rounded-2xl border border-theme bg-theme-input p-4 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-mono uppercase tracking-wider text-theme-muted block">
                           Your Voice Reflection:
                         </span>
-                        {renderAnswerBody(currentAns, true)}
+                        {status !== 'SUBMITTED' && (
+                          <button
+                            type="button"
+                            onClick={() => setAnswers((prev) => ({ ...prev, [q.id]: '' }))}
+                            className="text-xs text-theme-muted hover:text-[#F43F5E] transition-colors p-1"
+                            title="Discard recording"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        )}
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => setAnswers((prev) => ({ ...prev, [q.id]: '' }))}
-                        className="text-xs text-[#125CB9] hover:underline font-mono"
-                      >
-                        Change to text
-                      </button>
+                      {renderAnswerBody(currentAns, true)}
                     </div>
                   ) : (
                     <textarea
@@ -420,9 +424,13 @@ export const DailyView: React.FC = () => {
                 <div className="mt-3.5 flex flex-wrap items-center justify-between gap-2.5 pt-3 border-t border-theme-subtle">
                   <div className="flex items-center space-x-2">
                     {/* Voice Note Option */}
-                    {!isVoiceAns && (
+                    {!isVoiceAns && status !== 'SUBMITTED' && (
                       <VoiceRecorder
-                        onSendVoice={(url, dur) => handleVoiceAnswer(q, url, dur)}
+                        showSendButton={false}
+                        onSendVoice={(url, dur) => {
+                          const voicePayload = `[voice:${JSON.stringify({ url, duration: dur })}]`;
+                          setAnswers((prev) => ({ ...prev, [q.id]: voicePayload }));
+                        }}
                       />
                     )}
 

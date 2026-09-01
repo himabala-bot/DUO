@@ -14,8 +14,24 @@ import { TodoKanbanView } from '@/components/TodoKanbanView';
 
 export default function Home() {
   const { profile, hasActiveDuo, isLoading, supabaseUser, refreshProfile } = useAuth();
-  // Default starting page: 'daily' (Daily Love Questions)
-  const [activeTab, setActiveTab] = useState<string>('daily');
+  // Persist active tab across page refreshes
+  const [activeTab, setActiveTabState] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      const savedTab = localStorage.getItem('duo_active_tab');
+      if (savedTab && ['daily', 'chat', 'canvas', 'notes', 'todo'].includes(savedTab)) {
+        return savedTab;
+      }
+    }
+    return 'daily';
+  });
+
+  const setActiveTab = (tab: string) => {
+    setActiveTabState(tab);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('duo_active_tab', tab);
+    }
+  };
+
   const [pendingPairToken, setPendingPairToken] = useState<string | null>(null);
 
   // Detect ?pair=<token> parameter from QR code scan

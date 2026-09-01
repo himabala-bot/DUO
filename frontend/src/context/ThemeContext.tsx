@@ -15,37 +15,29 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [theme, setThemeState] = useState<Theme>('light');
-  const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>('light');
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    // Load saved theme
-    const saved = localStorage.getItem('duo_theme') as Theme | null;
-    if (saved && (saved === 'light' || saved === 'dark' || saved === 'system')) {
-      setThemeState(saved);
-    } else {
-      // Default to light or check system
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      setThemeState(prefersDark ? 'dark' : 'light');
+  const [theme, setThemeState] = useState<Theme>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('duo_theme') as Theme | null;
+      if (saved && (saved === 'light' || saved === 'dark' || saved === 'system')) {
+        return saved;
+      }
+      return document.documentElement.classList.contains('dark') ? 'dark' : 'light';
     }
-    setMounted(true);
-  }, []);
+    return 'light';
+  });
 
-  useEffect(() => {
-    if (!mounted) return;
-
-    let effectiveTheme: ResolvedTheme = 'light';
-    if (theme === 'system') {
-      effectiveTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    } else {
-      effectiveTheme = theme;
+  const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('duo_theme') as Theme | null;
+      if (saved === 'dark' || saved === 'light') return saved;
+      return document.documentElement.classList.contains('dark') ? 'dark' : 'light';
     }
+    return 'light';
+  });
 
-    setResolvedTheme(effectiveTheme);
-
+  const applyThemeToDOM = (effective: ResolvedTheme) => {
     const root = document.documentElement;
-    if (effectiveTheme === 'dark') {
+    if (effective === 'dark') {
       root.classList.add('dark');
       root.setAttribute('data-theme', 'dark');
       root.style.colorScheme = 'dark';
@@ -54,16 +46,54 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       root.setAttribute('data-theme', 'light');
       root.style.colorScheme = 'light';
     }
-  }, [theme, mounted]);
+  };
+
+  useEffect(() => {
+    const saved = localStorage.getItem('duo_theme') as Theme | null;
+    let initial: Theme = 'light';
+    if (saved && (saved === 'light' || saved === 'dark' || saved === 'system')) {
+      initial = saved;
+    } else {
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      initial = prefersDark ? 'dark' : 'light';
+    }
+
+    setThemeState(initial);
+    const effective: ResolvedTheme =
+      initial === 'system'
+        ? window.matchMedia('(prefers-color-scheme: dark)').matches
+          ? 'dark'
+          : 'light'
+        : initial;
+
+    setResolvedTheme(effective);
+    applyThemeToDOM(effective);
+  }, []);
 
   const setTheme = (newTheme: Theme) => {
     setThemeState(newTheme);
     localStorage.setItem('duo_theme', newTheme);
+
+    let effective: ResolvedTheme = 'light';
+    if (newTheme === 'system') {
+      effective = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    } else {
+      effective = newTheme;
+    }
+
+    setResolvedTheme(effective);
+    applyThemeToDOM(effective);
   };
 
   const toggleTheme = () => {
-    const next = resolvedTheme === 'dark' ? 'light' : 'dark';
-    setTheme(next);
+    // Check DOM classList directly for 100% foolproof 1-click toggling
+    const isCurrentlyDark =
+      typeof document !== 'undefined'
+        ? document.documentElement.classList.contains('dark')
+        : resolvedTheme === 'dark';
+
+    const nextTheme: ResolvedTheme = isCurrentlyDark ? 'light' : 'dark';
+    setTheme(nextTheme);
   };
 
   return (

@@ -9,6 +9,7 @@ interface VoiceRecorderProps {
   onCancel?: () => void;
   onStateChange?: (state: 'idle' | 'recording' | 'preview') => void;
   compact?: boolean;
+  showSendButton?: boolean;
 }
 
 export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
@@ -16,6 +17,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
   onCancel,
   onStateChange,
   compact = false,
+  showSendButton = true,
 }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [recordTime, setRecordTime] = useState(0);
@@ -238,14 +240,16 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
         </button>
 
         {/* Send Voice Note */}
-        <button
-          type="button"
-          onClick={handleSend}
-          className="flex h-8 w-8 items-center justify-center rounded-full bg-[#125CB9] text-white hover:bg-[#0E4B99] transition-colors shadow-xs shrink-0"
-          title="Send voice note"
-        >
-          <Send className="h-3.5 w-3.5" />
-        </button>
+        {showSendButton && (
+          <button
+            type="button"
+            onClick={handleSend}
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-[#125CB9] text-white hover:bg-[#0E4B99] transition-colors shadow-xs shrink-0"
+            title="Send voice note"
+          >
+            <Send className="h-3.5 w-3.5" />
+          </button>
+        )}
       </div>
     </div>
   );
