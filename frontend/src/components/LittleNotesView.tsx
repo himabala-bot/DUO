@@ -360,31 +360,31 @@ export const LittleNotesView: React.FC = () => {
           </div>
 
           {/* 4 File Folder Cards (Refined Physical Digital Folders) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
             {[
               {
                 id: 'TEXT' as CategoryType,
                 title: 'Text notes',
                 subtitle: 'Notes & More',
-                gradient: 'from-[#3B82F6] via-[#1D4ED8] to-[#1E3A8A]',
+                gradient: 'from-[#8EAFE3] to-[#7195CC]',
               },
               {
                 id: 'PHOTO' as CategoryType,
                 title: 'Photo memories',
                 subtitle: 'Pictures & More',
-                gradient: 'from-[#F43F5E] via-[#E11D48] to-[#881337]',
+                gradient: 'from-[#F56B9C] to-[#DE4E80]',
               },
               {
                 id: 'VOICE' as CategoryType,
                 title: 'Voice notes',
                 subtitle: 'Audio & More',
-                gradient: 'from-[#F97316] via-[#EA580C] to-[#9A3412]',
+                gradient: 'from-[#C3A982] to-[#A88E67]',
               },
               {
                 id: 'DRAWING' as CategoryType,
                 title: 'Doodle sketches',
                 subtitle: 'Drawings & More',
-                gradient: 'from-[#10B981] via-[#059669] to-[#064E3B]',
+                gradient: 'from-[#B8E6BE] to-[#9CD4A3]',
               },
             ].map((folder) => {
               const catNotes = notes.filter((n) => n.note_type === folder.id);
