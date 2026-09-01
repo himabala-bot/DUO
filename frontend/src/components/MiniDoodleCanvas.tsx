@@ -24,6 +24,9 @@ const BRUSH_SIZES = [
 
 export const MiniDoodleCanvas: React.FC<MiniDoodleCanvasProps> = ({ onChange }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
+
   const [isDrawing, setIsDrawing] = useState(false);
   const [color, setColor] = useState('#422F0E');
   const [brushSize, setBrushSize] = useState(4);
@@ -38,14 +41,14 @@ export const MiniDoodleCanvas: React.FC<MiniDoodleCanvasProps> = ({ onChange }) 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Fill clean white background
     ctx.fillStyle = '#FFFFFF';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     setHistory([]);
     setHasDrawn(false);
-    onChange(null);
-  }, [onChange]);
+    onChangeRef.current(null);
+  }, []);
 
+  // Initialize canvas only ONCE on mount
   useEffect(() => {
     initCanvas();
   }, [initCanvas]);
@@ -59,7 +62,7 @@ export const MiniDoodleCanvas: React.FC<MiniDoodleCanvasProps> = ({ onChange }) 
     const snapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
     setHistory((prev) => [...prev.slice(-15), snapshot]);
     setHasDrawn(true);
-    onChange(canvas.toDataURL('image/png'));
+    onChangeRef.current(canvas.toDataURL('image/png'));
   };
 
   const getCanvasCoords = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
@@ -142,12 +145,12 @@ export const MiniDoodleCanvas: React.FC<MiniDoodleCanvasProps> = ({ onChange }) 
     if (newHistory.length > 0) {
       const prevSnapshot = newHistory[newHistory.length - 1];
       ctx.putImageData(prevSnapshot, 0, 0);
-      onChange(canvas.toDataURL('image/png'));
+      onChangeRef.current(canvas.toDataURL('image/png'));
     } else {
       ctx.fillStyle = '#FFFFFF';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       setHasDrawn(false);
-      onChange(null);
+      onChangeRef.current(null);
     }
   };
 

@@ -279,7 +279,7 @@ export const LittleNotesView: React.FC = () => {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 items-start">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {filteredNotes.map((note) => {
               const formattedDate = format(new Date(note.created_at), 'MMM dd, hh:mm a');
 
@@ -287,12 +287,12 @@ export const LittleNotesView: React.FC = () => {
                 <div
                   key={note.id}
                   style={{ backgroundColor: note.color || '#FAF7F2' }}
-                  className={`group relative rounded-3xl border border-[#EFE8DC] p-5 shadow-[0_2px_12px_rgba(66,47,14,0.03)] hover:shadow-md transition-all flex flex-col justify-between space-y-4 ${
+                  className={`group relative h-[350px] rounded-3xl border border-[#EFE8DC] p-5 shadow-[0_2px_12px_rgba(66,47,14,0.03)] hover:shadow-md transition-all flex flex-col justify-between overflow-hidden ${
                     note.is_pinned ? 'ring-2 ring-[#FCC4C0]' : ''
                   }`}
                 >
                   {/* Top Bar: Author, Pin & Actions */}
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between shrink-0">
                     <div className="flex items-center space-x-2">
                       <Avatar src={note.author.avatar_url} name={note.author.name} size="xs" />
                       <span className="text-xs font-semibold text-[#422F0E] truncate max-w-[120px]">
@@ -325,45 +325,56 @@ export const LittleNotesView: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Body Content */}
-                  <div className="space-y-2">
-                    {/* Media Previews */}
-                    {note.note_type === 'PHOTO' && note.media_url && (
-                      <div className="rounded-2xl overflow-hidden border border-[#EFE8DC] bg-white shadow-sm max-h-56">
-                        <img
-                          src={note.media_url}
-                          alt="Photo Note"
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    )}
-
+                  {/* Body Content - Uniform Flex Area */}
+                  <div className="flex-1 min-h-0 py-2.5 flex flex-col justify-center overflow-hidden space-y-2">
+                    {/* Doodle / Drawing Note */}
                     {note.note_type === 'DRAWING' && note.media_url && (
-                      <div className="rounded-2xl overflow-hidden border border-[#EFE8DC] bg-white shadow-sm p-2">
+                      <div className="flex-1 min-h-0 w-full rounded-2xl overflow-hidden border border-[#EFE8DC] bg-white p-2.5 flex items-center justify-center shadow-inner">
                         <img
                           src={note.media_url}
                           alt="Doodle Note"
-                          className="w-full h-auto max-h-48 object-contain"
+                          className="w-full h-full object-contain select-none"
                         />
                       </div>
                     )}
 
+                    {/* Photo Note */}
+                    {note.note_type === 'PHOTO' && note.media_url && (
+                      <div className="flex-1 min-h-0 w-full rounded-2xl overflow-hidden border border-[#EFE8DC] bg-white shadow-sm flex items-center justify-center">
+                        <img
+                          src={note.media_url}
+                          alt="Photo Note"
+                          className="w-full h-full object-cover rounded-xl"
+                        />
+                      </div>
+                    )}
+
+                    {/* Voice Note */}
                     {note.note_type === 'VOICE' && note.media_url && (
-                      <div className="rounded-2xl border border-[#EFE8DC] bg-white p-3">
+                      <div className="flex-1 min-h-0 w-full rounded-2xl border border-[#EFE8DC] bg-white p-3.5 flex flex-col justify-center shadow-sm">
                         <WaveformPlayer audioUrl={note.media_url} />
                       </div>
                     )}
 
-                    {/* Text Message */}
-                    {note.content && (
-                      <p className="text-xs sm:text-sm text-[#422F0E] whitespace-pre-wrap leading-relaxed">
+                    {/* Text Note */}
+                    {note.note_type === 'TEXT' && note.content && (
+                      <div className="flex-1 min-h-0 w-full flex flex-col justify-center overflow-y-auto pr-1">
+                        <p className="text-xs sm:text-sm text-[#422F0E] whitespace-pre-wrap leading-relaxed">
+                          {note.content}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Optional Caption for Photo/Doodle/Voice */}
+                    {note.content && note.note_type !== 'TEXT' && (
+                      <p className="text-[11px] text-[#6B5E4E] line-clamp-2 leading-snug shrink-0 px-0.5">
                         {note.content}
                       </p>
                     )}
                   </div>
 
-                  {/* Bottom: Timestamp */}
-                  <div className="pt-2 border-t border-black/5 flex items-center justify-between text-[10px] font-mono text-[#A89F91]">
+                  {/* Bottom: Timestamp & Category */}
+                  <div className="pt-2 border-t border-black/5 flex items-center justify-between text-[10px] font-mono text-[#A89F91] shrink-0">
                     <span>{formattedDate}</span>
                     <span className="capitalize">{note.note_type.toLowerCase()}</span>
                   </div>
