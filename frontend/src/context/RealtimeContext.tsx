@@ -203,9 +203,14 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     userChannelRef.current = userChannel;
 
-    // 2. Presence & DUO Broadcast channel
+    // 2. Multi-channel subscriptions for the active DUO (Chat, Canvas, Notes, Presence)
     let duoChannel: RealtimeChannel | null = null;
+    let chatChannel: RealtimeChannel | null = null;
+    let canvasChannel: RealtimeChannel | null = null;
+    let notesChannel: RealtimeChannel | null = null;
+
     if (activeDuoId) {
+      // Main Duo channel for presence and global broadcasts
       duoChannel = supabase.channel(`duo:${activeDuoId}`, {
         config: { broadcast: { self: false }, presence: { key: userId } },
       });
@@ -232,6 +237,31 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           }
         });
 
+      // Chat Channel listener for instant text & voice notifications
+      chatChannel = supabase.channel(`chat:${activeDuoId}`, {
+        config: { broadcast: { self: false } },
+      });
+      chatChannel
+        .on('broadcast', { event: 'new_message' }, handleIncomingMessage)
+        .subscribe();
+
+      // Canvas / Doodle Channel listener for instant doodle notifications
+      canvasChannel = supabase.channel(`canvas:${activeDuoId}`, {
+        config: { broadcast: { self: false } },
+      });
+      canvasChannel
+        .on('broadcast', { event: 'new_drawing' }, handleIncomingDrawing)
+        .subscribe();
+
+      // Notes Channel listener for instant memo notifications
+      notesChannel = supabase.channel(`notes:${activeDuoId}`, {
+        config: { broadcast: { self: false } },
+      });
+      notesChannel
+        .on('broadcast', { event: 'new_note' }, handleIncomingNote)
+        .on('broadcast', { event: 'notes_updated' }, handleIncomingNote)
+        .subscribe();
+
       duoChannelRef.current = duoChannel;
     }
 
@@ -240,10 +270,19 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         supabase.removeChannel(userChannelRef.current);
         userChannelRef.current = null;
       }
-      if (duoChannelRef.current) {
-        supabase.removeChannel(duoChannelRef.current);
-        duoChannelRef.current = null;
+      if (duoChannel) {
+        supabase.removeChannel(duoChannel);
       }
+      if (chatChannel) {
+        supabase.removeChannel(chatChannel);
+      }
+      if (canvasChannel) {
+        supabase.removeChannel(canvasChannel);
+      }
+      if (notesChannel) {
+        supabase.removeChannel(notesChannel);
+      }
+      duoChannelRef.current = null;
     };
   }, [profile?.id, profile?.active_duo_id]);
 

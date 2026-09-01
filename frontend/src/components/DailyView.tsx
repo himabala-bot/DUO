@@ -20,12 +20,13 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { supabase } from '@/lib/supabase';
 import { KeepsakeArchiveModal } from './KeepsakeArchiveModal';
 import { VoiceRecorder } from './VoiceRecorder';
 import { WaveformPlayer } from './WaveformPlayer';
 
 export const DailyView: React.FC = () => {
-  const { partner } = useAuth();
+  const { profile, partner } = useAuth();
   const { toast } = useToast();
   const [questions, setQuestions] = useState<DailyQuestion[]>([]);
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -116,6 +117,16 @@ export const DailyView: React.FC = () => {
         type: 'success',
         text: `Shared with ${partner?.name || 'partner'}`,
       });
+
+      if (profile?.active_duo_id) {
+        const duoChan = supabase.channel(`duo:${profile.active_duo_id}`);
+        duoChan.send({
+          type: 'broadcast',
+          event: 'daily_response',
+          payload: { user_id: profile.id },
+        });
+      }
+
       await fetchTodayData();
       setTimeout(() => setFeedbackMsg(null), 4000);
     } catch (err: any) {
@@ -136,6 +147,16 @@ export const DailyView: React.FC = () => {
       ], 'SUBMIT');
       setQuestionStatuses((prev) => ({ ...prev, [q.id]: 'SUBMITTED' }));
       toast.love(`Voice reflection shared with ${partner?.name || 'partner'}`, 'Voice Note Shared');
+
+      if (profile?.active_duo_id) {
+        const duoChan = supabase.channel(`duo:${profile.active_duo_id}`);
+        duoChan.send({
+          type: 'broadcast',
+          event: 'daily_response',
+          payload: { user_id: profile.id },
+        });
+      }
+
       await fetchTodayData();
     } catch (err: any) {
       toast.error(err.message || 'Failed to submit voice note.', 'Error');
