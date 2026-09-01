@@ -18,11 +18,14 @@ import {
   Smile,
   CornerDownRight,
   Heart,
+  Mic,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { RealtimeChannel } from '@supabase/supabase-js';
+import { VoiceRecorder } from './VoiceRecorder';
+import { WaveformPlayer } from './WaveformPlayer';
 
-const QUICK_EMOJIS = ['❤️', '✨', '☕', '🕊️', '🌿', '🫂', '💌', '🔥'];
+const QUICK_EMOJIS = ['❤️', '🥺', '✨', '🥰', '☕', '🌸'];
 
 export const ChatView: React.FC = () => {
   const { profile, partner } = useAuth();
@@ -30,18 +33,20 @@ export const ChatView: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const [isSending, setIsSending] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [activeReactionMenu, setActiveReactionMenu] = useState<string | null>(null);
-  const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null);
-  const [touchStartX, setTouchStartX] = useState<number | null>(null);
   const [swipingMessageId, setSwipingMessageId] = useState<string | null>(null);
   const [swipeOffset, setSwipeOffset] = useState<number>(0);
+  const [touchStartX, setTouchStartX] = useState<number>(0);
+  const [isPartnerTyping, setIsPartnerTyping] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const channelRef = useRef<RealtimeChannel | null>(null);
   const lastTapRef = useRef<{ id: string; time: number } | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const partnerTypingTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const duoId = profile?.active_duo_id;
 
@@ -54,12 +59,20 @@ export const ChatView: React.FC = () => {
       const res = await messagesApi.list();
       setMessages(res.messages || []);
       setIsLoading(false);
-      messagesApi.markRead().catch(() => {});
+      messagesApi.markRead().then(() => {
+        if (channelRef.current && profile) {
+          channelRef.current.send({
+            type: 'broadcast',
+            event: 'messages_read',
+            payload: { duo_id: duoId, reader_id: profile.id },
+          });
+        }
+      }).catch(() => {});
     } catch (err) {
       console.warn('Failed to load messages:', err);
       setIsLoading(false);
     }
-  }, []);
+  }, [duoId, profile]);
 
   useEffect(() => {
     fetchMessages();
@@ -67,9 +80,9 @@ export const ChatView: React.FC = () => {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages.length]);
+  }, [messages.length, isPartnerTyping]);
 
-  // Set up Supabase Realtime channel for instant two-way chat
+  // Set up Supabase Realtime channel for instant two-way chat & typing indicators
   useEffect(() => {
     if (!isSupabaseConfigured() || !duoId || !profile) return;
 
@@ -99,6 +112,7 @@ export const ChatView: React.FC = () => {
       });
 
       if (!isMe) {
+        setIsPartnerTyping(false);
         try {
           await messagesApi.markRead();
           channel.send({
@@ -138,12 +152,28 @@ export const ChatView: React.FC = () => {
       setMessages([]);
     });
 
-    // 5. Listen for read receipts
+    // 5. Listen for read receipts in real time
     channel.on('broadcast', { event: 'messages_read' }, () => {
       const now = new Date().toISOString();
       setMessages((prev) =>
         prev.map((m) => (m.is_me && !m.read_at ? { ...m, read_at: now } : m))
       );
+    });
+
+    // 6. Listen for partner typing indicator
+    channel.on('broadcast', { event: 'user_typing' }, (payload) => {
+      const { is_typing, user_id } = payload.payload as { is_typing: boolean; user_id?: string };
+      if (user_id === profile.id) return;
+
+      if (is_typing) {
+        setIsPartnerTyping(true);
+        if (partnerTypingTimerRef.current) clearTimeout(partnerTypingTimerRef.current);
+        partnerTypingTimerRef.current = setTimeout(() => {
+          setIsPartnerTyping(false);
+        }, 3500);
+      } else {
+        setIsPartnerTyping(false);
+      }
     });
 
     channel.subscribe();
@@ -154,8 +184,35 @@ export const ChatView: React.FC = () => {
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;
       }
+      if (partnerTypingTimerRef.current) clearTimeout(partnerTypingTimerRef.current);
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     };
   }, [duoId, profile?.id]);
+
+  // Send typing broadcast
+  const sendTypingStatus = (isTyping: boolean) => {
+    if (!channelRef.current || !profile) return;
+    channelRef.current.send({
+      type: 'broadcast',
+      event: 'user_typing',
+      payload: { is_typing: isTyping, user_id: profile.id },
+    });
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const val = e.target.value;
+    setInputText(val);
+
+    if (val.trim()) {
+      sendTypingStatus(true);
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = setTimeout(() => {
+        sendTypingStatus(false);
+      }, 2500);
+    } else {
+      sendTypingStatus(false);
+    }
+  };
 
   // Handle Sending Message
   const handleSendMessage = async (e?: React.FormEvent) => {
@@ -163,6 +220,7 @@ export const ChatView: React.FC = () => {
     const content = inputText.trim();
     if (!content || isSending || !duoId) return;
 
+    sendTypingStatus(false);
     const currentReply = replyingTo;
     setInputText('');
     setReplyingTo(null);
@@ -178,11 +236,12 @@ export const ChatView: React.FC = () => {
       reply_to: currentReply
         ? {
             id: currentReply.id,
-            sender_name: currentReply.is_me ? 'You' : currentReply.sender?.name || partner?.name || 'Partner',
+            sender_name: currentReply.sender?.name || (currentReply.is_me ? 'You' : 'Partner'),
             content: currentReply.content,
           }
         : null,
       reactions: {},
+      is_unsent: false,
       is_me: true,
       created_at: new Date().toISOString(),
       read_at: null,
@@ -192,18 +251,15 @@ export const ChatView: React.FC = () => {
     setMessages((prev) => [...prev, optimisticMsg]);
 
     try {
-      const saved = await messagesApi.send(content, currentReply?.id);
-      const confirmedMsg: Message = {
-        ...saved,
+      const confirmedMsg = await messagesApi.send(content, currentReply?.id);
+      const formattedConfirmed: Message = {
+        ...confirmedMsg,
         is_me: true,
       };
 
-      setMessages((prev) => {
-        if (prev.some((m) => m.id === confirmedMsg.id)) {
-          return prev.filter((m) => m.id !== tempId);
-        }
-        return prev.map((m) => (m.id === tempId ? confirmedMsg : m));
-      });
+      setMessages((prev) =>
+        prev.map((m) => (m.id === tempId ? formattedConfirmed : m))
+      );
 
       if (channelRef.current) {
         channelRef.current.send({
@@ -216,6 +272,53 @@ export const ChatView: React.FC = () => {
       console.error('Failed to send message:', err);
       setMessages((prev) => prev.filter((m) => m.id !== tempId));
       toast.error('Message failed to send. Please check your connection.', 'Send Error');
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  // Handle Sending Voice Note
+  const handleSendVoiceNote = async (audioDataUrl: string, duration: number) => {
+    if (!duoId) return;
+    setIsSending(true);
+    const voicePayload = `[voice:${JSON.stringify({ url: audioDataUrl, duration })}]`;
+    const tempId = `temp-voice-${Date.now()}`;
+
+    const optimisticMsg: Message = {
+      id: tempId,
+      duo_id: duoId,
+      sender: profile as any,
+      receiver: partner as any,
+      content: voicePayload,
+      reply_to: null,
+      reactions: {},
+      is_unsent: false,
+      is_me: true,
+      created_at: new Date().toISOString(),
+      read_at: null,
+      isOptimistic: true,
+    };
+
+    setMessages((prev) => [...prev, optimisticMsg]);
+
+    try {
+      const confirmedMsg = await messagesApi.send(voicePayload);
+      setMessages((prev) =>
+        prev.map((m) => (m.id === tempId ? { ...confirmedMsg, is_me: true } : m))
+      );
+
+      if (channelRef.current) {
+        channelRef.current.send({
+          type: 'broadcast',
+          event: 'new_message',
+          payload: confirmedMsg,
+        });
+      }
+      toast.love('Voice note sent 🎙️', 'Voice Note');
+    } catch (err) {
+      console.error('Failed to send voice note:', err);
+      setMessages((prev) => prev.filter((m) => m.id !== tempId));
+      toast.error('Failed to send voice note.', 'Error');
     } finally {
       setIsSending(false);
     }
@@ -299,14 +402,14 @@ export const ChatView: React.FC = () => {
     }
   };
 
-  // Drag / Swipe to Reply
+  // Touch handlers for swipe to reply on mobile
   const handleTouchStart = (e: React.TouchEvent, msg: Message) => {
     setTouchStartX(e.touches[0].clientX);
     setSwipingMessageId(msg.id);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (touchStartX === null) return;
+    if (!swipingMessageId) return;
     const currentX = e.touches[0].clientX;
     const diff = currentX - touchStartX;
     if (diff > 0 && diff < 80) {
@@ -315,41 +418,19 @@ export const ChatView: React.FC = () => {
   };
 
   const handleTouchEnd = (msg: Message) => {
-    if (swipeOffset > 40) {
+    if (swipeOffset > 45) {
       setReplyingTo(msg);
       textareaRef.current?.focus();
     }
-    setTouchStartX(null);
-    setSwipingMessageId(null);
     setSwipeOffset(0);
-  };
-
-  const handleSelectReply = (msg: Message) => {
-    setReplyingTo(msg);
-    textareaRef.current?.focus();
-  };
-
-  const handleScrollToMessage = (msgId: string) => {
-    const el = document.getElementById(`msg-${msgId}`);
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      setHighlightedMessageId(msgId);
-      setTimeout(() => setHighlightedMessageId(null), 2000);
-    }
+    setSwipingMessageId(null);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    const isEnterToSend = profile?.enter_to_send ?? true;
-    if (isEnterToSend) {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        handleSendMessage();
-      }
-    } else {
-      if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
-        handleSendMessage();
-      }
+    const enterToSend = profile?.enter_to_send ?? true;
+    if (e.key === 'Enter' && !e.shiftKey && enterToSend) {
+      e.preventDefault();
+      handleSendMessage();
     }
   };
 
@@ -368,97 +449,102 @@ export const ChatView: React.FC = () => {
             </span>
             <span className="text-[10px] font-mono text-[#A89F91]">/ our stream</span>
           </div>
-          <span className="text-[11px] font-mono text-[#037F71] flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#DDF2B8]">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#037F71] animate-pulse" />
-            live sync
-          </span>
+
+          <div className="flex items-center space-x-2">
+            {isPartnerTyping && (
+              <span className="text-[11px] font-mono text-[#EA5E86] flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#FFF5F5] border border-[#FCC4C0] animate-pulse">
+                <span>{partner?.name || 'partner'} is typing...</span>
+              </span>
+            )}
+            <span className="text-[11px] font-mono text-[#037F71] flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#DDF2B8]">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#037F71] animate-pulse" />
+              live sync
+            </span>
+          </div>
         </div>
 
         {/* Message Stream */}
         <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-5 bg-[#FAF7F2]">
           {isLoading ? (
-            <div className="flex h-full items-center justify-center text-xs sm:text-sm font-mono text-[#8C857B]">
+            <div className="flex h-full items-center justify-center text-xs sm:text-sm font-mono text-[#A89F91]">
               Opening conversation...
             </div>
           ) : messages.length === 0 ? (
-            <div className="flex h-full flex-col items-center justify-center text-center p-8">
-              <span className="font-serif text-xl sm:text-2xl text-[#1C1917] mb-2">Your quiet space</span>
-              <p className="max-w-sm text-xs sm:text-sm text-[#78716C] leading-relaxed">
-                Send a quick thought or note to {partner?.name}. Double-tap to react, or swipe to reply.
+            <div className="flex h-full flex-col items-center justify-center text-center p-6 space-y-2">
+              <Heart className="h-8 w-8 text-[#FCC4C0] animate-bounce mb-1" />
+              <span className="font-serif text-xl sm:text-2xl text-[#422F0E]">Your quiet space</span>
+              <p className="max-w-xs text-xs sm:text-sm text-[#6B5E4E] leading-relaxed">
+                Send a sweet thought or a voice note to {partner?.name || 'your partner'}.
               </p>
             </div>
           ) : (
             messages.map((msg) => {
               const isSwiping = swipingMessageId === msg.id;
-              const isHighlighted = highlightedMessageId === msg.id;
-              const reactionsMap = msg.reactions || {};
-              const reactionEntries = Object.entries(reactionsMap);
               const isMenuOpen = activeReactionMenu === msg.id;
+              const reactionEntries = Object.entries(msg.reactions || {});
+
+              // Check if message is a voice note
+              const isVoice = msg.content.startsWith('[voice:');
+              let voiceData: { url: string; duration: number } | null = null;
+              if (isVoice) {
+                try {
+                  const jsonStr = msg.content.substring(7, msg.content.length - 1);
+                  voiceData = JSON.parse(jsonStr);
+                } catch {
+                  voiceData = null;
+                }
+              }
 
               return (
                 <div
                   key={msg.id}
-                  id={`msg-${msg.id}`}
-                  className={`group relative flex flex-col transition-all ${
+                  className={`group relative flex flex-col ${
                     msg.is_me ? 'items-end' : 'items-start'
-                  } ${isHighlighted ? 'ring-2 ring-[#C2410C]/40 rounded-2xl p-1 bg-[#F5F2EB]/60' : ''}`}
+                  }`}
                 >
-                  {/* Swipe indicator */}
-                  {isSwiping && swipeOffset > 20 && (
-                    <div
-                      className="absolute left-0 top-1/2 -translate-y-1/2 text-[#C2410C] flex items-center gap-1 text-xs font-mono"
-                      style={{ opacity: Math.min(swipeOffset / 40, 1) }}
-                    >
-                      <Reply className="h-3.5 w-3.5" />
-                      <span>Reply</span>
-                    </div>
-                  )}
-
-                  {/* Quoted parent reply banner */}
+                  {/* Replied Message Header */}
                   {msg.reply_to && (
                     <div
-                      onClick={() => msg.reply_to && handleScrollToMessage(msg.reply_to.id)}
-                      className={`mb-1 flex items-center space-x-2 cursor-pointer max-w-[85%] sm:max-w-[70%] rounded-xl px-3 py-1.5 text-xs border ${
-                        msg.is_me
-                          ? 'border-[#D4CEC2] bg-[#F5F2EB] text-[#57534E]'
-                          : 'border-[#E8E4DB] bg-[#FFFFFF] text-[#57534E]'
-                      } transition-all hover:opacity-85`}
+                      className={`mb-1 flex items-center space-x-1.5 text-[11px] text-[#A89F91] ${
+                        msg.is_me ? 'pr-2 justify-end' : 'pl-2 justify-start'
+                      }`}
                     >
-                      <CornerDownRight className="h-3.5 w-3.5 text-[#C2410C] shrink-0" />
-                      <span className="font-semibold text-[#1C1917] shrink-0">
-                        {msg.reply_to.sender_name}:
+                      <CornerDownRight className="h-3 w-3" />
+                      <span className="truncate max-w-[200px]">
+                        Replying to <strong>{msg.reply_to.sender_name}</strong>: &ldquo;
+                        {msg.reply_to.content}&rdquo;
                       </span>
-                      <span className="truncate italic">"{msg.reply_to.content}"</span>
                     </div>
                   )}
 
-                  {/* Message Bubble + Action Hover Container */}
-                  <div className="relative flex items-center gap-1.5 max-w-[85%] sm:max-w-[70%]">
-                    {/* Action buttons (desktop hover) */}
-                    <div
-                      className={`opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 ${
-                        msg.is_me ? 'order-first' : 'order-last'
-                      }`}
-                    >
+                  {/* Bubble + Action Container */}
+                  <div
+                    className={`flex items-center gap-2 max-w-[85%] sm:max-w-[75%] ${
+                      msg.is_me ? 'flex-row-reverse' : 'flex-row'
+                    }`}
+                  >
+                    {/* Hover Reaction & Actions */}
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center space-x-1 shrink-0">
                       <button
                         onClick={() => setActiveReactionMenu(isMenuOpen ? null : msg.id)}
-                        className="rounded-full p-1.5 text-[#8C857B] hover:bg-[#E8E4DB] hover:text-[#1C1917] transition-all"
-                        title="React"
+                        className="rounded-full p-1.5 text-[#A89F91] hover:bg-[#F2ECE1] hover:text-[#422F0E] transition-all"
+                        title="Add reaction"
                       >
                         <Smile className="h-4 w-4" />
                       </button>
-
                       <button
-                        onClick={() => handleSelectReply(msg)}
-                        className="rounded-full p-1.5 text-[#8C857B] hover:bg-[#E8E4DB] hover:text-[#1C1917] transition-all"
+                        onClick={() => {
+                          setReplyingTo(msg);
+                          textareaRef.current?.focus();
+                        }}
+                        className="rounded-full p-1.5 text-[#A89F91] hover:bg-[#F2ECE1] hover:text-[#422F0E] transition-all"
                         title="Reply"
                       >
                         <Reply className="h-4 w-4" />
                       </button>
-
                       <button
                         onClick={() => handleDeleteMessage(msg)}
-                        className="rounded-full p-1.5 text-[#8C857B] hover:bg-[#FEF2F2] hover:text-[#DC2626] transition-all"
+                        className="rounded-full p-1.5 text-[#A89F91] hover:bg-[#FFF5F5] hover:text-[#EA5E86] transition-all"
                         title={msg.is_me ? 'Unsend' : 'Delete'}
                       >
                         <Trash2 className="h-4 w-4" />
@@ -476,20 +562,28 @@ export const ChatView: React.FC = () => {
                         transform: isSwiping ? `translateX(${swipeOffset}px)` : 'none',
                         transition: isSwiping ? 'none' : 'transform 0.15s ease',
                       }}
-                      className={`relative select-none cursor-pointer rounded-[22px] sm:rounded-[24px] px-4 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-[14px] leading-relaxed shadow-sm transition-all ${
+                      className={`relative select-none cursor-pointer rounded-[22px] sm:rounded-[24px] px-4.5 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-[14px] leading-relaxed shadow-sm transition-all ${
                         msg.is_me
-                          ? 'bg-[#1C1917] text-[#FAF8F5] rounded-br-[8px]'
-                          : 'bg-[#FFFFFF] text-[#1C1917] border border-[#E8E4DB] rounded-bl-[8px] shadow-[0_2px_8px_rgba(28,25,23,0.03)]'
+                          ? 'bg-[#422F0E] text-[#FAF7F2] rounded-br-[8px]'
+                          : 'bg-[#FFFFFF] text-[#422F0E] border border-[#EFE8DC] rounded-bl-[8px] shadow-[0_2px_8px_rgba(66,47,14,0.03)]'
                       }`}
                     >
-                      <p className="whitespace-pre-wrap break-words">{msg.content}</p>
+                      {voiceData ? (
+                        <WaveformPlayer
+                          audioUrl={voiceData.url}
+                          duration={voiceData.duration}
+                          isMe={msg.is_me}
+                        />
+                      ) : (
+                        <p className="whitespace-pre-wrap break-words">{msg.content}</p>
+                      )}
 
                       {/* Inline Reactions Pill */}
                       {reactionEntries.length > 0 && (
                         <div
                           className={`absolute -bottom-2.5 ${
                             msg.is_me ? 'right-3' : 'left-3'
-                          } flex items-center space-x-1 rounded-full border border-[#E8E4DB] bg-[#FFFFFF] px-2 py-0.5 text-xs shadow-sm`}
+                          } flex items-center space-x-1 rounded-full border border-[#EFE8DC] bg-[#FFFFFF] px-2 py-0.5 text-xs shadow-sm`}
                         >
                           {reactionEntries.map(([userId, emoji]) => (
                             <span
@@ -514,7 +608,7 @@ export const ChatView: React.FC = () => {
                   {/* Reaction Picker Popup */}
                   {isMenuOpen && (
                     <div
-                      className={`z-20 mt-1 flex items-center gap-1.5 rounded-full border border-[#E8E4DB] bg-[#FFFFFF] p-1.5 shadow-lg ${
+                      className={`z-20 mt-1 flex items-center gap-1.5 rounded-full border border-[#EFE8DC] bg-[#FFFFFF] p-1.5 shadow-lg ${
                         msg.is_me ? 'mr-2' : 'ml-2'
                       }`}
                     >
@@ -529,7 +623,7 @@ export const ChatView: React.FC = () => {
                       ))}
                       <button
                         onClick={() => setActiveReactionMenu(null)}
-                        className="rounded-full p-1 text-[#8C857B] hover:text-[#1C1917]"
+                        className="rounded-full p-1 text-[#A89F91] hover:text-[#422F0E]"
                       >
                         <X className="h-3.5 w-3.5" />
                       </button>
@@ -542,7 +636,7 @@ export const ChatView: React.FC = () => {
                       {msg.created_at ? format(new Date(msg.created_at), 'hh:mm a') : 'Just now'}
                     </span>
                     {msg.is_me && (
-                      <span>
+                      <span title={msg.read_at ? 'Read' : 'Sent'}>
                         {msg.read_at ? (
                           <CheckCheck className="h-3.5 w-3.5 text-[#EA5E86]" />
                         ) : (
@@ -555,6 +649,21 @@ export const ChatView: React.FC = () => {
               );
             })
           )}
+
+          {/* 3-Dot Partner Typing Indicator Bubble */}
+          {isPartnerTyping && (
+            <div className="flex items-start space-x-2 animate-in fade-in slide-in-from-bottom-2 duration-200">
+              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#FCC4C0]/40 text-xs border border-[#EFE8DC]">
+                🌸
+              </div>
+              <div className="flex items-center space-x-1.5 rounded-full border border-[#EFE8DC] bg-[#FFFFFF] px-4 py-2.5 shadow-sm">
+                <span className="h-2 w-2 rounded-full bg-[#EA5E86] animate-bounce [animation-delay:0ms]" />
+                <span className="h-2 w-2 rounded-full bg-[#EA5E86] animate-bounce [animation-delay:150ms]" />
+                <span className="h-2 w-2 rounded-full bg-[#EA5E86] animate-bounce [animation-delay:300ms]" />
+              </div>
+            </div>
+          )}
+
           <div ref={messagesEndRef} />
         </div>
 
@@ -577,13 +686,17 @@ export const ChatView: React.FC = () => {
           </div>
         )}
 
-        {/* Input Composer */}
-        <form onSubmit={handleSendMessage} className="border-t border-[#EFE8DC] bg-[#FFFFFF] p-3.5 sm:p-4 shrink-0">
-          <div className="flex items-center space-x-2.5">
+        {/* Input Composer & Voice Recorder */}
+        <form onSubmit={handleSendMessage} className="border-t border-[#EFE8DC] bg-[#FFFFFF] p-3 sm:p-4 shrink-0">
+          <div className="flex items-center space-x-2">
+            {/* Voice Recorder button */}
+            <VoiceRecorder onSendVoice={handleSendVoiceNote} />
+
+            {/* Textarea */}
             <textarea
               ref={textareaRef}
               value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
+              onChange={handleInputChange}
               onKeyDown={handleKeyDown}
               placeholder={
                 replyingTo
@@ -593,6 +706,8 @@ export const ChatView: React.FC = () => {
               rows={1}
               className="flex-1 max-h-32 min-h-[44px] resize-none rounded-full border border-[#EFE8DC] bg-[#FAF7F2] px-5 py-3 text-xs sm:text-sm text-[#422F0E] placeholder-[#A89F91] focus:border-[#EA5E86] focus:bg-[#FFFFFF] focus:outline-none focus:ring-2 focus:ring-[#FCC4C0]/40"
             />
+
+            {/* Send Button */}
             <button
               type="submit"
               disabled={!inputText.trim() || isSending}

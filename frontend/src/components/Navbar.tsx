@@ -11,7 +11,8 @@ import {
   MessageSquare,
   Palette,
   BookOpen,
-  Archive,
+  StickyNote,
+  ListTodo,
   KeyRound,
   Settings,
   Heart,
@@ -28,9 +29,10 @@ interface NavbarProps {
 const NAV_TABS = [
   { id: 'daily', label: 'Daily Love Prompts', shortLabel: 'Daily', icon: BookOpen, accent: 'text-[#EA5E86]', activeBg: 'bg-[#FCC4C0]/30' },
   { id: 'chat', label: 'Cozy Chat', shortLabel: 'Chat', icon: MessageSquare, accent: 'text-[#EF6545]', activeBg: 'bg-[#FFD094]/30' },
-  { id: 'canvas', label: 'Doodle Studio', shortLabel: 'Canvas', icon: Palette, accent: 'text-[#037F71]', activeBg: 'bg-[#DDF2B8]/40' },
-  { id: 'history', label: 'Our Memories', shortLabel: 'Memories', icon: Archive, accent: 'text-[#F49625]', activeBg: 'bg-[#F7E9B2]/40' },
-  { id: 'duo', label: 'Secret Room Key', shortLabel: 'Room', icon: KeyRound, accent: 'text-[#57B1A8]', activeBg: 'bg-[#AECFD0]/30' },
+  { id: 'canvas', label: 'Doodle Studio', shortLabel: 'Doodle', icon: Palette, accent: 'text-[#037F71]', activeBg: 'bg-[#DDF2B8]/40' },
+  { id: 'notes', label: 'Little Notes', shortLabel: 'Notes', icon: StickyNote, accent: 'text-[#EA5E86]', activeBg: 'bg-[#F9D4F8]/30' },
+  { id: 'todo', label: 'Our Lists', shortLabel: 'Lists', icon: ListTodo, accent: 'text-[#F49625]', activeBg: 'bg-[#FFD094]/30' },
+  { id: 'duo', label: 'Secret Room Key', shortLabel: 'Key', icon: KeyRound, accent: 'text-[#57B1A8]', activeBg: 'bg-[#AECFD0]/30' },
 ];
 
 export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
@@ -49,19 +51,14 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
         <div className="space-y-5">
           <button
             onClick={() => setActiveTab('daily')}
-            className="flex items-center space-x-2 text-left group focus:outline-none"
+            className="flex items-center space-x-2.5 text-left group focus:outline-none"
           >
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#FCC4C0] text-[#EA5E86] shadow-sm group-hover:scale-105 transition-transform">
-              <Heart className="h-4 w-4 fill-current" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-[#FCC4C0]/40 text-[#EA5E86] shadow-sm group-hover:scale-105 transition-transform">
+              <Heart className="h-5 w-5 fill-current" />
             </div>
-            <div>
-              <span className="font-serif text-2xl font-normal tracking-tight text-[#422F0E] group-hover:text-[#EA5E86] transition-colors">
-                Duo
-              </span>
-              <span className="block text-[10px] font-mono text-[#A89F91]">
-                our little world
-              </span>
-            </div>
+            <span className="font-serif text-2xl font-bold tracking-tight text-[#422F0E] group-hover:text-[#EA5E86] transition-colors">
+              Duo
+            </span>
           </button>
 
           {/* Partner Status Card */}

@@ -122,3 +122,43 @@ export interface NotificationItem {
   is_read: boolean;
   created_at: string;
 }
+
+export interface LittleNote {
+  id: string;
+  duo_id: string;
+  author: PartnerProfile;
+  note_type: 'TEXT' | 'PHOTO' | 'VOICE' | 'DRAWING';
+  content: string;
+  media_url: string;
+  color: string;
+  is_pinned: boolean;
+  is_me: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TodoItem {
+  id: string;
+  duo_id: string;
+  category_id: string;
+  created_by: PartnerProfile;
+  title: string;
+  description: string;
+  is_completed: boolean;
+  completed_at: string | null;
+  order: number;
+  is_me: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TodoCategory {
+  id: string;
+  duo_id: string;
+  title: string;
+  emoji: string;
+  color: string;
+  order: number;
+  items: TodoItem[];
+  created_at: string;
+}

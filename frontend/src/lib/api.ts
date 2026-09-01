@@ -270,3 +270,100 @@ export const notificationsApi = {
     return request('/api/notifications/read-all/', { method: 'POST' });
   },
 };
+
+// 7. LITTLE NOTES APIS
+export const notesApi = {
+  list: async (): Promise<{ notes: import('@/types').LittleNote[]; count: number }> => {
+    return request('/api/notes/');
+  },
+
+  create: async (data: {
+    note_type: 'TEXT' | 'PHOTO' | 'VOICE' | 'DRAWING';
+    content?: string;
+    media_url?: string;
+    color?: string;
+    is_pinned?: boolean;
+  }): Promise<import('@/types').LittleNote> => {
+    return request('/api/notes/', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  update: async (
+    id: string,
+    data: { is_pinned?: boolean; content?: string; color?: string; media_url?: string }
+  ): Promise<import('@/types').LittleNote> => {
+    return request(`/api/notes/${id}/`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  },
+
+  delete: async (id: string): Promise<{ success: boolean; message: string }> => {
+    return request(`/api/notes/${id}/`, { method: 'DELETE' });
+  },
+};
+
+// 8. TO-DO & KANBAN LISTS APIS
+export const todosApi = {
+  getBoard: async (): Promise<{ categories: import('@/types').TodoCategory[] }> => {
+    return request('/api/todos/');
+  },
+
+  createCategory: async (data: {
+    title: string;
+    emoji?: string;
+    color?: string;
+  }): Promise<import('@/types').TodoCategory> => {
+    return request('/api/todos/', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  updateCategory: async (
+    id: string,
+    data: { title?: string; emoji?: string; color?: string; order?: number }
+  ): Promise<import('@/types').TodoCategory> => {
+    return request(`/api/todos/categories/${id}/`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  },
+
+  deleteCategory: async (id: string): Promise<{ success: boolean; message: string }> => {
+    return request(`/api/todos/categories/${id}/`, { method: 'DELETE' });
+  },
+
+  createItem: async (data: {
+    category_id: string;
+    title: string;
+    description?: string;
+  }): Promise<import('@/types').TodoItem> => {
+    return request('/api/todos/items/', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  updateItem: async (
+    id: string,
+    data: {
+      is_completed?: boolean;
+      title?: string;
+      description?: string;
+      category_id?: string;
+      order?: number;
+    }
+  ): Promise<import('@/types').TodoItem> => {
+    return request(`/api/todos/items/${id}/`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  },
+
+  deleteItem: async (id: string): Promise<{ success: boolean; message: string }> => {
+    return request(`/api/todos/items/${id}/`, { method: 'DELETE' });
+  },
+};

@@ -18,4 +18,6 @@ urlpatterns = [
     path('api/drawings/', include('apps.drawings.urls')),
     path('api/daily/', include('apps.daily.urls')),
     path('api/notifications/', include('apps.notifications.urls')),
+    path('api/notes/', include('apps.notes.urls')),
+    path('api/todos/', include('apps.todos.urls')),
 ]

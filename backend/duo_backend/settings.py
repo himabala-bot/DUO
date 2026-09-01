@@ -48,6 +48,8 @@ INSTALLED_APPS = [
     'apps.drawings.apps.DrawingsConfig',
     'apps.daily.apps.DailyConfig',
     'apps.notifications.apps.NotificationsConfig',
+    'apps.notes.apps.NotesConfig',
+    'apps.todos.apps.TodosConfig',
 ]
 
 MIDDLEWARE = [

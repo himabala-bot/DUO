@@ -8,25 +8,26 @@ import { ConnectionHub } from '@/components/ConnectionHub';
 import { ChatView } from '@/components/ChatView';
 import { DrawingCanvas } from '@/components/DrawingCanvas';
 import { DailyView } from '@/components/DailyView';
-import { DailyHistory } from '@/components/DailyHistory';
+import { LittleNotesView } from '@/components/LittleNotesView';
+import { TodoKanbanView } from '@/components/TodoKanbanView';
 
 export default function Home() {
   const { profile, hasActiveDuo, isLoading, supabaseUser } = useAuth();
-  // Set default starting page to 'daily' (Daily Questions & Reflections)
+  // Default starting page: 'daily' (Daily Love Questions)
   const [activeTab, setActiveTab] = useState<string>('daily');
 
   if (isLoading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-[#FBFAF7] text-[#1C1917]">
+      <div className="flex h-screen items-center justify-center bg-[#FAF7F2] text-[#422F0E]">
         <div className="text-center">
-          <span className="font-serif text-3xl font-normal text-[#1C1917]">Duo</span>
-          <p className="mt-2 text-xs font-mono text-[#8C857B]">Opening room...</p>
+          <span className="font-serif text-3xl font-bold text-[#422F0E]">Duo</span>
+          <p className="mt-2 text-xs font-mono text-[#A89F91]">Opening our room...</p>
         </div>
       </div>
     );
   }
 
-  // Not signed in -> Show Editorial Landing Page + Auth
+  // Not signed in -> Show Landing Page + Auth
   if (!supabaseUser && !profile) {
     return <AuthView />;
   }
@@ -34,7 +35,7 @@ export default function Home() {
   // Signed in, but not in an active paired room
   if (!hasActiveDuo) {
     return (
-      <div className="min-h-screen bg-[#FBFAF7] text-[#1C1917] flex flex-col lg:flex-row">
+      <div className="min-h-screen bg-[#FAF7F2] text-[#422F0E] flex flex-col lg:flex-row">
         <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
         <main className="flex-1 min-h-0 pb-20 lg:pb-0 flex flex-col justify-center overflow-y-auto">
           <ConnectionHub />
@@ -45,7 +46,7 @@ export default function Home() {
 
   // Signed in and in an active paired room
   return (
-    <div className="h-screen bg-[#FBFAF7] text-[#1C1917] flex flex-col lg:flex-row overflow-hidden">
+    <div className="h-screen bg-[#FAF7F2] text-[#422F0E] flex flex-col lg:flex-row overflow-hidden">
       {/* Navigation: Desktop Sidebar (left) / Mobile & Tablet Header + Pill Bar */}
       <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
 
@@ -54,7 +55,8 @@ export default function Home() {
         {activeTab === 'daily' && <DailyView />}
         {activeTab === 'chat' && <ChatView />}
         {activeTab === 'canvas' && <DrawingCanvas />}
-        {activeTab === 'history' && <DailyHistory />}
+        {activeTab === 'notes' && <LittleNotesView />}
+        {activeTab === 'todo' && <TodoKanbanView />}
         {activeTab === 'duo' && <ConnectionHub />}
       </main>
     </div>
