@@ -59,12 +59,12 @@ export const Avatar: React.FC<AvatarProps> = ({
 
   return (
     <div
-      className={`relative inline-flex items-center justify-center rounded-full overflow-hidden shrink-0 aspect-square border border-[#EFE8DC] bg-[#FFFFFF] shadow-sm ${SIZE_MAP[size]} ${className}`}
+      className={`relative inline-flex items-center justify-center rounded-full overflow-hidden shrink-0 aspect-square border border-[#EFE8DC] bg-[#FAF7F2] shadow-sm p-1 ${SIZE_MAP[size]} ${className}`}
     >
       <img
         src={resolvedSrc}
         alt={name || 'Avatar'}
-        className="w-full h-full aspect-square object-cover object-center rounded-full select-none"
+        className="w-full h-full object-contain object-center select-none"
         onError={(e) => {
           // Fallback if image fails to load
           e.currentTarget.src = DEFAULT_AVATAR;

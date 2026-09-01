@@ -351,16 +351,16 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                         setSelectedAvatar(avatarPath);
                         setCustomAvatarUrl('');
                       }}
-                      className={`relative aspect-square w-full rounded-full p-1 border-2 transition-all hover:scale-105 flex items-center justify-center overflow-hidden shrink-0 ${
+                      className={`relative aspect-square w-full rounded-full p-2 border-2 transition-all hover:scale-105 flex items-center justify-center overflow-hidden shrink-0 ${
                         selectedAvatar === avatarPath
-                          ? 'border-[#EA5E86] ring-2 ring-[#FCC4C0] shadow-md scale-105 bg-[#FFF8FA]'
-                          : 'border-[#EFE8DC] bg-[#FFFFFF] hover:border-[#FCC4C0]'
+                          ? 'border-[#EA5E86] ring-2 ring-[#FCC4C0] shadow-md scale-105 bg-[#FFF5F5]'
+                          : 'border-[#EFE8DC] bg-[#FAF7F2] hover:border-[#FCC4C0] hover:bg-[#FFFFFF]'
                       }`}
                     >
                       <img
                         src={avatarPath}
                         alt={`Avatar ${index + 1}`}
-                        className="w-full h-full aspect-square object-cover object-center rounded-full select-none"
+                        className="w-full h-full object-contain object-center select-none"
                       />
                     </button>
                   ))}
