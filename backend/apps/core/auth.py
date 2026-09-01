@@ -62,8 +62,11 @@ class SupabaseAuthentication(authentication.BaseAuthentication):
                 }
             )
 
-            # Keep profile email/name updated
+            # Keep profile email/name/duo_code updated
             updated = False
+            if not profile.duo_code:
+                profile.duo_code = profile._generate_unique_code()
+                updated = True
             if email and profile.email != email:
                 profile.email = email
                 updated = True
@@ -74,7 +77,7 @@ class SupabaseAuthentication(authentication.BaseAuthentication):
                 profile.avatar_url = avatar_url
                 updated = True
             if updated:
-                profile.save(update_fields=['email', 'name', 'avatar_url', 'updated_at'])
+                profile.save()
 
             django_user.profile = profile
             request.profile = profile
