@@ -57,6 +57,92 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       config: { broadcast: { self: false } },
     });
 
+    const handleIncomingMessage = (payload: any) => {
+      const msg = payload.payload || payload;
+      if (!msg) return;
+      const senderId = msg.sender?.id || msg.sender_id || msg.user_id;
+      if (senderId === userId) return;
+
+      const newNotif: NotificationItem = {
+        id: `msg-${msg.id || Date.now()}`,
+        recipient_id: userId,
+        type: 'MESSAGE',
+        title: 'New Message',
+        body: msg.content || 'New message',
+        reference_id: msg.id || null,
+        is_read: false,
+        created_at: new Date().toISOString(),
+      };
+
+      setNotifications((prev) => [newNotif, ...prev]);
+      setUnreadCount((c) => c + 1);
+      setLatestNotification(newNotif);
+    };
+
+    const handleIncomingDrawing = (payload: any) => {
+      const drawing = payload.payload || payload;
+      if (!drawing) return;
+      const senderId = drawing.sender?.id || drawing.sender_id;
+      if (senderId === userId) return;
+
+      const newNotif: NotificationItem = {
+        id: `draw-${drawing.id || Date.now()}`,
+        recipient_id: userId,
+        type: 'DRAWING',
+        title: 'New Doodle',
+        body: drawing.caption ? `"${drawing.caption}"` : 'Sent you a doodle',
+        reference_id: drawing.id || null,
+        is_read: false,
+        created_at: new Date().toISOString(),
+      };
+
+      setNotifications((prev) => [newNotif, ...prev]);
+      setUnreadCount((c) => c + 1);
+      setLatestNotification(newNotif);
+    };
+
+    const handleIncomingNote = (payload: any) => {
+      const note = payload.payload || payload;
+      if (!note) return;
+      const authorId = note.author?.id || note.author_id;
+      if (authorId === userId) return;
+
+      const newNotif: NotificationItem = {
+        id: `note-${note.id || Date.now()}`,
+        recipient_id: userId,
+        type: 'NOTE' as any,
+        title: 'New Note',
+        body: note.content || 'Left a note',
+        reference_id: note.id || null,
+        is_read: false,
+        created_at: new Date().toISOString(),
+      };
+
+      setNotifications((prev) => [newNotif, ...prev]);
+      setUnreadCount((c) => c + 1);
+      setLatestNotification(newNotif);
+    };
+
+    const handleIncomingDaily = (payload: any) => {
+      const data = payload.payload || payload;
+      if (data?.user_id === userId) return;
+
+      const newNotif: NotificationItem = {
+        id: `prompt-${Date.now()}`,
+        recipient_id: userId,
+        type: 'DAILY_RESPONSE',
+        title: 'Love Prompt',
+        body: 'Answered today\'s questions',
+        reference_id: null,
+        is_read: false,
+        created_at: new Date().toISOString(),
+      };
+
+      setNotifications((prev) => [newNotif, ...prev]);
+      setUnreadCount((c) => c + 1);
+      setLatestNotification(newNotif);
+    };
+
     userChannel
       .on(
         'postgres_changes',
@@ -71,10 +157,6 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           setNotifications((prev) => [newNotif, ...prev]);
           setUnreadCount((c) => c + 1);
           setLatestNotification(newNotif);
-
-          setTimeout(() => {
-            setLatestNotification((current) => (current?.id === newNotif.id ? null : current));
-          }, 6000);
         }
       )
       .on('broadcast', { event: 'new_notification' }, (payload) => {
@@ -86,37 +168,12 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         });
         setUnreadCount((c) => c + 1);
         setLatestNotification(newNotif);
-
-        setTimeout(() => {
-          setLatestNotification((current) => (current?.id === newNotif.id ? null : current));
-        }, 6000);
       })
-      .on('broadcast', { event: 'new_drawing' }, (payload) => {
-        const drawing = payload.payload as any;
-        if (!drawing) return;
-        const senderId = drawing.sender?.id || drawing.sender_id;
-        if (senderId === userId) return;
-
-        const senderName = drawing.sender?.name || profile.partner?.name || 'Partner';
-        const newNotif: NotificationItem = {
-          id: `draw-${drawing.id || Date.now()}`,
-          recipient_id: userId,
-          type: 'DRAWING',
-          title: `New Drawing from ${senderName}`,
-          body: drawing.caption ? `"${drawing.caption}"` : 'Sent you a new doodle!',
-          reference_id: drawing.id || null,
-          is_read: false,
-          created_at: new Date().toISOString(),
-        };
-
-        setNotifications((prev) => [newNotif, ...prev]);
-        setUnreadCount((c) => c + 1);
-        setLatestNotification(newNotif);
-
-        setTimeout(() => {
-          setLatestNotification((current) => (current?.id === newNotif.id ? null : current));
-        }, 6000);
-      })
+      .on('broadcast', { event: 'new_message' }, handleIncomingMessage)
+      .on('broadcast', { event: 'new_drawing' }, handleIncomingDrawing)
+      .on('broadcast', { event: 'new_note' }, handleIncomingNote)
+      .on('broadcast', { event: 'notes_updated' }, handleIncomingNote)
+      .on('broadcast', { event: 'daily_response' }, handleIncomingDaily)
       .on(
         'postgres_changes',
         {
@@ -146,11 +203,11 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     userChannelRef.current = userChannel;
 
-    // 2. Presence channel for partner online status if in active DUO
+    // 2. Presence & DUO Broadcast channel
     let duoChannel: RealtimeChannel | null = null;
     if (activeDuoId) {
-      duoChannel = supabase.channel(`duo_presence:${activeDuoId}`, {
-        config: { presence: { key: userId } },
+      duoChannel = supabase.channel(`duo:${activeDuoId}`, {
+        config: { broadcast: { self: false }, presence: { key: userId } },
       });
 
       duoChannel
@@ -164,6 +221,11 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             setPartnerOnline(false);
           }
         })
+        .on('broadcast', { event: 'new_message' }, handleIncomingMessage)
+        .on('broadcast', { event: 'new_drawing' }, handleIncomingDrawing)
+        .on('broadcast', { event: 'new_note' }, handleIncomingNote)
+        .on('broadcast', { event: 'notes_updated' }, handleIncomingNote)
+        .on('broadcast', { event: 'daily_response' }, handleIncomingDaily)
         .subscribe(async (status: string) => {
           if (status === 'SUBSCRIBED') {
             await duoChannel?.track({ online_at: new Date().toISOString() });

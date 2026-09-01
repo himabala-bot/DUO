@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRealtime } from '@/context/RealtimeContext';
-import { MessageSquare, Palette, Sparkles, KeyRound, Bell, Heart, FileText } from 'lucide-react';
+import { MessageSquare, Palette, Sparkles, Heart, FileText, Bell } from 'lucide-react';
 import { NotificationItem } from '@/types';
 
 interface NotificationPopoutProps {
@@ -32,7 +32,7 @@ export const NotificationPopout: React.FC<NotificationPopoutProps> = ({
     setIsExiting(false);
     setVisibleNotif(latestNotification);
 
-    // Instagram-style flash popout: pops out, stays for exactly 1.0 second, then smoothly disappears
+    // Instagram-style flash icon popout: pops out, stays for exactly 1.0 second, then smoothly disappears
     const exitTimer = setTimeout(() => {
       setIsExiting(true);
     }, 1000);
@@ -62,74 +62,71 @@ export const NotificationPopout: React.FC<NotificationPopoutProps> = ({
     setVisibleNotif(null);
   };
 
-  const getIcon = () => {
+  const getIconInfo = () => {
     switch (visibleNotif.type) {
       case 'MESSAGE':
         return {
           icon: MessageSquare,
           bg: 'bg-[#125CB9]',
-          border: 'border-[#125CB9]/30',
-          label: 'New Message',
+          ring: 'ring-[#125CB9]/40',
+          shadow: 'shadow-[#125CB9]/30',
+          label: 'New message',
         };
       case 'DRAWING':
         return {
           icon: Palette,
           bg: 'bg-[#00D26A]',
-          border: 'border-[#00D26A]/30',
-          label: 'New Doodle',
+          ring: 'ring-[#00D26A]/40',
+          shadow: 'shadow-[#00D26A]/30',
+          label: 'New doodle',
         };
       case 'DAILY_RESPONSE':
         return {
           icon: Sparkles,
           bg: 'bg-[#FB923C]',
-          border: 'border-[#FB923C]/30',
-          label: 'Love Prompt',
+          ring: 'ring-[#FB923C]/40',
+          shadow: 'shadow-[#FB923C]/30',
+          label: 'Love prompt',
         };
       case 'CONNECTION_REQUEST':
       case 'CONNECTION_ACCEPTED':
         return {
           icon: Heart,
           bg: 'bg-[#F43F5E]',
-          border: 'border-[#F43F5E]/30',
-          label: 'Room Link',
+          ring: 'ring-[#F43F5E]/40',
+          shadow: 'shadow-[#F43F5E]/30',
+          label: 'Room linked',
         };
       default:
         return {
-          icon: Bell,
-          bg: 'bg-[#125CB9]',
-          border: 'border-[#125CB9]/30',
-          label: 'New Update',
+          icon: ((visibleNotif.type as string) === 'NOTE') ? FileText : Bell,
+          bg: ((visibleNotif.type as string) === 'NOTE') ? 'bg-[#8B5CF6]' : 'bg-[#125CB9]',
+          ring: ((visibleNotif.type as string) === 'NOTE') ? 'ring-[#8B5CF6]/40' : 'ring-[#125CB9]/40',
+          shadow: 'shadow-md',
+          label: 'Notification',
         };
     }
   };
 
-  const iconInfo = getIcon();
+  const iconInfo = getIconInfo();
   const Icon = iconInfo.icon;
 
   return (
     <div
       onClick={handleClick}
-      className={`fixed top-4 left-1/2 -translate-x-1/2 sm:top-5 sm:left-auto sm:right-6 lg:top-5 lg:left-72 z-50 cursor-pointer select-none transition-all duration-200 ${
+      title={iconInfo.label}
+      className={`fixed top-4 left-1/2 -translate-x-1/2 sm:top-5 sm:left-auto sm:right-8 lg:top-5 lg:left-72 z-50 cursor-pointer select-none transition-all duration-200 ${
         isExiting
-          ? 'opacity-0 scale-90 -translate-y-2 pointer-events-none'
-          : 'opacity-100 scale-100 translate-y-0 animate-in zoom-in-75 fade-in slide-in-from-top-3'
+          ? 'opacity-0 scale-50 -translate-y-3 pointer-events-none'
+          : 'opacity-100 scale-100 translate-y-0 animate-in zoom-in-50 fade-in slide-in-from-top-4 duration-150'
       }`}
     >
-      <div className={`flex items-center space-x-2.5 rounded-full border ${iconInfo.border} bg-theme-card/95 backdrop-blur-md px-3.5 py-2 shadow-2xl hover:scale-105 transition-transform ring-1 ring-black/5`}>
-        <div className={`flex h-6 w-6 items-center justify-center rounded-full ${iconInfo.bg} text-white shadow-xs shrink-0 animate-pulse`}>
-          <Icon className="h-3.5 w-3.5" />
-        </div>
-
-        <div className="flex flex-col pr-1">
-          <span className="text-[11px] font-mono font-bold text-theme-primary tracking-tight">
-            {iconInfo.label}
-          </span>
-          <span className="text-xs text-theme-secondary truncate max-w-[180px] sm:max-w-[240px]">
-            {visibleNotif.body}
-          </span>
-        </div>
+      {/* Instagram-style circular icon orb popping out */}
+      <div className={`flex h-11 w-11 items-center justify-center rounded-full ${iconInfo.bg} text-white shadow-xl ${iconInfo.shadow} ring-4 ${iconInfo.ring} hover:scale-110 active:scale-95 transition-transform`}>
+        <Icon className="h-5 w-5 fill-current/20" />
       </div>
     </div>
   );
 };
+
 

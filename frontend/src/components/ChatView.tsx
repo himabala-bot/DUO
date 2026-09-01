@@ -277,6 +277,15 @@ export const ChatView: React.FC = () => {
           payload: confirmedMsg,
         });
       }
+
+      if (partner?.id) {
+        const partnerNotifChannel = supabase.channel(`user:${partner.id}`);
+        partnerNotifChannel.send({
+          type: 'broadcast',
+          event: 'new_message',
+          payload: confirmedMsg,
+        });
+      }
     } catch (err) {
       console.error('Failed to send message:', err);
       setMessages((prev) => prev.filter((m) => m.id !== tempId));
@@ -318,6 +327,15 @@ export const ChatView: React.FC = () => {
 
       if (channelRef.current) {
         channelRef.current.send({
+          type: 'broadcast',
+          event: 'new_message',
+          payload: confirmedMsg,
+        });
+      }
+
+      if (partner?.id) {
+        const partnerNotifChannel = supabase.channel(`user:${partner.id}`);
+        partnerNotifChannel.send({
           type: 'broadcast',
           event: 'new_message',
           payload: confirmedMsg,
