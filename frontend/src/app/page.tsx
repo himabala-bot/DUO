@@ -57,7 +57,6 @@ export default function Home() {
         {activeTab === 'canvas' && <DrawingCanvas />}
         {activeTab === 'notes' && <LittleNotesView />}
         {activeTab === 'todo' && <TodoKanbanView />}
-        {activeTab === 'duo' && <ConnectionHub />}
       </main>
     </div>
   );

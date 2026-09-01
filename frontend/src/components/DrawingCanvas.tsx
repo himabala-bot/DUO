@@ -371,7 +371,7 @@ export const DrawingCanvas: React.FC = () => {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-theme pb-5">
           <div>
             <div className="flex items-center space-x-1.5 text-xs font-mono text-theme-muted">
-              <Heart className="h-3.5 w-3.5 text-[#5B58E6] fill-current" />
+              <Heart className="h-3.5 w-3.5 text-[#125CB9] fill-current" />
               <span>Doodle Studio</span>
             </div>
             <h2 className="mt-1 font-serif text-2xl sm:text-3xl font-bold text-theme-primary">
@@ -385,10 +385,10 @@ export const DrawingCanvas: React.FC = () => {
 
         {/* Mode Switcher Tabs */}
         <div className="flex items-center justify-between pb-3 border-b border-theme">
-          <div className="flex items-center space-x-1 border border-theme rounded-lg p-1 bg-theme-input">
+          <div className="flex items-center space-x-1 border border-theme rounded-full p-1 bg-theme-input">
             <button
               onClick={() => setActiveTab('canvas')}
-              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+              className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${
                 activeTab === 'canvas'
                   ? 'bg-theme-card text-theme-primary shadow-xs font-semibold'
                   : 'text-theme-secondary hover:text-theme-primary'
@@ -399,7 +399,7 @@ export const DrawingCanvas: React.FC = () => {
             </button>
             <button
               onClick={() => setActiveTab('gallery')}
-              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+              className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${
                 activeTab === 'gallery'
                   ? 'bg-theme-card text-theme-primary shadow-xs font-semibold'
                   : 'text-theme-secondary hover:text-theme-primary'
@@ -415,7 +415,7 @@ export const DrawingCanvas: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
             {/* Canvas Viewport (Desktop 8-9 cols) */}
             <div className="lg:col-span-8 xl:col-span-9 flex flex-col items-center">
-              <div className="w-full overflow-hidden rounded-xl border border-theme bg-theme-card p-2 sm:p-2.5 shadow-xs">
+              <div className="w-full overflow-hidden rounded-2xl border border-theme bg-theme-card p-2 sm:p-2.5 shadow-xs">
                 <canvas
                   ref={canvasRef}
                   width={800}
@@ -427,7 +427,7 @@ export const DrawingCanvas: React.FC = () => {
                   onTouchStart={startDrawing}
                   onTouchMove={draw}
                   onTouchEnd={stopDrawing}
-                  className="w-full aspect-[4/3] rounded-lg cursor-crosshair touch-none bg-[#FFFFFF]"
+                  className="w-full aspect-[4/3] rounded-xl cursor-crosshair touch-none bg-[#FFFFFF]"
                 />
               </div>
 
@@ -439,12 +439,12 @@ export const DrawingCanvas: React.FC = () => {
                   onChange={(e) => setCaption(e.target.value)}
                   placeholder="Add a sweet caption (optional)..."
                   maxLength={100}
-                  className="flex-1 rounded-lg border border-theme bg-theme-input px-3.5 py-2 text-xs sm:text-sm text-theme-primary placeholder-theme-muted focus:border-[#5B58E6] focus:bg-theme-card focus:outline-none"
+                  className="flex-1 rounded-2xl border border-theme bg-theme-input px-4 py-2 text-xs sm:text-sm text-theme-primary placeholder-theme-muted focus:border-[#125CB9] focus:bg-theme-card focus:outline-none"
                 />
                 <button
                   onClick={handleSendDrawing}
                   disabled={isSending}
-                  className="flex items-center justify-center space-x-1.5 rounded-lg bg-[#5B58E6] px-4 py-2 text-xs font-medium text-white hover:bg-[#4A46DC] transition-colors disabled:opacity-40 shadow-xs shrink-0"
+                  className="flex items-center justify-center space-x-1.5 rounded-full bg-[#125CB9] px-5 py-2 text-xs font-medium text-white hover:bg-[#0E4B99] transition-colors disabled:opacity-40 shadow-xs shrink-0"
                 >
                   <span>{isSending ? 'Sending doodle...' : `Send to ${partner?.name || 'Partner'}`}</span>
                   <ArrowRight className="h-3.5 w-3.5" />
@@ -453,7 +453,7 @@ export const DrawingCanvas: React.FC = () => {
             </div>
 
             {/* Tools & Palette Sidebar (Desktop 4-3 cols) */}
-            <div className="lg:col-span-4 xl:col-span-3 rounded-xl border border-theme bg-theme-card p-4 shadow-xs flex flex-col gap-4">
+            <div className="lg:col-span-4 xl:col-span-3 rounded-2xl border border-theme bg-theme-card p-4 shadow-xs flex flex-col gap-4">
               {/* History Actions */}
               <div>
                 <span className="text-[10px] font-mono uppercase tracking-wider text-theme-muted font-medium">Actions</span>
@@ -462,7 +462,7 @@ export const DrawingCanvas: React.FC = () => {
                     onClick={handleUndo}
                     disabled={historyIndex <= 0}
                     title="Undo"
-                    className="flex-1 flex items-center justify-center rounded-lg border border-theme bg-theme-input p-2 text-theme-secondary hover:bg-theme-card disabled:opacity-30 transition-colors"
+                    className="flex-1 flex items-center justify-center rounded-xl border border-theme bg-theme-input p-2 text-theme-secondary hover:bg-theme-card disabled:opacity-30 transition-colors"
                   >
                     <RotateCcw className="h-3.5 w-3.5" />
                   </button>
@@ -470,14 +470,14 @@ export const DrawingCanvas: React.FC = () => {
                     onClick={handleRedo}
                     disabled={historyIndex >= history.length - 1}
                     title="Redo"
-                    className="flex-1 flex items-center justify-center rounded-lg border border-theme bg-theme-input p-2 text-theme-secondary hover:bg-theme-card disabled:opacity-30 transition-colors"
+                    className="flex-1 flex items-center justify-center rounded-xl border border-theme bg-theme-input p-2 text-theme-secondary hover:bg-theme-card disabled:opacity-30 transition-colors"
                   >
                     <RotateCw className="h-3.5 w-3.5" />
                   </button>
                   <button
                     onClick={handleClear}
                     title="Clear Canvas"
-                    className="flex-1 flex items-center justify-center rounded-lg border border-theme bg-theme-input p-2 text-theme-muted hover:text-[#F43F5E] hover:bg-[#F43F5E]/10 transition-colors"
+                    className="flex-1 flex items-center justify-center rounded-xl border border-theme bg-theme-input p-2 text-theme-muted hover:text-[#F43F5E] hover:bg-[#F43F5E]/10 transition-colors"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
@@ -496,9 +496,9 @@ export const DrawingCanvas: React.FC = () => {
                         setIsEraser(false);
                       }}
                       title={c.name}
-                      className={`relative h-8 w-full rounded-md border transition-all ${
+                      className={`relative h-8 w-full rounded-xl border transition-all ${
                         !isEraser && color === c.value
-                          ? 'border-[#5B58E6] ring-2 ring-[#5B58E6]/40 scale-105 shadow-xs'
+                          ? 'border-[#125CB9] ring-2 ring-[#125CB9]/40 scale-105 shadow-xs'
                           : 'border-theme hover:scale-105'
                       }`}
                       style={{ backgroundColor: c.value }}
@@ -519,9 +519,9 @@ export const DrawingCanvas: React.FC = () => {
                     <button
                       key={s.name}
                       onClick={() => setBrushSize(s.value)}
-                      className={`flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all ${
+                      className={`flex items-center justify-between rounded-xl px-3 py-1.5 text-xs font-medium transition-all ${
                         brushSize === s.value
-                          ? 'bg-[#5B58E6]/10 text-[#5B58E6] font-semibold border border-[#5B58E6]/25'
+                          ? 'bg-[#125CB9]/10 text-[#125CB9] font-semibold border border-[#125CB9]/25'
                           : 'text-theme-secondary hover:bg-theme-input border border-transparent'
                       }`}
                     >
@@ -539,9 +539,9 @@ export const DrawingCanvas: React.FC = () => {
               <div>
                 <button
                   onClick={() => setIsEraser(!isEraser)}
-                  className={`flex w-full items-center justify-center space-x-1.5 rounded-lg py-2 text-xs font-medium transition-all ${
+                  className={`flex w-full items-center justify-center space-x-1.5 rounded-xl py-2 text-xs font-medium transition-all ${
                     isEraser
-                      ? 'bg-[#5B58E6] text-white shadow-xs'
+                      ? 'bg-[#125CB9] text-white shadow-xs'
                       : 'border border-theme bg-theme-input text-theme-secondary hover:bg-theme-card'
                   }`}
                 >
@@ -555,9 +555,9 @@ export const DrawingCanvas: React.FC = () => {
           /* Gallery View */
           <div>
             {drawings.length === 0 ? (
-              <div className="flex h-64 flex-col items-center justify-center rounded-2xl border border-[#E8E4DB] bg-[#FFFFFF] p-8 sm:p-12 text-center shadow-sm">
-                <h4 className="font-serif text-xl text-[#1C1917]">No drawings in archive</h4>
-                <p className="mt-1.5 text-xs sm:text-sm text-[#78716C]">
+              <div className="flex h-64 flex-col items-center justify-center rounded-2xl border border-theme bg-theme-card p-8 sm:p-12 text-center shadow-sm">
+                <h4 className="font-serif text-xl text-theme-primary font-bold">No drawings in archive</h4>
+                <p className="mt-1.5 text-xs sm:text-sm text-theme-secondary">
                   Draw a sketch and share it with {partner?.name} to start your archive.
                 </p>
               </div>
@@ -569,11 +569,11 @@ export const DrawingCanvas: React.FC = () => {
                   return (
                     <div
                       key={draw.id}
-                      className="rounded-2xl border border-[#E8E4DB] bg-[#FFFFFF] overflow-hidden shadow-[0_2px_8px_rgba(28,25,23,0.03)] transition-all hover:border-[#D4CEC2] hover:shadow-md"
+                      className="rounded-2xl border border-theme bg-theme-card overflow-hidden shadow-xs transition-all hover:border-[#125CB9]"
                     >
                       <div
                         onClick={() => setSelectedDrawing(draw)}
-                        className="cursor-pointer aspect-[4/3] w-full bg-[#FBFAF7] flex items-center justify-center overflow-hidden border-b border-[#E8E4DB]"
+                        className="cursor-pointer aspect-[4/3] w-full bg-theme-input flex items-center justify-center overflow-hidden border-b border-theme"
                       >
                         {imgSource ? (
                           <img
@@ -582,28 +582,28 @@ export const DrawingCanvas: React.FC = () => {
                             className="h-full w-full object-contain p-3"
                           />
                         ) : (
-                          <div className="text-xs text-[#8C857B] font-mono">No preview</div>
+                          <div className="text-xs text-theme-muted font-mono">No preview</div>
                         )}
                       </div>
 
                       <div className="p-4">
-                        <div className="flex items-center justify-between text-xs font-mono text-[#8C857B]">
+                        <div className="flex items-center justify-between text-xs font-mono text-theme-muted">
                           <span>{draw.is_me ? 'You' : draw.sender?.name}</span>
                           <span>{format(new Date(draw.created_at), 'MMM dd, yyyy')}</span>
                         </div>
-                        {draw.caption && <p className="mt-1.5 text-xs sm:text-sm text-[#1C1917] font-serif italic line-clamp-2">"{draw.caption}"</p>}
+                        {draw.caption && <p className="mt-1.5 text-xs sm:text-sm text-theme-primary font-serif italic line-clamp-2">"{draw.caption}"</p>}
 
                         <div className="mt-3.5 flex justify-end gap-2">
                           <button
                             onClick={() => setSelectedDrawing(draw)}
-                            className="rounded-lg p-2 text-[#78716C] hover:bg-[#F5F2EB] hover:text-[#1C1917] transition-colors"
+                            className="rounded-full p-2 text-theme-secondary hover:bg-theme-input hover:text-theme-primary transition-colors"
                             title="View"
                           >
                             <Eye className="h-4 w-4" />
                           </button>
                           <button
                             onClick={() => handleDownloadDrawing(draw)}
-                            className="rounded-lg p-2 text-[#78716C] hover:bg-[#F5F2EB] hover:text-[#1C1917] transition-colors"
+                            className="rounded-full p-2 text-theme-secondary hover:bg-theme-input hover:text-theme-primary transition-colors"
                             title="Download PNG"
                           >
                             <Download className="h-4 w-4" />
@@ -621,33 +621,33 @@ export const DrawingCanvas: React.FC = () => {
         {/* Lightbox Modal */}
         {selectedDrawing && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-[2px]">
-            <div className="relative max-h-[90vh] max-w-3xl w-full overflow-hidden rounded-2xl border border-[#E8E4DB] bg-[#FFFFFF] p-6 shadow-2xl">
-              <div className="flex items-center justify-between pb-4 border-b border-[#E8E4DB]">
+            <div className="relative max-h-[90vh] max-w-3xl w-full overflow-hidden rounded-2xl border border-theme bg-theme-card p-6 shadow-2xl">
+              <div className="flex items-center justify-between pb-4 border-b border-theme">
                 <div>
-                  <h4 className="font-serif text-lg text-[#1C1917]">
+                  <h4 className="font-serif text-lg font-bold text-theme-primary">
                     Drawing by {selectedDrawing.is_me ? 'You' : selectedDrawing.sender?.name}
                   </h4>
-                  <p className="text-xs font-mono text-[#8C857B]">
+                  <p className="text-xs font-mono text-theme-muted">
                     {format(new Date(selectedDrawing.created_at), 'MMMM dd, yyyy hh:mm a')}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => handleDownloadDrawing(selectedDrawing)}
-                    className="rounded-xl border border-[#E8E4DB] bg-[#FBFAF7] px-3.5 py-1.5 text-xs font-medium text-[#1C1917] hover:bg-[#F5F2EB] flex items-center gap-1.5"
+                    className="rounded-full border border-theme bg-theme-input px-3.5 py-1.5 text-xs font-medium text-theme-primary hover:bg-theme-card flex items-center gap-1.5"
                   >
                     <Download className="h-4 w-4" /> Download
                   </button>
                   <button
                     onClick={() => setSelectedDrawing(null)}
-                    className="rounded-xl p-2 text-[#8C857B] hover:text-[#1C1917]"
+                    className="rounded-full p-2 text-theme-muted hover:text-theme-primary"
                   >
                     <X className="h-5 w-5" />
                   </button>
                 </div>
               </div>
 
-              <div className="mt-4 overflow-hidden rounded-xl bg-[#FBFAF7] border border-[#E8E4DB] p-4 flex items-center justify-center">
+              <div className="mt-4 overflow-hidden rounded-2xl bg-theme-input border border-theme p-4 flex items-center justify-center">
                 <img
                   src={selectedDrawing.image_url || selectedDrawing.storage_path}
                   alt={selectedDrawing.caption}
@@ -656,7 +656,7 @@ export const DrawingCanvas: React.FC = () => {
               </div>
 
               {selectedDrawing.caption && (
-                <p className="mt-3 text-center text-sm font-serif italic text-[#1C1917]">
+                <p className="mt-3 text-center text-sm font-serif italic text-theme-primary">
                   "{selectedDrawing.caption}"
                 </p>
               )}

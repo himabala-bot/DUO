@@ -57,8 +57,8 @@ const CATEGORIES: CategoryConfig[] = [
     title: 'Text Notes',
     subtitle: 'Heartfelt words, thoughts & tiny reminders',
     icon: FileText,
-    accentColor: 'text-[#5B58E6]',
-    badgeBg: 'bg-[#5B58E6]/10 border-[#5B58E6]/30 text-[#5B58E6]',
+    accentColor: 'text-[#125CB9]',
+    badgeBg: 'bg-[#125CB9]/10 border-[#125CB9]/30 text-[#125CB9]',
     cardBg: 'var(--bg-card)',
   },
   {
@@ -289,7 +289,7 @@ export const LittleNotesView: React.FC = () => {
                 setNoteType(selectedCategory || 'TEXT');
                 setShowCreateModal(true);
               }}
-              className="flex items-center space-x-1.5 rounded-lg bg-[#5B58E6] px-4 py-2 text-xs font-medium text-white hover:bg-[#4A46DC] transition-colors shadow-xs"
+              className="flex items-center space-x-1.5 rounded-full bg-[#125CB9] px-4 py-2 text-xs font-medium text-white hover:bg-[#0E4B99] transition-colors shadow-xs"
             >
               <Plus className="h-3.5 w-3.5" />
               <span>New Note</span>
@@ -303,7 +303,7 @@ export const LittleNotesView: React.FC = () => {
         {latestNoteForYou && (
           <div
             onClick={() => setPreviewNote(latestNoteForYou)}
-            className="group relative cursor-pointer overflow-hidden rounded-xl border border-theme bg-theme-card p-3.5 sm:p-4 shadow-xs transition-all hover:border-[#5B58E6]"
+            className="group relative cursor-pointer overflow-hidden rounded-2xl border border-theme bg-theme-card p-3.5 sm:p-4 shadow-xs transition-all hover:border-[#125CB9]"
           >
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
               <div className="flex items-center space-x-3 min-w-0">
@@ -311,7 +311,7 @@ export const LittleNotesView: React.FC = () => {
 
                 <div className="min-w-0">
                   <div className="flex items-center space-x-2">
-                    <span className="inline-flex items-center gap-1 px-2 py-0.2 rounded text-[10px] font-mono font-medium border border-[#5B58E6]/25 bg-[#5B58E6]/10 text-[#5B58E6]">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-medium border border-[#125CB9]/25 bg-[#125CB9]/10 text-[#125CB9]">
                       <Heart className="h-2.5 w-2.5 fill-current" />
                       <span>Note for you</span>
                     </span>
@@ -332,10 +332,10 @@ export const LittleNotesView: React.FC = () => {
 
               {/* Right CTA */}
               <div className="flex items-center space-x-1.5 shrink-0 self-end sm:self-center">
-                <span className="text-xs font-semibold text-[#5B58E6] group-hover:underline">
+                <span className="text-xs font-semibold text-[#125CB9] group-hover:underline">
                   Open Note
                 </span>
-                <span className="flex h-7 w-7 items-center justify-center rounded-md border border-theme bg-theme-input text-theme-secondary group-hover:bg-[#5B58E6] group-hover:text-white transition-colors">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full border border-theme bg-theme-input text-theme-secondary group-hover:bg-[#125CB9] group-hover:text-white transition-colors">
                   <ArrowRight className="h-3.5 w-3.5" />
                 </span>
               </div>
@@ -371,12 +371,12 @@ export const LittleNotesView: React.FC = () => {
                   <div
                     key={cat.id}
                     onClick={() => setSelectedCategory(cat.id)}
-                    className="group relative block w-full h-[330px] cursor-pointer rounded-xl border border-theme bg-theme-card p-4 text-theme-primary shadow-xs transition-all hover:border-[#5B58E6] flex flex-col justify-between overflow-hidden"
+                    className="group relative block w-full h-[330px] cursor-pointer rounded-2xl border border-theme bg-theme-card p-4 text-theme-primary shadow-xs transition-all hover:border-[#125CB9] flex flex-col justify-between overflow-hidden"
                   >
                     {/* Card Header: Category Title & Arrow */}
                     <div className="flex items-center justify-between shrink-0">
                       <div className="flex items-center space-x-2">
-                        <div className={`flex h-7 w-7 items-center justify-center rounded-md border border-theme bg-theme-input ${cat.accentColor}`}>
+                        <div className={`flex h-8 w-8 items-center justify-center rounded-xl border border-theme bg-theme-input ${cat.accentColor}`}>
                           <Icon className="h-4 w-4" />
                         </div>
                         <div>
@@ -389,7 +389,7 @@ export const LittleNotesView: React.FC = () => {
                         </div>
                       </div>
 
-                      <div className="flex h-6 w-6 items-center justify-center rounded border border-theme bg-theme-input text-theme-muted group-hover:bg-[#5B58E6] group-hover:text-white transition-colors">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-full border border-theme bg-theme-input text-theme-muted group-hover:bg-[#125CB9] group-hover:text-white transition-colors">
                         <ArrowRight className="h-3 w-3" />
                       </div>
                     </div>
@@ -399,7 +399,7 @@ export const LittleNotesView: React.FC = () => {
                       {latestInCat ? (
                         <>
                           {cat.id === 'DRAWING' && latestInCat.media_url ? (
-                            <div className="relative h-full w-full overflow-hidden rounded-lg border border-theme bg-theme-input p-2 flex items-center justify-center">
+                            <div className="relative h-full w-full overflow-hidden rounded-xl border border-theme bg-theme-input p-2 flex items-center justify-center">
                               <img
                                 src={latestInCat.media_url}
                                 alt="Latest Doodle"
@@ -407,7 +407,7 @@ export const LittleNotesView: React.FC = () => {
                               />
                             </div>
                           ) : cat.id === 'PHOTO' && latestInCat.media_url ? (
-                            <div className="relative h-full w-full overflow-hidden rounded-lg border border-theme bg-theme-input">
+                            <div className="relative h-full w-full overflow-hidden rounded-xl border border-theme bg-theme-input">
                               <img
                                 src={latestInCat.media_url}
                                 alt="Latest Photo"
@@ -416,12 +416,12 @@ export const LittleNotesView: React.FC = () => {
                             </div>
                           ) : cat.id === 'VOICE' && latestInCat.media_url ? (
                             <div className="relative h-full w-full flex items-center justify-center">
-                              <div className="w-full rounded-lg border border-theme bg-theme-input p-3">
+                              <div className="w-full rounded-xl border border-theme bg-theme-input p-3">
                                 <WaveformPlayer audioUrl={latestInCat.media_url} />
                               </div>
                             </div>
                           ) : (
-                            <div className="relative h-full w-full overflow-hidden rounded-lg border border-theme bg-theme-input p-3 flex items-center">
+                            <div className="relative h-full w-full overflow-hidden rounded-xl border border-theme bg-theme-input p-3 flex items-center">
                               <p className="text-xs text-theme-primary whitespace-pre-wrap leading-relaxed line-clamp-4">
                                 {latestInCat.content}
                               </p>
@@ -429,7 +429,7 @@ export const LittleNotesView: React.FC = () => {
                           )}
                         </>
                       ) : (
-                        <div className="relative h-full w-full flex flex-col items-center justify-center rounded-lg border border-dashed border-theme bg-theme-input/50 p-4 text-center">
+                        <div className="relative h-full w-full flex flex-col items-center justify-center rounded-xl border border-dashed border-theme bg-theme-input/50 p-4 text-center">
                           <Icon className={`h-5 w-5 mb-1 opacity-40 ${cat.accentColor}`} />
                           <span className="text-xs font-serif font-medium text-theme-muted">No {cat.title.toLowerCase()} yet</span>
                         </div>
@@ -477,7 +477,7 @@ export const LittleNotesView: React.FC = () => {
                     <div className="flex items-center space-x-2.5">
                       <button
                         onClick={() => setSelectedCategory(null)}
-                        className="flex items-center space-x-1.5 rounded-lg border border-theme bg-theme-card px-3 py-1.5 text-xs font-mono text-theme-secondary hover:bg-theme-card-hover transition-colors shadow-xs"
+                        className="flex items-center space-x-1.5 rounded-full border border-theme bg-theme-card px-3.5 py-1.5 text-xs font-mono text-theme-secondary hover:bg-theme-card-hover transition-colors shadow-xs"
                       >
                         <ArrowLeft className="h-3 w-3" />
                         <span>All Collections</span>
@@ -488,7 +488,7 @@ export const LittleNotesView: React.FC = () => {
                         <h3 className="font-serif text-base sm:text-lg font-bold text-theme-primary">
                           {currentCatConfig.title}
                         </h3>
-                        <span className="text-[11px] font-mono font-medium px-2 py-0.2 rounded border bg-theme-input border-theme text-theme-muted">
+                        <span className="text-[11px] font-mono font-medium px-2.5 py-0.2 rounded-full border bg-theme-input border-theme text-theme-muted">
                           {categoryNotes.length}
                         </span>
                       </div>
@@ -496,7 +496,7 @@ export const LittleNotesView: React.FC = () => {
 
                     <button
                       onClick={() => openCreateForCategory(currentCatConfig.id)}
-                      className="flex items-center space-x-1.5 rounded-lg bg-[#5B58E6] px-3.5 py-1.5 text-xs font-medium text-white hover:bg-[#4A46DC] transition-colors shadow-xs self-start sm:self-auto"
+                      className="flex items-center space-x-1.5 rounded-full bg-[#125CB9] px-4 py-1.5 text-xs font-medium text-white hover:bg-[#0E4B99] transition-colors shadow-xs self-start sm:self-auto"
                     >
                       <Plus className="h-3.5 w-3.5" />
                       <span>Add {currentCatConfig.title.slice(0, -1)}</span>
@@ -505,7 +505,7 @@ export const LittleNotesView: React.FC = () => {
 
                   {/* Category Notes Grid */}
                   {categoryNotes.length === 0 ? (
-                    <div className="rounded-xl border border-theme bg-theme-card p-10 text-center space-y-2 shadow-xs">
+                    <div className="rounded-2xl border border-theme bg-theme-card p-10 text-center space-y-2 shadow-xs">
                       <CatIcon className={`h-6 w-6 mx-auto mb-1 ${currentCatConfig.accentColor}`} />
                       <h4 className="font-serif text-base font-bold text-theme-primary">No {currentCatConfig.title.toLowerCase()} yet</h4>
                       <p className="text-xs text-theme-secondary max-w-sm mx-auto">
@@ -513,7 +513,7 @@ export const LittleNotesView: React.FC = () => {
                       </p>
                       <button
                         onClick={() => openCreateForCategory(currentCatConfig.id)}
-                        className="mt-2 inline-flex items-center space-x-1.5 rounded-lg bg-[#5B58E6] px-4 py-2 text-xs font-medium text-white hover:bg-[#4A46DC] transition-colors shadow-xs"
+                        className="mt-2 inline-flex items-center space-x-1.5 rounded-full bg-[#125CB9] px-4 py-2 text-xs font-medium text-white hover:bg-[#0E4B99] transition-colors shadow-xs"
                       >
                         <Plus className="h-3.5 w-3.5" />
                         <span>Create Note</span>
@@ -529,8 +529,8 @@ export const LittleNotesView: React.FC = () => {
                             key={note.id}
                             onClick={() => setPreviewNote(note)}
                             className={cn(
-                              "group relative block w-full h-[320px] cursor-pointer rounded-xl border border-theme bg-theme-card p-4 text-theme-primary shadow-xs transition-all hover:border-[#5B58E6] flex flex-col justify-between overflow-hidden",
-                              note.is_pinned ? "ring-2 ring-[#5B58E6]/40" : ""
+                              "group relative block w-full h-[320px] cursor-pointer rounded-2xl border border-theme bg-theme-card p-4 text-theme-primary shadow-xs transition-all hover:border-[#125CB9] flex flex-col justify-between overflow-hidden",
+                              note.is_pinned ? "ring-2 ring-[#125CB9]/40" : ""
                             )}
                           >
                             <div className="flex flex-col h-full justify-between">
@@ -549,9 +549,9 @@ export const LittleNotesView: React.FC = () => {
                                       e.stopPropagation();
                                       handleTogglePin(note);
                                     }}
-                                    className={`p-1 rounded transition-colors ${
+                                    className={`p-1 rounded-full transition-colors ${
                                       note.is_pinned
-                                        ? 'text-[#5B58E6] bg-theme-input'
+                                        ? 'text-[#125CB9] bg-theme-input'
                                         : 'text-theme-muted hover:text-theme-primary opacity-0 group-hover:opacity-100'
                                     }`}
                                     title={note.is_pinned ? 'Unpin note' : 'Pin note'}
@@ -564,7 +564,7 @@ export const LittleNotesView: React.FC = () => {
                                       e.stopPropagation();
                                       handleDeleteNote(note);
                                     }}
-                                    className="p-1 text-theme-muted hover:text-[#F43F5E] rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                                    className="p-1 text-theme-muted hover:text-[#F43F5E] rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                                     title="Delete note"
                                   >
                                     <Trash2 className="h-3 w-3" />
@@ -575,7 +575,7 @@ export const LittleNotesView: React.FC = () => {
                               {/* Visual Display */}
                               <div className="relative mb-2 h-36 w-full shrink-0">
                                 {note.note_type === 'DRAWING' && note.media_url ? (
-                                  <div className="relative h-full w-full overflow-hidden rounded-lg border border-theme bg-theme-input p-2 flex items-center justify-center">
+                                  <div className="relative h-full w-full overflow-hidden rounded-xl border border-theme bg-theme-input p-2 flex items-center justify-center">
                                     <img
                                       src={note.media_url}
                                       alt="Doodle"
@@ -583,7 +583,7 @@ export const LittleNotesView: React.FC = () => {
                                     />
                                   </div>
                                 ) : note.note_type === 'PHOTO' && note.media_url ? (
-                                  <div className="relative h-full w-full overflow-hidden rounded-lg border border-theme bg-theme-input">
+                                  <div className="relative h-full w-full overflow-hidden rounded-xl border border-theme bg-theme-input">
                                     <img
                                       src={note.media_url}
                                       alt="Photo"
@@ -592,12 +592,12 @@ export const LittleNotesView: React.FC = () => {
                                   </div>
                                 ) : note.note_type === 'VOICE' && note.media_url ? (
                                   <div className="relative h-full w-full flex items-center justify-center">
-                                    <div className="w-full rounded-lg border border-theme bg-theme-input p-3">
+                                    <div className="w-full rounded-xl border border-theme bg-theme-input p-3">
                                       <WaveformPlayer audioUrl={note.media_url} />
                                     </div>
                                   </div>
                                 ) : (
-                                  <div className="relative h-full w-full overflow-hidden rounded-lg border border-theme bg-theme-input p-3 flex items-center">
+                                  <div className="relative h-full w-full overflow-hidden rounded-xl border border-theme bg-theme-input p-3 flex items-center">
                                     <p className="text-xs text-theme-primary whitespace-pre-wrap leading-relaxed line-clamp-4">
                                       {note.content}
                                     </p>
@@ -631,7 +631,7 @@ export const LittleNotesView: React.FC = () => {
       ───────────────────────────────────────────────────────────── */}
       {previewNote && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-[3px]">
-          <div className="w-full max-w-md rounded-xl border border-theme bg-theme-card p-5 shadow-xl animate-in zoom-in-95 duration-150 space-y-3.5 max-h-[85vh] overflow-y-auto">
+          <div className="w-full max-w-md rounded-2xl border border-theme bg-theme-card p-5 shadow-2xl animate-in zoom-in-95 duration-150 space-y-3.5 max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-2.5 border-b border-theme">
               <div className="flex items-center space-x-2">
                 <Avatar src={previewNote.author.avatar_url} name={previewNote.author.name} size="xs" />
@@ -646,7 +646,7 @@ export const LittleNotesView: React.FC = () => {
               </div>
               <button
                 onClick={() => setPreviewNote(null)}
-                className="p-1 rounded text-theme-muted hover:text-theme-primary"
+                className="p-1 rounded-full text-theme-muted hover:text-theme-primary"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -654,7 +654,7 @@ export const LittleNotesView: React.FC = () => {
 
             {/* Media Zoom */}
             {previewNote.note_type === 'DRAWING' && previewNote.media_url && (
-              <div className="rounded-lg border border-theme bg-theme-input p-3">
+              <div className="rounded-xl border border-theme bg-theme-input p-3">
                 <img
                   src={previewNote.media_url}
                   alt="Doodle"
@@ -664,7 +664,7 @@ export const LittleNotesView: React.FC = () => {
             )}
 
             {previewNote.note_type === 'PHOTO' && previewNote.media_url && (
-              <div className="rounded-lg border border-theme bg-theme-input overflow-hidden">
+              <div className="rounded-xl border border-theme bg-theme-input overflow-hidden">
                 <img
                   src={previewNote.media_url}
                   alt="Photo"
@@ -674,14 +674,13 @@ export const LittleNotesView: React.FC = () => {
             )}
 
             {previewNote.note_type === 'VOICE' && previewNote.media_url && (
-              <div className="rounded-lg border border-theme bg-theme-input p-3">
+              <div className="rounded-xl border border-theme bg-theme-input p-3">
                 <WaveformPlayer audioUrl={previewNote.media_url} />
               </div>
             )}
 
-            {/* Full Content */}
             {previewNote.content && (
-              <div className="p-3 bg-theme-input rounded-lg border border-theme">
+              <div className="p-3 bg-theme-input rounded-xl border border-theme">
                 <p className="text-xs sm:text-sm text-theme-primary whitespace-pre-wrap leading-relaxed">
                   {previewNote.content}
                 </p>
@@ -691,7 +690,7 @@ export const LittleNotesView: React.FC = () => {
             <div className="flex justify-end pt-1">
               <button
                 onClick={() => setPreviewNote(null)}
-                className="px-4 py-1.5 rounded-lg bg-[#5B58E6] text-white text-xs font-medium hover:bg-[#4A46DC] transition-colors shadow-xs"
+                className="px-4 py-1.5 rounded-full bg-[#125CB9] text-white text-xs font-medium hover:bg-[#0E4B99] transition-colors shadow-xs"
               >
                 Close
               </button>
@@ -705,25 +704,25 @@ export const LittleNotesView: React.FC = () => {
       ───────────────────────────────────────────────────────────── */}
       {showCreateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-[3px] overflow-y-auto">
-          <div className="w-full max-w-lg rounded-xl border border-theme bg-theme-card p-5 shadow-xl animate-in zoom-in-95 duration-150 space-y-4">
+          <div className="w-full max-w-lg rounded-2xl border border-theme bg-theme-card p-5 shadow-2xl animate-in zoom-in-95 duration-150 space-y-4">
             {/* Modal Header */}
             <div className="flex items-center justify-between pb-2.5 border-b border-theme">
               <div className="flex items-center space-x-2">
-                <span className="flex h-6 w-6 items-center justify-center rounded-md bg-[#5B58E6]/10 text-[#5B58E6]">
+                <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-[#125CB9]/10 text-[#125CB9]">
                   <Heart className="h-3.5 w-3.5 fill-current" />
                 </span>
                 <h3 className="font-serif text-base font-bold text-theme-primary">Leave a Little Note</h3>
               </div>
               <button
                 onClick={() => setShowCreateModal(false)}
-                className="p-1 text-theme-muted hover:text-theme-primary rounded"
+                className="p-1 text-theme-muted hover:text-theme-primary rounded-full"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
 
             {/* Note Type Selector Tabs */}
-            <div className="grid grid-cols-4 gap-1 border border-theme rounded-lg p-1 bg-theme-input">
+            <div className="grid grid-cols-4 gap-1 border border-theme rounded-xl p-1 bg-theme-input">
               {[
                 { id: 'TEXT', label: 'Text', icon: FileText },
                 { id: 'PHOTO', label: 'Photo', icon: Camera },
@@ -740,7 +739,7 @@ export const LittleNotesView: React.FC = () => {
                       setNoteType(tab.id as any);
                       if (tab.id === 'TEXT') setMediaUrl('');
                     }}
-                    className={`flex items-center justify-center space-x-1.5 py-1.5 rounded-md text-xs font-medium transition-all ${
+                    className={`flex items-center justify-center space-x-1.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
                       isActive
                         ? 'bg-theme-card text-theme-primary font-semibold shadow-xs'
                         : 'text-theme-secondary hover:text-theme-primary'
@@ -759,8 +758,8 @@ export const LittleNotesView: React.FC = () => {
               {noteType === 'PHOTO' && (
                 <div className="space-y-2">
                   <label className="block text-xs font-medium text-theme-secondary">Upload Photo</label>
-                  <label className="cursor-pointer flex items-center justify-center space-x-2 rounded-lg border border-dashed border-theme bg-theme-input px-4 py-2.5 text-xs font-medium text-theme-primary hover:border-[#5B58E6] transition-colors">
-                    <Camera className="h-4 w-4 text-[#5B58E6]" />
+                  <label className="cursor-pointer flex items-center justify-center space-x-2 rounded-xl border border-dashed border-theme bg-theme-input px-4 py-2.5 text-xs font-medium text-theme-primary hover:border-[#125CB9] transition-colors">
+                    <Camera className="h-4 w-4 text-[#125CB9]" />
                     <span>Choose Image</span>
                     <input
                       type="file"
@@ -770,7 +769,7 @@ export const LittleNotesView: React.FC = () => {
                     />
                   </label>
                   {mediaUrl && (
-                    <div className="rounded-lg border border-theme overflow-hidden max-h-44 mt-2">
+                    <div className="rounded-xl border border-theme overflow-hidden max-h-44 mt-2">
                       <img src={mediaUrl} alt="Preview" className="w-full h-full object-cover" />
                     </div>
                   )}
@@ -779,7 +778,7 @@ export const LittleNotesView: React.FC = () => {
 
               {/* Voice Note Option */}
               {noteType === 'VOICE' && (
-                <div className="space-y-2 text-center p-3 rounded-lg border border-theme bg-theme-input">
+                <div className="space-y-2 text-center p-3 rounded-xl border border-theme bg-theme-input">
                   <span className="text-xs text-theme-secondary block mb-1 font-medium">Record voice memo:</span>
                   <div className="flex justify-center">
                     <VoiceRecorder onSendVoice={(url) => setMediaUrl(url)} />
@@ -815,7 +814,7 @@ export const LittleNotesView: React.FC = () => {
                   }
                   rows={2}
                   required={noteType === 'TEXT'}
-                  className="w-full rounded-lg border border-theme bg-theme-input p-2.5 text-xs sm:text-sm text-theme-primary placeholder-theme-muted focus:border-[#5B58E6] focus:bg-theme-card focus:outline-none"
+                  className="w-full rounded-xl border border-theme bg-theme-input p-3 text-xs sm:text-sm text-theme-primary placeholder-theme-muted focus:border-[#125CB9] focus:bg-theme-card focus:outline-none"
                 />
               </div>
 
@@ -825,7 +824,7 @@ export const LittleNotesView: React.FC = () => {
                   type="checkbox"
                   checked={isPinned}
                   onChange={(e) => setIsPinned(e.target.checked)}
-                  className="rounded border-theme text-[#5B58E6] focus:ring-[#5B58E6]"
+                  className="rounded border-theme text-[#125CB9] focus:ring-[#125CB9]"
                 />
                 <span>Pin this note to the top</span>
               </label>
@@ -835,7 +834,7 @@ export const LittleNotesView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="px-3 py-1.5 rounded-lg border border-theme text-xs font-medium text-theme-secondary hover:bg-theme-input"
+                  className="px-3.5 py-1.5 rounded-full border border-theme text-xs font-medium text-theme-secondary hover:bg-theme-input"
                 >
                   Cancel
                 </button>
@@ -846,7 +845,7 @@ export const LittleNotesView: React.FC = () => {
                     (noteType === 'TEXT' && !textContent.trim()) ||
                     (noteType === 'DRAWING' && !mediaUrl)
                   }
-                  className="px-4 py-1.5 rounded-lg bg-[#5B58E6] text-white hover:bg-[#4A46DC] text-xs font-medium shadow-xs disabled:opacity-40 transition-colors"
+                  className="px-4 py-1.5 rounded-full bg-[#125CB9] text-white hover:bg-[#0E4B99] text-xs font-medium shadow-xs disabled:opacity-40 transition-colors"
                 >
                   {isSubmitting ? 'Posting...' : 'Post Little Note'}
                 </button>

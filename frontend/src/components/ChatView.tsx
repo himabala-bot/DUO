@@ -455,7 +455,7 @@ export const ChatView: React.FC = () => {
   return (
     <div className="flex-1 w-full h-full flex flex-col items-center justify-center p-2 sm:p-4 md:p-6 min-h-0">
       {/* Centered Conversation Container (~840–880px) */}
-      <div className="w-full max-w-3xl xl:max-w-4xl h-full flex flex-col overflow-hidden rounded-xl border border-theme bg-theme-card shadow-sm transition-colors">
+      <div className="w-full max-w-3xl xl:max-w-4xl h-full flex flex-col overflow-hidden rounded-2xl border border-theme bg-theme-card shadow-sm transition-colors">
         {/* Chat Room Subheader */}
         <div className="flex items-center justify-between border-b border-theme bg-theme-page px-4 py-2.5 shrink-0">
           <div className="flex items-center space-x-2.5">
@@ -467,7 +467,7 @@ export const ChatView: React.FC = () => {
                 </span>
                 <span
                   className={`h-2 w-2 rounded-full ${
-                    isPartnerTyping ? 'bg-[#5B58E6] animate-pulse' : 'bg-[#00D26A]'
+                    isPartnerTyping ? 'bg-[#125CB9] animate-pulse' : 'bg-[#00D26A]'
                   }`}
                 />
               </div>
@@ -478,7 +478,7 @@ export const ChatView: React.FC = () => {
           </div>
 
           <div className="flex items-center space-x-2">
-            <span className="text-[10px] font-mono text-[#00D26A] flex items-center gap-1.5 px-2 py-0.5 rounded bg-[#00D26A]/10 border border-[#00D26A]/20">
+            <span className="text-[10px] font-mono text-[#00D26A] flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#00D26A]/10 border border-[#00D26A]/20">
               <span className="h-1.5 w-1.5 rounded-full bg-[#00D26A]" />
               live
             </span>
@@ -486,21 +486,21 @@ export const ChatView: React.FC = () => {
         </div>
 
         {/* Message Stream */}
-        <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3.5 bg-theme-page">
+        <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-2.5 bg-theme-page">
           {isLoading ? (
             <div className="flex h-full items-center justify-center text-xs font-mono text-theme-muted">
               Loading messages...
             </div>
           ) : messages.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center text-center p-6 space-y-2">
-              <Heart className="h-6 w-6 text-[#5B58E6] mb-1" />
+              <Heart className="h-6 w-6 text-[#125CB9] mb-1" />
               <span className="font-serif text-base text-theme-primary font-bold">Your private conversation</span>
               <p className="max-w-xs text-xs text-theme-secondary leading-relaxed">
                 Send a sweet note, photo, or voice memo to {partner?.name || 'your partner'}.
               </p>
             </div>
           ) : (
-            messages.map((msg) => {
+            messages.map((msg, idx) => {
               const isSwiping = swipingMessageId === msg.id;
               const isMenuOpen = activeReactionMenu === msg.id;
               const reactionEntries = Object.entries(msg.reactions || {});
@@ -517,12 +517,26 @@ export const ChatView: React.FC = () => {
                 }
               }
 
+              // Timestamp logic: only show timestamp if difference from NEXT consecutive message by the same sender is > 1 minute, or if this is the last message in a cluster
+              const nextMsg = messages[idx + 1];
+              let showTimestamp = true;
+              if (nextMsg && nextMsg.is_me === msg.is_me) {
+                const currTime = new Date(msg.created_at || '').getTime();
+                const nextTime = new Date(nextMsg.created_at || '').getTime();
+                if (!isNaN(currTime) && !isNaN(nextTime)) {
+                  const diffSec = Math.abs(nextTime - currTime) / 1000;
+                  if (diffSec <= 60) {
+                    showTimestamp = false;
+                  }
+                }
+              }
+
               return (
                 <div
                   key={msg.id}
                   className={`group relative flex flex-col ${
                     msg.is_me ? 'items-end' : 'items-start'
-                  }`}
+                  } ${showTimestamp ? 'mb-2' : 'mb-0.5'}`}
                 >
                   {/* Replied Message Header */}
                   {msg.reply_to && (
@@ -539,17 +553,17 @@ export const ChatView: React.FC = () => {
                     </div>
                   )}
 
-                  {/* Bubble + Action Container */}
+                  {/* Bubble + Action Container (Actions face the center whitespace) */}
                   <div
-                    className={`flex items-center gap-1.5 max-w-[85%] sm:max-w-[75%] ${
+                    className={`flex items-center gap-2 max-w-[85%] sm:max-w-[75%] ${
                       msg.is_me ? 'flex-row-reverse' : 'flex-row'
                     }`}
                   >
-                    {/* Hover Reaction & Actions */}
-                    <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center space-x-0.5 shrink-0 bg-theme-card border border-theme rounded-md p-0.5 shadow-xs">
+                    {/* Hover Reaction & Actions (Positioned on the whitespace side in the center) */}
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 flex items-center space-x-1 shrink-0 bg-theme-card/95 backdrop-blur-xs border border-theme rounded-full px-2 py-1 shadow-sm">
                       <button
                         onClick={() => setActiveReactionMenu(isMenuOpen ? null : msg.id)}
-                        className="rounded p-1 text-theme-muted hover:bg-theme-input hover:text-theme-primary transition-colors"
+                        className="rounded-full p-1 text-theme-muted hover:bg-theme-input hover:text-theme-primary transition-colors"
                         title="Add reaction"
                       >
                         <Smile className="h-3.5 w-3.5" />
@@ -559,21 +573,21 @@ export const ChatView: React.FC = () => {
                           setReplyingTo(msg);
                           textareaRef.current?.focus();
                         }}
-                        className="rounded p-1 text-theme-muted hover:bg-theme-input hover:text-theme-primary transition-colors"
+                        className="rounded-full p-1 text-theme-muted hover:bg-theme-input hover:text-theme-primary transition-colors"
                         title="Reply"
                       >
                         <Reply className="h-3.5 w-3.5" />
                       </button>
                       <button
                         onClick={() => handleDeleteMessage(msg)}
-                        className="rounded p-1 text-theme-muted hover:bg-[#F43F5E]/15 hover:text-[#F43F5E] transition-colors"
+                        className="rounded-full p-1 text-theme-muted hover:bg-[#F43F5E]/15 hover:text-[#F43F5E] transition-colors"
                         title={msg.is_me ? 'Unsend' : 'Delete'}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     </div>
 
-                    {/* The Message Bubble */}
+                    {/* The Message Bubble with Soft Rounded Curves */}
                     <div
                       onClick={() => handleMessageTap(msg)}
                       onDoubleClick={() => handleToggleReaction(msg, 'heart')}
@@ -584,10 +598,10 @@ export const ChatView: React.FC = () => {
                         transform: isSwiping ? `translateX(${swipeOffset}px)` : 'none',
                         transition: isSwiping ? 'none' : 'transform 0.15s ease',
                       }}
-                      className={`relative select-none cursor-pointer rounded-lg px-3.5 py-2 text-xs sm:text-sm leading-relaxed transition-all shadow-xs ${
+                      className={`relative select-none cursor-pointer px-4 py-2.5 text-xs sm:text-sm leading-relaxed transition-all shadow-xs ${
                         msg.is_me
-                          ? 'bg-[#5B58E6] text-white rounded-tr-xs'
-                          : 'bg-theme-card text-theme-primary border border-theme rounded-tl-xs'
+                          ? 'bg-[#125CB9] text-white rounded-2xl rounded-tr-md'
+                          : 'bg-theme-card text-theme-primary border border-theme rounded-2xl rounded-tl-md'
                       }`}
                     >
                       {voiceData ? (
@@ -603,9 +617,9 @@ export const ChatView: React.FC = () => {
                       {/* Inline Reactions Pill */}
                       {reactionEntries.length > 0 && (
                         <div
-                          className={`absolute -bottom-2 ${
-                            msg.is_me ? 'right-2' : 'left-2'
-                          } flex items-center space-x-1 rounded-full border border-theme bg-theme-card px-1.5 py-0.5 shadow-xs`}
+                          className={`absolute -bottom-2.5 ${
+                            msg.is_me ? 'right-3' : 'left-3'
+                          } flex items-center space-x-1 rounded-full border border-theme bg-theme-card px-2 py-0.5 shadow-sm`}
                         >
                           {reactionEntries.map(([userId, reactionKey]) => (
                             <span
@@ -613,7 +627,7 @@ export const ChatView: React.FC = () => {
                               onClick={(e) => {
                                 e.stopPropagation();
                                 if (profile && userId === profile.id) {
-                                  handleToggleReaction(msg, reactionKey);
+                                   handleToggleReaction(msg, reactionKey);
                                 }
                               }}
                               className="hover:scale-110 transition-transform flex items-center"
@@ -630,7 +644,7 @@ export const ChatView: React.FC = () => {
                   {/* Reaction Picker Popup */}
                   {isMenuOpen && (
                     <div
-                      className={`z-20 mt-1 flex items-center gap-1 rounded-lg border border-theme bg-theme-card p-1 shadow-lg ${
+                      className={`z-20 mt-1 flex items-center gap-1 rounded-full border border-theme bg-theme-card px-2 py-1 shadow-lg ${
                         msg.is_me ? 'mr-1' : 'ml-1'
                       }`}
                     >
@@ -640,7 +654,7 @@ export const ChatView: React.FC = () => {
                           <button
                             key={r.id}
                             onClick={() => handleToggleReaction(msg, r.id)}
-                            className={`rounded p-1 hover:bg-theme-input hover:scale-110 transition-transform ${r.color}`}
+                            className={`rounded-full p-1.5 hover:bg-theme-input hover:scale-110 transition-transform ${r.color}`}
                             title={r.id}
                           >
                             <Icon className={`h-3.5 w-3.5 ${r.fill}`} />
@@ -649,28 +663,30 @@ export const ChatView: React.FC = () => {
                       })}
                       <button
                         onClick={() => setActiveReactionMenu(null)}
-                        className="rounded p-1 text-theme-muted hover:text-theme-primary"
+                        className="rounded-full p-1 text-theme-muted hover:text-theme-primary"
                       >
                         <X className="h-3 w-3" />
                       </button>
                     </div>
                   )}
 
-                  {/* Timestamp & Read Status */}
-                  <div className="mt-0.5 flex items-center space-x-1 px-1 text-[10px] font-mono text-theme-muted">
-                    <span>
-                      {msg.created_at ? format(new Date(msg.created_at), 'hh:mm a') : 'Just now'}
-                    </span>
-                    {msg.is_me && (
-                      <span title={msg.read_at ? 'Read' : 'Sent'}>
-                        {msg.read_at ? (
-                          <CheckCheck className="h-3 w-3 text-[#5B58E6]" />
-                        ) : (
-                          <Check className="h-3 w-3 text-theme-muted" />
-                        )}
+                  {/* Timestamp & Read Status (Only visible when interval exceeds 1 minute or last in chain) */}
+                  {showTimestamp && (
+                    <div className="mt-1 flex items-center space-x-1.5 px-2 text-[10px] font-mono text-theme-muted">
+                      <span>
+                        {msg.created_at ? format(new Date(msg.created_at), 'hh:mm a') : 'Just now'}
                       </span>
-                    )}
-                  </div>
+                      {msg.is_me && (
+                        <span title={msg.read_at ? 'Read' : 'Sent'}>
+                          {msg.read_at ? (
+                            <CheckCheck className="h-3 w-3 text-[#125CB9]" />
+                          ) : (
+                            <Check className="h-3 w-3 text-theme-muted" />
+                          )}
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
               );
             })
@@ -680,10 +696,10 @@ export const ChatView: React.FC = () => {
           {isPartnerTyping && (
             <div className="flex items-start space-x-2 animate-in fade-in duration-150">
               <Avatar src={partner?.avatar_url} name={partner?.name} size="xs" />
-              <div className="flex items-center space-x-1.5 rounded-lg border border-theme bg-theme-card px-3 py-2 shadow-xs">
-                <span className="h-1.5 w-1.5 rounded-full bg-[#5B58E6] animate-bounce [animation-delay:0ms]" />
-                <span className="h-1.5 w-1.5 rounded-full bg-[#5B58E6] animate-bounce [animation-delay:150ms]" />
-                <span className="h-1.5 w-1.5 rounded-full bg-[#5B58E6] animate-bounce [animation-delay:300ms]" />
+              <div className="flex items-center space-x-1.5 rounded-2xl border border-theme bg-theme-card px-3.5 py-2.5 shadow-xs">
+                <span className="h-2 w-2 rounded-full bg-[#125CB9] animate-bounce [animation-delay:0ms]" />
+                <span className="h-2 w-2 rounded-full bg-[#125CB9] animate-bounce [animation-delay:150ms]" />
+                <span className="h-2 w-2 rounded-full bg-[#125CB9] animate-bounce [animation-delay:300ms]" />
               </div>
             </div>
           )}
@@ -693,9 +709,9 @@ export const ChatView: React.FC = () => {
 
         {/* Replying Banner */}
         {replyingTo && (
-          <div className="flex items-center justify-between border-t border-theme bg-[#5B58E6]/10 px-4 py-2 text-xs shrink-0">
+          <div className="flex items-center justify-between border-t border-theme bg-[#125CB9]/10 px-4 py-2 text-xs shrink-0">
             <div className="flex items-center space-x-2 truncate">
-              <Reply className="h-3.5 w-3.5 text-[#5B58E6] shrink-0" />
+              <Reply className="h-3.5 w-3.5 text-[#125CB9] shrink-0" />
               <span className="font-semibold text-theme-primary shrink-0">
                 Replying to {replyingTo.is_me ? 'yourself' : replyingTo.sender?.name || partner?.name}:
               </span>
@@ -703,7 +719,7 @@ export const ChatView: React.FC = () => {
             </div>
             <button
               onClick={() => setReplyingTo(null)}
-              className="p-1 text-theme-muted hover:text-theme-primary transition-colors rounded"
+              className="p-1 text-theme-muted hover:text-theme-primary transition-colors rounded-full"
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -724,14 +740,14 @@ export const ChatView: React.FC = () => {
               onKeyDown={handleKeyDown}
               placeholder={`Message ${partner?.name || 'your partner'}...`}
               rows={1}
-              className="flex-1 max-h-32 min-h-[38px] resize-none rounded-lg border border-theme bg-theme-input px-3 py-2 text-xs sm:text-sm text-theme-primary placeholder-theme-muted focus:border-[#5B58E6] focus:bg-theme-card focus:outline-none focus:ring-1 focus:ring-[#5B58E6] transition-all leading-normal"
+              className="flex-1 max-h-32 min-h-[40px] resize-none rounded-2xl border border-theme bg-theme-input px-4 py-2 text-xs sm:text-sm text-theme-primary placeholder-theme-muted focus:border-[#125CB9] focus:bg-theme-card focus:outline-none focus:ring-1 focus:ring-[#125CB9] transition-all leading-normal"
             />
 
             {/* Send Button */}
             <button
               type="submit"
               disabled={!inputText.trim() || isSending}
-              className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#5B58E6] text-white shadow-xs hover:bg-[#4A46DC] disabled:opacity-40 disabled:hover:bg-[#5B58E6] transition-all shrink-0"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-[#125CB9] text-white shadow-xs hover:bg-[#0E4B99] disabled:opacity-40 disabled:hover:bg-[#125CB9] transition-all shrink-0"
               title="Send Message"
             >
               <Send className="h-4 w-4" />

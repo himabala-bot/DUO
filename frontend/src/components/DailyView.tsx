@@ -187,18 +187,18 @@ export const DailyView: React.FC = () => {
             {/* Previous Answers / Archive Button */}
             <button
               onClick={() => setShowArchiveModal(true)}
-              className="flex items-center space-x-1.5 rounded-lg border border-theme bg-theme-card px-3 py-1.5 text-xs font-medium text-theme-primary hover:bg-theme-card-hover transition-colors shadow-xs"
+              className="flex items-center space-x-1.5 rounded-full border border-theme bg-theme-card px-3.5 py-1.5 text-xs font-medium text-theme-primary hover:bg-theme-card-hover transition-colors shadow-xs"
             >
-              <BookOpen className="h-3.5 w-3.5 text-[#5B58E6]" />
+              <BookOpen className="h-3.5 w-3.5 text-[#125CB9]" />
               <span>Past Answers</span>
             </button>
           </div>
         </div>
 
         {/* Partner Progress Overview Card */}
-        <div className="rounded-xl border border-theme bg-theme-card p-3.5 flex items-center justify-between shadow-xs">
+        <div className="rounded-2xl border border-theme bg-theme-card p-3.5 flex items-center justify-between shadow-xs">
           <div className="flex items-center space-x-3">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#5B58E6]/10 text-[#5B58E6]">
+            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#125CB9]/10 text-[#125CB9]">
               <Heart className="h-4 w-4 fill-current" />
             </span>
             <div>
@@ -214,7 +214,7 @@ export const DailyView: React.FC = () => {
           </div>
 
           <span
-            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-mono font-medium ${
+            className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-medium ${
               partnerStatus === 'SUBMITTED'
                 ? 'bg-[#00D26A]/10 border border-[#00D26A]/25 text-[#00D26A]'
                 : 'bg-theme-input border border-theme text-theme-muted'
@@ -245,7 +245,7 @@ export const DailyView: React.FC = () => {
             return (
               <div
                 key={q.id}
-                className="rounded-xl border border-theme bg-theme-card p-4 sm:p-5 shadow-xs transition-all"
+                className="rounded-2xl border border-theme bg-theme-card p-4 sm:p-5 shadow-xs transition-all"
               >
                 {/* Question Header & Status */}
                 <div className="flex items-start justify-between gap-3">
@@ -260,15 +260,15 @@ export const DailyView: React.FC = () => {
 
                   <div className="shrink-0">
                     {status === 'SUBMITTED' ? (
-                      <span className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[11px] font-mono font-medium border border-[#00D26A]/25 bg-[#00D26A]/10 text-[#00D26A]">
+                      <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-mono font-medium border border-[#00D26A]/25 bg-[#00D26A]/10 text-[#00D26A]">
                         <Check className="h-3 w-3" /> Shared
                       </span>
                     ) : status === 'DRAFT' ? (
-                      <span className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[11px] font-mono font-medium border border-[#FB923C]/25 bg-[#FB923C]/10 text-[#FB923C]">
+                      <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-mono font-medium border border-[#FB923C]/25 bg-[#FB923C]/10 text-[#FB923C]">
                         <Bookmark className="h-3 w-3" /> Draft
                       </span>
                     ) : (
-                      <span className="inline-flex items-center rounded bg-theme-input border border-theme px-2 py-0.5 text-[11px] font-mono text-theme-muted">
+                      <span className="inline-flex items-center rounded-full bg-theme-input border border-theme px-2.5 py-0.5 text-[11px] font-mono text-theme-muted">
                         Unwritten
                       </span>
                     )}
@@ -278,7 +278,7 @@ export const DailyView: React.FC = () => {
                 {/* Answer Input or Voice Preview */}
                 <div className="mt-3">
                   {isVoiceAns ? (
-                    <div className="rounded-lg border border-theme bg-theme-input p-3 flex items-center justify-between">
+                    <div className="rounded-xl border border-theme bg-theme-input p-3 flex items-center justify-between">
                       <div>
                         <span className="text-[10px] font-mono uppercase tracking-wider text-theme-muted block mb-1">
                           Your Voice Reflection:
@@ -288,7 +288,7 @@ export const DailyView: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setAnswers((prev) => ({ ...prev, [q.id]: '' }))}
-                        className="text-xs text-[#5B58E6] hover:underline font-mono"
+                        className="text-xs text-[#125CB9] hover:underline font-mono"
                       >
                         Change to text
                       </button>
@@ -299,7 +299,7 @@ export const DailyView: React.FC = () => {
                       onChange={(e) => handleAnswerChange(q.id, e.target.value)}
                       placeholder="Write your reflection..."
                       rows={3}
-                      className="w-full rounded-lg border border-theme bg-theme-input p-3 text-xs sm:text-sm text-theme-primary placeholder-theme-muted focus:border-[#5B58E6] focus:bg-theme-card focus:outline-none focus:ring-1 focus:ring-[#5B58E6] leading-relaxed transition-colors"
+                      className="w-full rounded-2xl border border-theme bg-theme-input p-3.5 text-xs sm:text-sm text-theme-primary placeholder-theme-muted focus:border-[#125CB9] focus:bg-theme-card focus:outline-none focus:ring-1 focus:ring-[#125CB9] leading-relaxed transition-colors"
                     />
                   )}
                 </div>
@@ -336,7 +336,7 @@ export const DailyView: React.FC = () => {
                       onClick={() => handleSaveQuestionDraft(q.id)}
                       disabled={actionState === 'saving' || actionState === 'submitting'}
                       title="Save Draft (Private)"
-                      className="flex items-center space-x-1.5 rounded-lg border border-theme bg-theme-input px-3 py-1.5 text-xs font-medium text-theme-secondary hover:bg-theme-card hover:text-theme-primary disabled:opacity-40 transition-colors"
+                      className="flex items-center space-x-1.5 rounded-full border border-theme bg-theme-input px-3.5 py-1.5 text-xs font-medium text-theme-secondary hover:bg-theme-card hover:text-theme-primary disabled:opacity-40 transition-colors"
                     >
                       <Bookmark className="h-3 w-3" />
                       <span>{actionState === 'saving' ? 'Saving...' : 'Draft'}</span>
@@ -347,7 +347,7 @@ export const DailyView: React.FC = () => {
                       onClick={() => handleSendQuestion(q.id)}
                       disabled={actionState === 'submitting' || actionState === 'saving'}
                       title="Send answer to partner"
-                      className="flex items-center space-x-1.5 rounded-lg bg-[#5B58E6] px-4 py-1.5 text-xs font-medium text-white hover:bg-[#4A46DC] disabled:opacity-40 transition-colors shadow-xs"
+                      className="flex items-center space-x-1.5 rounded-full bg-[#125CB9] px-4 py-1.5 text-xs font-medium text-white hover:bg-[#0E4B99] disabled:opacity-40 transition-colors shadow-xs"
                     >
                       <Send className="h-3 w-3" />
                       <span>{actionState === 'submitting' ? 'Sending...' : status === 'SUBMITTED' ? 'Update & Share' : 'Send'}</span>
@@ -357,8 +357,8 @@ export const DailyView: React.FC = () => {
 
                 {/* Partner's Submitted Response */}
                 {partnerStatus === 'SUBMITTED' && partnerAns ? (
-                  <div className="mt-3.5 rounded-lg border border-[#5B58E6]/20 bg-[#5B58E6]/5 p-3.5 space-y-1">
-                    <div className="flex items-center space-x-1.5 text-[11px] font-mono text-[#5B58E6] font-medium">
+                  <div className="mt-3.5 rounded-2xl border border-[#125CB9]/20 bg-[#125CB9]/5 p-3.5 space-y-1">
+                    <div className="flex items-center space-x-1.5 text-[11px] font-mono text-[#125CB9] font-medium">
                       <Heart className="h-3 w-3 fill-current" />
                       <span>{partner?.name}'s response:</span>
                     </div>

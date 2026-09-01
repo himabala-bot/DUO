@@ -158,15 +158,15 @@ export const ConnectionHub: React.FC = () => {
       <div className="w-full max-w-3xl space-y-5">
         {/* Active Connected Room Card */}
         {hasActiveDuo && partner ? (
-          <div className="rounded-xl border border-theme bg-theme-card p-5 sm:p-6 shadow-xs">
+          <div className="rounded-2xl border border-theme bg-theme-card p-5 sm:p-6 shadow-xs">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
-                <div className="inline-flex items-center space-x-1.5 rounded px-2 py-0.5 text-[11px] font-mono text-[#00D26A] bg-[#00D26A]/10 border border-[#00D26A]/25 mb-2">
+                <div className="inline-flex items-center space-x-1.5 rounded-full px-3 py-0.5 text-[11px] font-mono text-[#00D26A] bg-[#00D26A]/10 border border-[#00D26A]/25 mb-2">
                   <span className="h-1.5 w-1.5 rounded-full bg-[#00D26A]" />
                   <span>Room Linked & Active</span>
                 </div>
                 <h2 className="font-serif text-xl sm:text-2xl font-bold text-theme-primary">
-                  {profile?.name} <span className="text-[#5B58E6] font-normal">&amp;</span> {partner.name}
+                  {profile?.name} <span className="text-[#125CB9] font-normal">&amp;</span> {partner.name}
                 </h2>
                 <p className="mt-1 text-xs text-theme-secondary max-w-lg leading-relaxed">
                   Your private world is active. All chats, love notes, drawings, and daily reflections are shared only between the two of you.
@@ -175,7 +175,7 @@ export const ConnectionHub: React.FC = () => {
 
               <button
                 onClick={handleLeaveDuo}
-                className="rounded-lg border border-theme bg-theme-input px-3.5 py-1.5 text-xs text-theme-secondary hover:border-[#F43F5E] hover:text-[#F43F5E] transition-colors shrink-0"
+                className="rounded-full border border-theme bg-theme-input px-4 py-1.5 text-xs text-theme-secondary hover:border-[#F43F5E] hover:text-[#F43F5E] transition-colors shrink-0"
               >
                 Disconnect room
               </button>
@@ -186,7 +186,7 @@ export const ConnectionHub: React.FC = () => {
         {/* Alert Messages */}
         {message && (
           <div
-            className={`flex items-center space-x-2 rounded-lg border p-3 text-xs ${
+            className={`flex items-center space-x-2 rounded-2xl border p-3.5 text-xs ${
               message.type === 'success'
                 ? 'border-[#00D26A]/25 bg-[#00D26A]/10 text-[#00D26A]'
                 : 'border-[#F43F5E]/25 bg-[#F43F5E]/10 text-[#F43F5E]'
@@ -203,9 +203,9 @@ export const ConnectionHub: React.FC = () => {
 
         {/* Incoming Requests Banner */}
         {incomingRequests.length > 0 && (
-          <div className="rounded-xl border border-[#5B58E6]/25 bg-[#5B58E6]/10 p-4 shadow-xs">
+          <div className="rounded-2xl border border-[#125CB9]/25 bg-[#125CB9]/10 p-4 sm:p-5 shadow-xs">
             <div className="flex items-center space-x-2 mb-1">
-              <Heart className="h-3.5 w-3.5 text-[#5B58E6] fill-current" />
+              <Heart className="h-3.5 w-3.5 text-[#125CB9] fill-current" />
               <h3 className="font-serif text-sm font-bold text-theme-primary">
                 Incoming Pairing Request
               </h3>
@@ -218,7 +218,7 @@ export const ConnectionHub: React.FC = () => {
               {incomingRequests.map((req) => (
                 <div
                   key={req.id}
-                  className="flex flex-col sm:flex-row items-start sm:items-center justify-between rounded-lg border border-theme bg-theme-card p-3 gap-2.5 shadow-xs"
+                  className="flex flex-col sm:flex-row items-start sm:items-center justify-between rounded-xl border border-theme bg-theme-card p-3.5 gap-2.5 shadow-xs"
                 >
                   <div>
                     <h4 className="text-xs font-bold text-theme-primary">{req.sender.name}</h4>
@@ -229,13 +229,13 @@ export const ConnectionHub: React.FC = () => {
                     <button
                       onClick={() => handleAccept(req.id)}
                       disabled={isSubmitting}
-                      className="rounded-lg bg-[#5B58E6] px-3.5 py-1.5 text-xs font-medium text-white hover:bg-[#4A46DC] transition-colors disabled:opacity-50 shadow-xs"
+                      className="rounded-full bg-[#125CB9] px-4 py-1.5 text-xs font-medium text-white hover:bg-[#0E4B99] transition-colors disabled:opacity-50 shadow-xs"
                     >
                       Accept & Link
                     </button>
                     <button
                       onClick={() => handleDecline(req.id)}
-                      className="rounded-lg border border-theme px-3 py-1.5 text-xs text-theme-muted hover:text-theme-primary"
+                      className="rounded-full border border-theme px-3.5 py-1.5 text-xs text-theme-muted hover:text-theme-primary"
                     >
                       Decline
                     </button>
@@ -249,7 +249,7 @@ export const ConnectionHub: React.FC = () => {
         {/* Pairing Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Card 1: Your Key */}
-          <div className="rounded-xl border border-theme bg-theme-card p-4 sm:p-5 shadow-xs flex flex-col justify-between">
+          <div className="rounded-2xl border border-theme bg-theme-card p-5 shadow-xs flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-mono uppercase tracking-wider text-theme-muted font-medium">
@@ -258,7 +258,7 @@ export const ConnectionHub: React.FC = () => {
                 <button
                   onClick={handleRegenerateCode}
                   title="Regenerate key"
-                  className="text-theme-muted hover:text-theme-primary p-1 transition-colors rounded hover:bg-theme-input"
+                  className="text-theme-muted hover:text-theme-primary p-1.5 transition-colors rounded-full hover:bg-theme-input"
                 >
                   <RefreshCw className="h-3.5 w-3.5" />
                 </button>
@@ -271,7 +271,7 @@ export const ConnectionHub: React.FC = () => {
                 Send this secret code to your partner so they can link directly to your space.
               </p>
 
-              <div className="mt-4 rounded-lg border border-theme bg-theme-input p-3 text-center">
+              <div className="mt-4 rounded-xl border border-theme bg-theme-input p-3 text-center">
                 <span className="font-mono text-xl sm:text-2xl font-bold tracking-widest text-theme-primary">
                   {profile?.duo_code || 'DUO-......'}
                 </span>
@@ -281,7 +281,7 @@ export const ConnectionHub: React.FC = () => {
             <div className="mt-4">
               <button
                 onClick={handleCopyCode}
-                className="w-full flex items-center justify-center space-x-1.5 rounded-lg border border-theme bg-theme-input py-2 text-xs font-medium text-theme-primary hover:bg-theme-card transition-colors"
+                className="w-full flex items-center justify-center space-x-1.5 rounded-full border border-theme bg-theme-input py-2 text-xs font-medium text-theme-primary hover:bg-theme-card transition-colors"
               >
                 {copied ? <Check className="h-3.5 w-3.5 text-[#00D26A]" /> : <Copy className="h-3.5 w-3.5 text-theme-muted" />}
                 <span>{copied ? 'Copied to clipboard' : 'Copy Secret Key'}</span>
@@ -290,7 +290,7 @@ export const ConnectionHub: React.FC = () => {
           </div>
 
           {/* Card 2: Connect with Partner Key */}
-          <div className="rounded-xl border border-theme bg-theme-card p-4 sm:p-5 shadow-xs flex flex-col justify-between">
+          <div className="rounded-2xl border border-theme bg-theme-card p-5 shadow-xs flex flex-col justify-between">
             <div>
               <span className="text-[10px] font-mono uppercase tracking-wider text-theme-muted font-medium">
                 Enter Partner's Key
@@ -312,14 +312,14 @@ export const ConnectionHub: React.FC = () => {
                     placeholder="e.g. DUO-7K4P2M"
                     maxLength={15}
                     disabled={hasActiveDuo}
-                    className="w-full rounded-lg border border-theme bg-theme-input px-3 py-2 text-center font-mono text-base font-bold tracking-widest text-theme-primary uppercase placeholder-theme-muted focus:border-[#5B58E6] focus:bg-theme-card focus:outline-none disabled:opacity-40"
+                    className="w-full rounded-xl border border-theme bg-theme-input px-3 py-2 text-center font-mono text-base font-bold tracking-widest text-theme-primary uppercase placeholder-theme-muted focus:border-[#125CB9] focus:bg-theme-card focus:outline-none disabled:opacity-40"
                   />
                 </div>
 
                 <button
                   type="submit"
                   disabled={isSubmitting || !partnerCode.trim() || hasActiveDuo}
-                  className="flex w-full items-center justify-center space-x-1.5 rounded-lg bg-[#5B58E6] py-2 text-xs font-medium text-white hover:bg-[#4A46DC] transition-colors disabled:opacity-40 shadow-xs"
+                  className="flex w-full items-center justify-center space-x-1.5 rounded-full bg-[#125CB9] py-2.5 text-xs font-medium text-white hover:bg-[#0E4B99] transition-colors disabled:opacity-40 shadow-xs"
                 >
                   <span>{isSubmitting ? 'Linking...' : 'Send Pairing Request'}</span>
                   <ArrowRight className="h-3.5 w-3.5" />
@@ -331,7 +331,7 @@ export const ConnectionHub: React.FC = () => {
               <div className="mt-4 pt-3 border-t border-theme">
                 <span className="text-[10px] font-mono text-theme-muted">Sent Request:</span>
                 {outgoingRequests.map((req) => (
-                  <div key={req.id} className="mt-1.5 flex items-center justify-between rounded-lg bg-theme-input border border-theme px-3 py-1.5 text-xs">
+                  <div key={req.id} className="mt-1.5 flex items-center justify-between rounded-xl bg-theme-input border border-theme px-3 py-1.5 text-xs">
                     <span className="text-theme-secondary">Sent to <strong className="text-theme-primary">{req.receiver.name}</strong></span>
                     <button
                       onClick={() => handleCancel(req.id)}

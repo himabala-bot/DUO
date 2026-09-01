@@ -55,7 +55,7 @@ export const NotificationPopout: React.FC<NotificationPopoutProps> = ({
       case 'MESSAGE':
         return {
           icon: MessageSquare,
-          bg: 'bg-[#5B58E6]',
+          bg: 'bg-[#125CB9]',
           label: 'New Message',
         };
       case 'DRAWING':
@@ -74,7 +74,7 @@ export const NotificationPopout: React.FC<NotificationPopoutProps> = ({
       case 'CONNECTION_ACCEPTED':
         return {
           icon: KeyRound,
-          bg: 'bg-[#5B58E6]',
+          bg: 'bg-[#125CB9]',
           label: 'Room Update',
         };
       default:
@@ -94,8 +94,8 @@ export const NotificationPopout: React.FC<NotificationPopoutProps> = ({
       onClick={handleClick}
       className="fixed top-14 right-4 sm:top-16 sm:right-6 lg:top-5 lg:left-72 z-50 cursor-pointer animate-in fade-in zoom-in-95 slide-in-from-top-2 duration-150 select-none"
     >
-      <div className="flex items-center space-x-2.5 rounded-lg border border-theme bg-theme-card px-3 py-2 shadow-md hover:border-[#5B58E6] transition-all">
-        <div className={`flex h-6 w-6 items-center justify-center rounded-md ${iconInfo.bg} text-white shadow-xs shrink-0`}>
+      <div className="flex items-center space-x-2.5 rounded-full border border-theme bg-theme-card px-3.5 py-2 shadow-lg hover:border-[#125CB9] transition-all">
+        <div className={`flex h-6 w-6 items-center justify-center rounded-full ${iconInfo.bg} text-white shadow-xs shrink-0`}>
           <Icon className="h-3.5 w-3.5" />
         </div>
 
@@ -114,7 +114,7 @@ export const NotificationPopout: React.FC<NotificationPopoutProps> = ({
             markNotificationAsRead(visibleNotif.id);
             setVisibleNotif(null);
           }}
-          className="text-theme-muted hover:text-theme-primary p-0.5 rounded"
+          className="text-theme-muted hover:text-theme-primary p-1 rounded-full"
         >
           <X className="h-3 w-3" />
         </button>

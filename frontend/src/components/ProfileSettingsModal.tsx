@@ -264,25 +264,25 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3 sm:p-6 backdrop-blur-[4px] overflow-y-auto">
-      <div className="relative w-full max-w-2xl rounded-xl border border-theme bg-theme-card shadow-2xl overflow-hidden flex flex-col max-h-[88vh] transition-colors">
+      <div className="relative w-full max-w-2xl rounded-2xl border border-theme bg-theme-card shadow-2xl overflow-hidden flex flex-col max-h-[88vh] transition-colors">
         {/* Modal Top Header */}
         <div className="flex items-center justify-between border-b border-theme bg-theme-page px-5 py-3 shrink-0">
           <div className="flex items-center space-x-2">
-            <span className="flex h-6 w-6 items-center justify-center rounded-md bg-[#5B58E6] text-white">
+            <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-[#125CB9] text-white">
               <Heart className="h-3.5 w-3.5 fill-current" />
             </span>
             <h2 className="font-serif text-base sm:text-lg font-bold text-theme-primary">Room Settings</h2>
           </div>
           <button
             onClick={onClose}
-            className="rounded p-1 text-theme-secondary hover:text-theme-primary hover:bg-theme-card transition-colors"
+            className="rounded-full p-1.5 text-theme-secondary hover:text-theme-primary hover:bg-theme-card transition-colors"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
 
         {/* Section Navigation Tabs */}
-        <div className="flex border-b border-theme bg-theme-page px-4 sm:px-5 overflow-x-auto shrink-0 gap-1 scrollbar-none py-1.5">
+        <div className="flex border-b border-theme bg-theme-page px-4 sm:px-5 overflow-x-auto shrink-0 gap-1.5 scrollbar-none py-2">
           {[
             { id: 'profile', label: 'Profile', icon: User },
             { id: 'duo', label: 'Our Space', icon: Heart },
@@ -296,9 +296,9 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
               <button
                 key={sec.id}
                 onClick={() => setActiveSection(sec.id as any)}
-                className={`flex items-center space-x-1.5 py-1.5 px-3 text-xs font-medium rounded-lg transition-all whitespace-nowrap ${
+                className={`flex items-center space-x-1.5 py-1.5 px-3.5 text-xs font-medium rounded-full transition-all whitespace-nowrap ${
                   isActive
-                    ? 'bg-[#5B58E6] text-white font-semibold shadow-xs'
+                    ? 'bg-[#125CB9] text-white font-semibold shadow-xs'
                     : 'text-theme-secondary hover:bg-theme-card hover:text-theme-primary'
                 }`}
               >
@@ -314,7 +314,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
           {/* Action Message Banner */}
           {actionMessage && (
             <div
-              className={`flex items-center space-x-2 rounded-lg p-2.5 text-xs ${
+              className={`flex items-center space-x-2 rounded-xl p-3 text-xs ${
                 actionMessage.type === 'success' ? 'bg-[#00D26A]/10 text-[#00D26A] border border-[#00D26A]/25' : 'bg-[#F43F5E]/10 text-[#F43F5E] border border-[#F43F5E]/25'
               }`}
             >
@@ -327,13 +327,13 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
           {activeSection === 'profile' && (
             <div className="space-y-4">
               {/* Profile Card & Avatar */}
-              <div className="rounded-xl border border-theme bg-theme-input p-4 flex flex-col sm:flex-row items-center gap-4">
+              <div className="rounded-2xl border border-theme bg-theme-input p-4 flex flex-col sm:flex-row items-center gap-4">
                 <Avatar src={selectedAvatar} name={name} size="md" />
 
                 <div className="flex-1 text-center sm:text-left">
                   <h3 className="font-serif text-sm font-bold text-theme-primary">{profile?.name}</h3>
                   <p className="text-xs font-mono text-theme-muted">{profile?.email}</p>
-                  <div className="mt-1.5 inline-flex items-center space-x-1.5 rounded bg-theme-card border border-theme px-2.5 py-0.5 text-[10px] font-mono text-theme-secondary">
+                  <div className="mt-1.5 inline-flex items-center space-x-1.5 rounded-full bg-theme-card border border-theme px-3 py-0.5 text-[10px] font-mono text-theme-secondary">
                     <span className={`h-1.5 w-1.5 rounded-full ${hasActiveDuo ? 'bg-[#00D26A]' : 'bg-theme-muted'}`} />
                     <span>{hasActiveDuo ? `Paired with ${partner?.name || 'Partner'}` : 'Unconnected Room'}</span>
                   </div>
@@ -356,8 +356,8 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                       }}
                       className={`relative aspect-square rounded-full p-0.5 border-2 transition-all hover:scale-105 ${
                         selectedAvatar === avatarPath
-                          ? 'border-[#5B58E6] ring-2 ring-[#5B58E6]/40 shadow-xs scale-105'
-                          : 'border-theme bg-theme-input hover:border-[#5B58E6]'
+                          ? 'border-[#125CB9] ring-2 ring-[#125CB9]/40 shadow-xs scale-105'
+                          : 'border-theme bg-theme-input hover:border-[#125CB9]'
                       }`}
                     >
                       <img
@@ -379,7 +379,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Your name"
-                    className="w-full rounded-lg border border-theme bg-theme-input px-3 py-1.5 text-xs sm:text-sm text-theme-primary placeholder-theme-muted focus:border-[#5B58E6] focus:bg-theme-card focus:outline-none"
+                    className="w-full rounded-xl border border-theme bg-theme-input px-3.5 py-2 text-xs sm:text-sm text-theme-primary placeholder-theme-muted focus:border-[#125CB9] focus:bg-theme-card focus:outline-none"
                     required
                   />
                 </div>
@@ -391,7 +391,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                     value={customAvatarUrl}
                     onChange={(e) => setCustomAvatarUrl(e.target.value)}
                     placeholder="https://example.com/avatar.jpg"
-                    className="w-full rounded-lg border border-theme bg-theme-input px-3 py-1.5 text-xs text-theme-primary placeholder-theme-muted focus:border-[#5B58E6] focus:bg-theme-card focus:outline-none"
+                    className="w-full rounded-xl border border-theme bg-theme-input px-3.5 py-2 text-xs text-theme-primary placeholder-theme-muted focus:border-[#125CB9] focus:bg-theme-card focus:outline-none"
                   />
                 </div>
 
@@ -404,7 +404,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                   <button
                     type="submit"
                     disabled={isSavingProfile || !name.trim()}
-                    className="ml-auto flex items-center space-x-1.5 rounded-lg bg-[#5B58E6] px-4 py-1.5 text-xs font-medium text-white hover:bg-[#4A46DC] disabled:opacity-40 transition-colors shadow-xs"
+                    className="ml-auto flex items-center space-x-1.5 rounded-full bg-[#125CB9] px-4 py-2 text-xs font-medium text-white hover:bg-[#0E4B99] disabled:opacity-40 transition-colors shadow-xs"
                   >
                     <span>{isSavingProfile ? 'Saving...' : 'Save Profile'}</span>
                   </button>
@@ -418,7 +418,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
             <div className="space-y-4">
               {/* Partner Card */}
               {hasActiveDuo && partner ? (
-                <div className="rounded-xl border border-theme bg-theme-input p-4 space-y-3">
+                <div className="rounded-2xl border border-theme bg-theme-input p-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-mono uppercase tracking-wider text-theme-muted font-medium">Connected Partner</span>
                     <span className="text-[11px] font-mono text-[#00D26A] flex items-center gap-1">
@@ -437,13 +437,13 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 
                   {connectedDateFormatted && (
                     <div className="flex items-center space-x-1.5 text-[11px] font-mono text-theme-secondary pt-2 border-t border-theme">
-                      <Calendar className="h-3 w-3 text-[#5B58E6]" />
+                      <Calendar className="h-3 w-3 text-[#125CB9]" />
                       <span>Paired since {connectedDateFormatted}</span>
                     </div>
                   )}
                 </div>
               ) : (
-                <div className="rounded-xl border border-theme bg-theme-input p-5 text-center">
+                <div className="rounded-2xl border border-theme bg-theme-input p-5 text-center">
                   <p className="text-xs text-theme-secondary">
                     You are not currently paired in an active room.
                   </p>
@@ -453,7 +453,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                         onClose();
                         onNavigateTab('duo');
                       }}
-                      className="mt-2.5 inline-flex items-center space-x-1.5 rounded-lg bg-[#5B58E6] px-4 py-1.5 text-xs font-medium text-white hover:bg-[#4A46DC] transition-colors shadow-xs"
+                      className="mt-2.5 inline-flex items-center space-x-1.5 rounded-full bg-[#125CB9] px-4 py-2 text-xs font-medium text-white hover:bg-[#0E4B99] transition-colors shadow-xs"
                     >
                       <span>Pair Secret Keys</span>
                     </button>
@@ -462,19 +462,19 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
               )}
 
               {/* Your Duo Key Card */}
-              <div className="rounded-xl border border-theme bg-theme-card p-4 shadow-xs space-y-2.5">
+              <div className="rounded-2xl border border-theme bg-theme-card p-4 shadow-xs space-y-2.5">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-mono uppercase tracking-wider text-theme-muted font-medium">Your Secret Key</span>
                   <button
                     onClick={handleRegenerateCode}
                     title="Regenerate key"
-                    className="p-1 text-theme-muted hover:text-theme-primary rounded hover:bg-theme-input transition-colors"
+                    className="p-1.5 text-theme-muted hover:text-theme-primary rounded-full hover:bg-theme-input transition-colors"
                   >
                     <RefreshCw className="h-3 w-3" />
                   </button>
                 </div>
 
-                <div className="rounded-lg border border-theme bg-theme-input p-3 text-center">
+                <div className="rounded-xl border border-theme bg-theme-input p-3 text-center">
                   <span className="font-mono text-xl font-bold tracking-widest text-theme-primary">
                     {profile?.duo_code}
                   </span>
@@ -482,7 +482,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 
                 <button
                   onClick={handleCopyCode}
-                  className="w-full flex items-center justify-center space-x-1.5 rounded-lg border border-theme bg-theme-input py-2 text-xs font-medium text-theme-primary hover:bg-theme-card transition-colors"
+                  className="w-full flex items-center justify-center space-x-1.5 rounded-full border border-theme bg-theme-input py-2 text-xs font-medium text-theme-primary hover:bg-theme-card transition-colors"
                 >
                   {copiedCode ? <Check className="h-3.5 w-3.5 text-[#00D26A]" /> : <Copy className="h-3.5 w-3.5 text-theme-muted" />}
                   <span>{copiedCode ? 'Key copied to clipboard' : 'Copy Secret Key'}</span>
@@ -491,7 +491,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 
               {/* Disconnect / Leave Duo */}
               {hasActiveDuo && (
-                <div className="rounded-xl border border-[#F43F5E]/25 bg-[#F43F5E]/10 p-4 space-y-2.5">
+                <div className="rounded-2xl border border-[#F43F5E]/25 bg-[#F43F5E]/10 p-4 space-y-2.5">
                   <h4 className="text-xs font-semibold text-[#F43F5E] uppercase tracking-wider font-mono">
                     Disconnect Room
                   </h4>
@@ -502,7 +502,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                   {!confirmLeaveDuo ? (
                     <button
                       onClick={() => setConfirmLeaveDuo(true)}
-                      className="rounded-lg border border-[#F43F5E]/30 bg-theme-card px-3.5 py-1.5 text-xs font-medium text-[#F43F5E] hover:bg-[#F43F5E]/10 transition-colors"
+                      className="rounded-full border border-[#F43F5E]/30 bg-theme-card px-4 py-1.5 text-xs font-medium text-[#F43F5E] hover:bg-[#F43F5E]/10 transition-colors"
                     >
                       Disconnect from Duo
                     </button>
@@ -515,13 +515,13 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                         <button
                           onClick={handleLeaveDuo}
                           disabled={actionLoading}
-                          className="rounded-lg bg-[#F43F5E] px-3.5 py-1.5 text-xs font-medium text-white hover:bg-[#E11D48] transition-colors disabled:opacity-50"
+                          className="rounded-full bg-[#F43F5E] px-4 py-1.5 text-xs font-medium text-white hover:bg-[#E11D48] transition-colors disabled:opacity-50"
                         >
                           {actionLoading ? 'Disconnecting...' : 'Yes, Disconnect'}
                         </button>
                         <button
                           onClick={() => setConfirmLeaveDuo(false)}
-                          className="rounded-lg border border-theme bg-theme-card px-3 py-1.5 text-xs text-theme-secondary"
+                          className="rounded-full border border-theme bg-theme-card px-4 py-1.5 text-xs text-theme-secondary"
                         >
                           Cancel
                         </button>
@@ -538,18 +538,18 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
             <div className="space-y-4">
               <div className="space-y-3">
                 {/* Enter to Send Toggle */}
-                <div className="flex items-center justify-between rounded-xl border border-theme bg-theme-input p-3.5">
+                <div className="flex items-center justify-between rounded-2xl border border-theme bg-theme-input p-3.5">
                   <div>
                     <h4 className="text-xs sm:text-sm font-medium text-theme-primary">Press Enter to Send</h4>
                     <p className="text-xs text-theme-secondary">
-                      When enabled, pressing <kbd className="font-mono bg-theme-card px-1 py-0.2 rounded border border-theme text-[10px]">Enter</kbd> sends immediately. Shift+Enter creates a new line.
+                      When enabled, pressing <kbd className="font-mono bg-theme-card px-1.5 py-0.2 rounded border border-theme text-[10px]">Enter</kbd> sends immediately. Shift+Enter creates a new line.
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={() => handleTogglePreference('enter_to_send', !enterToSend)}
                     className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                      enterToSend ? 'bg-[#5B58E6]' : 'bg-theme-muted'
+                      enterToSend ? 'bg-[#125CB9]' : 'bg-theme-muted'
                     }`}
                   >
                     <span
@@ -561,7 +561,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                 </div>
 
                 {/* Read Receipts Toggle */}
-                <div className="flex items-center justify-between rounded-xl border border-theme bg-theme-input p-3.5">
+                <div className="flex items-center justify-between rounded-2xl border border-theme bg-theme-input p-3.5">
                   <div>
                     <h4 className="text-xs sm:text-sm font-medium text-theme-primary">Read Receipts</h4>
                     <p className="text-xs text-theme-secondary">
@@ -572,7 +572,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                     type="button"
                     onClick={() => handleTogglePreference('read_receipts', !readReceipts)}
                     className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                      readReceipts ? 'bg-[#5B58E6]' : 'bg-theme-muted'
+                      readReceipts ? 'bg-[#125CB9]' : 'bg-theme-muted'
                     }`}
                   >
                     <span
@@ -584,7 +584,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                 </div>
 
                 {/* Message Notifications Toggle */}
-                <div className="flex items-center justify-between rounded-xl border border-theme bg-theme-input p-3.5">
+                <div className="flex items-center justify-between rounded-2xl border border-theme bg-theme-input p-3.5">
                   <div>
                     <h4 className="text-xs sm:text-sm font-medium text-theme-primary">Message Notifications</h4>
                     <p className="text-xs text-theme-secondary">
@@ -595,7 +595,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                     type="button"
                     onClick={() => handleTogglePreference('notifications_enabled', !notificationsEnabled)}
                     className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                      notificationsEnabled ? 'bg-[#5B58E6]' : 'bg-theme-muted'
+                      notificationsEnabled ? 'bg-[#125CB9]' : 'bg-theme-muted'
                     }`}
                   >
                     <span
@@ -608,7 +608,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
               </div>
 
               {/* Clear Chat History */}
-              <div className="rounded-xl border border-theme bg-theme-card p-4 space-y-2.5 shadow-xs">
+              <div className="rounded-2xl border border-theme bg-theme-card p-4 space-y-2.5 shadow-xs">
                 <div className="flex items-center space-x-1.5">
                   <Trash2 className="h-3.5 w-3.5 text-[#F43F5E]" />
                   <h4 className="text-xs font-medium text-theme-primary">Clear Chat History</h4>
@@ -620,12 +620,12 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                 {!confirmClearChat ? (
                   <button
                     onClick={() => setConfirmClearChat(true)}
-                    className="rounded-lg border border-theme bg-theme-input px-3.5 py-1.5 text-xs font-medium text-[#F43F5E] hover:bg-[#F43F5E]/10 transition-colors"
+                    className="rounded-full border border-theme bg-theme-input px-4 py-1.5 text-xs font-medium text-[#F43F5E] hover:bg-[#F43F5E]/10 transition-colors"
                   >
                     Clear All Messages
                   </button>
                 ) : (
-                  <div className="rounded-lg border border-[#F43F5E]/25 bg-[#F43F5E]/10 p-3 space-y-2">
+                  <div className="rounded-xl border border-[#F43F5E]/25 bg-[#F43F5E]/10 p-3 space-y-2">
                     <p className="text-xs font-semibold text-[#F43F5E]">
                       Are you sure? This will delete all chat history for both of you.
                     </p>
@@ -633,13 +633,13 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                       <button
                         onClick={handleClearChat}
                         disabled={actionLoading}
-                        className="rounded-lg bg-[#F43F5E] px-3.5 py-1.5 text-xs font-medium text-white hover:bg-[#E11D48] transition-colors disabled:opacity-50"
+                        className="rounded-full bg-[#F43F5E] px-4 py-1.5 text-xs font-medium text-white hover:bg-[#E11D48] transition-colors disabled:opacity-50"
                       >
                         {actionLoading ? 'Clearing...' : 'Yes, Delete Everything'}
                       </button>
                       <button
                         onClick={() => setConfirmClearChat(false)}
-                        className="rounded-lg border border-theme bg-theme-card px-3 py-1.5 text-xs text-theme-secondary"
+                        className="rounded-full border border-theme bg-theme-card px-4 py-1.5 text-xs text-theme-secondary"
                       >
                         Cancel
                       </button>
@@ -665,7 +665,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                   {
                     id: 'light',
                     label: 'Light Mode',
-                    desc: 'Crisp cool slate, pure white cards & indigo buttons',
+                    desc: 'Crisp cool slate, pure white cards & blue buttons',
                     icon: Sun,
                     previewBg: 'bg-[#F4F5F9] text-[#191C26] border-[#E8EAF0]',
                   },
@@ -690,19 +690,19 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                     <button
                       key={item.id}
                       onClick={() => handleThemeChange(item.id as any)}
-                      className={`flex flex-col items-start p-3.5 rounded-xl border text-left transition-all relative overflow-hidden ${
+                      className={`flex flex-col items-start p-3.5 rounded-2xl border text-left transition-all relative overflow-hidden ${
                         isSelected
-                          ? 'border-[#5B58E6] bg-[#5B58E6]/10 ring-2 ring-[#5B58E6]/40 shadow-xs'
+                          ? 'border-[#125CB9] bg-[#125CB9]/10 ring-2 ring-[#125CB9]/40 shadow-xs'
                           : 'border-theme bg-theme-input hover:bg-theme-card'
                       }`}
                     >
                       <div className="flex items-center justify-between w-full mb-2.5">
-                        <div className={`p-1.5 rounded-lg ${item.previewBg} border shadow-xs`}>
-                          <Icon className="h-4 w-4 text-[#5B58E6]" />
+                        <div className={`p-2 rounded-xl ${item.previewBg} border shadow-xs`}>
+                          <Icon className="h-4 w-4 text-[#125CB9]" />
                         </div>
                         {isSelected && (
-                          <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#5B58E6] text-white">
-                            <Check className="h-2.5 w-2.5" />
+                          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#125CB9] text-white">
+                            <Check className="h-3 w-3" />
                           </span>
                         )}
                       </div>
@@ -719,29 +719,29 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
           {activeSection === 'security' && (
             <div className="space-y-4">
               {/* Account Status Card */}
-              <div className="rounded-xl border border-theme bg-theme-input p-3.5 space-y-2">
+              <div className="rounded-2xl border border-theme bg-theme-input p-4 space-y-2">
                 <span className="text-[10px] font-mono uppercase tracking-wider text-theme-muted font-medium">Authentication</span>
                 <div className="flex items-center justify-between">
                   <div>
                     <span className="text-xs font-medium text-theme-primary">{profile?.email}</span>
                     <p className="text-[11px] text-theme-muted mt-0.5">Encrypted with Supabase Auth</p>
                   </div>
-                  <span className="inline-flex items-center gap-1 rounded bg-[#00D26A]/10 px-2 py-0.5 text-[10px] font-mono text-[#00D26A] border border-[#00D26A]/25">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-[#00D26A]/10 px-2.5 py-0.5 text-[10px] font-mono text-[#00D26A] border border-[#00D26A]/25">
                     <Check className="h-2.5 w-2.5" /> Active
                   </span>
                 </div>
               </div>
 
               {/* Change Password Form */}
-              <form onSubmit={handleChangePassword} className="rounded-xl border border-theme bg-theme-card p-4 space-y-3 shadow-xs">
+              <form onSubmit={handleChangePassword} className="rounded-2xl border border-theme bg-theme-card p-4 space-y-3 shadow-xs">
                 <div className="flex items-center space-x-1.5">
-                  <Lock className="h-3.5 w-3.5 text-[#5B58E6]" />
+                  <Lock className="h-3.5 w-3.5 text-[#125CB9]" />
                   <h4 className="text-xs font-medium text-theme-primary">Change Password</h4>
                 </div>
 
                 {passwordStatus && (
                   <div
-                    className={`rounded-lg p-2.5 text-xs ${
+                    className={`rounded-xl p-2.5 text-xs ${
                       passwordStatus.type === 'success' ? 'bg-[#00D26A]/10 text-[#00D26A] border border-[#00D26A]/25' : 'bg-[#F43F5E]/10 text-[#F43F5E] border border-[#F43F5E]/25'
                     }`}
                   >
@@ -758,7 +758,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                       onChange={(e) => setNewPassword(e.target.value)}
                       placeholder="••••••••"
                       minLength={6}
-                      className="w-full rounded-lg border border-theme bg-theme-input px-3 py-1.5 text-xs text-theme-primary focus:border-[#5B58E6] focus:bg-theme-card focus:outline-none"
+                      className="w-full rounded-xl border border-theme bg-theme-input px-3.5 py-2 text-xs text-theme-primary focus:border-[#125CB9] focus:bg-theme-card focus:outline-none"
                     />
                   </div>
                   <div>
@@ -769,7 +769,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="••••••••"
                       minLength={6}
-                      className="w-full rounded-lg border border-theme bg-theme-input px-3 py-1.5 text-xs text-theme-primary focus:border-[#5B58E6] focus:bg-theme-card focus:outline-none"
+                      className="w-full rounded-xl border border-theme bg-theme-input px-3.5 py-2 text-xs text-theme-primary focus:border-[#125CB9] focus:bg-theme-card focus:outline-none"
                     />
                   </div>
                 </div>
@@ -778,7 +778,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                   <button
                     type="submit"
                     disabled={passwordLoading || !newPassword || !confirmPassword}
-                    className="rounded-lg bg-[#5B58E6] px-4 py-1.5 text-xs font-medium text-white hover:bg-[#4A46DC] disabled:opacity-40 transition-colors shadow-xs"
+                    className="rounded-full bg-[#125CB9] px-4 py-2 text-xs font-medium text-white hover:bg-[#0E4B99] disabled:opacity-40 transition-colors shadow-xs"
                   >
                     {passwordLoading ? 'Updating...' : 'Update Password'}
                   </button>
@@ -786,7 +786,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
               </form>
 
               {/* Danger Zone: Delete Account */}
-              <div className="rounded-xl border border-[#F43F5E]/25 bg-[#F43F5E]/10 p-4 space-y-2.5">
+              <div className="rounded-2xl border border-[#F43F5E]/25 bg-[#F43F5E]/10 p-4 space-y-2.5">
                 <div className="flex items-center space-x-1.5">
                   <AlertTriangle className="h-3.5 w-3.5 text-[#F43F5E]" />
                   <h4 className="text-xs font-semibold text-[#F43F5E] uppercase tracking-wider font-mono">
@@ -800,12 +800,12 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                 {!confirmDeleteAccount ? (
                   <button
                     onClick={() => setConfirmDeleteAccount(true)}
-                    className="rounded-lg bg-[#F43F5E] px-3.5 py-1.5 text-xs font-medium text-white hover:bg-[#E11D48] transition-colors"
+                    className="rounded-full bg-[#F43F5E] px-4 py-1.5 text-xs font-medium text-white hover:bg-[#E11D48] transition-colors"
                   >
                     Delete Account
                   </button>
                 ) : (
-                  <div className="rounded-lg border border-[#F43F5E]/25 bg-theme-card p-3 space-y-2.5">
+                  <div className="rounded-xl border border-[#F43F5E]/25 bg-theme-card p-3 space-y-2.5">
                     <p className="text-xs font-semibold text-[#F43F5E]">
                       Type <strong>DELETE</strong> to confirm permanent account deletion:
                     </p>
@@ -814,13 +814,13 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                       value={deleteConfirmText}
                       onChange={(e) => setDeleteConfirmText(e.target.value)}
                       placeholder="Type DELETE"
-                      className="w-full rounded-lg border border-[#F43F5E]/30 bg-theme-input px-3 py-1.5 text-xs font-mono text-[#F43F5E] focus:outline-none"
+                      className="w-full rounded-xl border border-[#F43F5E]/30 bg-theme-input px-3.5 py-2 text-xs font-mono text-[#F43F5E] focus:outline-none"
                     />
                     <div className="flex gap-2">
                       <button
                         onClick={handleDeleteAccount}
                         disabled={deleteConfirmText !== 'DELETE' || actionLoading}
-                        className="rounded-lg bg-[#F43F5E] px-3.5 py-1.5 text-xs font-medium text-white hover:bg-[#E11D48] disabled:opacity-40 transition-colors"
+                        className="rounded-full bg-[#F43F5E] px-4 py-1.5 text-xs font-medium text-white hover:bg-[#E11D48] disabled:opacity-40 transition-colors"
                       >
                         {actionLoading ? 'Deleting...' : 'Permanently Delete Account'}
                       </button>
@@ -829,7 +829,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                           setConfirmDeleteAccount(false);
                           setDeleteConfirmText('');
                         }}
-                        className="rounded-lg border border-theme px-3 py-1.5 text-xs text-theme-secondary"
+                        className="rounded-full border border-theme px-4 py-1.5 text-xs text-theme-secondary"
                       >
                         Cancel
                       </button>

@@ -12,7 +12,7 @@ interface WaveformPlayerProps {
 export const WaveformPlayer: React.FC<WaveformPlayerProps> = ({ audioUrl, duration = 0, isMe = false }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
-  const [audioDuration, setAudioDuration] = useState(duration);
+  const [audioDuration, setAudioDuration] = useState<number>(isFinite(duration) && duration > 0 ? duration : 0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Generate 28 waveform bars with pseudo-random aesthetic heights
@@ -24,14 +24,32 @@ export const WaveformPlayer: React.FC<WaveformPlayerProps> = ({ audioUrl, durati
     const audio = new Audio(audioUrl);
     audioRef.current = audio;
 
-    audio.addEventListener('loadedmetadata', () => {
-      if (audio.duration && !isNaN(audio.duration)) {
+    const updateDuration = () => {
+      if (isFinite(audio.duration) && audio.duration > 0 && !isNaN(audio.duration)) {
         setAudioDuration(audio.duration);
+      } else if (audio.duration === Infinity) {
+        audio.currentTime = 1e101;
+        audio.ontimeupdate = function () {
+          this.ontimeupdate = () => {
+            setCurrentTime(audio.currentTime);
+          };
+          if (isFinite(audio.duration) && audio.duration > 0) {
+            setAudioDuration(audio.duration);
+          }
+          audio.currentTime = 0;
+        };
       }
-    });
+    };
+
+    audio.addEventListener('loadedmetadata', updateDuration);
+    audio.addEventListener('durationchange', updateDuration);
+    audio.addEventListener('canplaythrough', updateDuration);
 
     audio.addEventListener('timeupdate', () => {
       setCurrentTime(audio.currentTime);
+      if ((!audioDuration || !isFinite(audioDuration)) && isFinite(audio.duration) && audio.duration > 0) {
+        setAudioDuration(audio.duration);
+      }
     });
 
     audio.addEventListener('ended', () => {
@@ -45,6 +63,12 @@ export const WaveformPlayer: React.FC<WaveformPlayerProps> = ({ audioUrl, durati
     };
   }, [audioUrl]);
 
+  useEffect(() => {
+    if (isFinite(duration) && duration > 0) {
+      setAudioDuration(duration);
+    }
+  }, [duration]);
+
   const togglePlay = () => {
     if (!audioRef.current) return;
     if (isPlaying) {
@@ -56,23 +80,25 @@ export const WaveformPlayer: React.FC<WaveformPlayerProps> = ({ audioUrl, durati
     }
   };
 
+  const effectiveDuration = isFinite(audioDuration) && audioDuration > 0 ? audioDuration : (duration && isFinite(duration) && duration > 0 ? duration : 0);
+
   const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!audioRef.current || !audioDuration) return;
+    if (!audioRef.current || !effectiveDuration) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const pos = (e.clientX - rect.left) / rect.width;
-    const seekTime = Math.max(0, Math.min(audioDuration, pos * audioDuration));
+    const seekTime = Math.max(0, Math.min(effectiveDuration, pos * effectiveDuration));
     audioRef.current.currentTime = seekTime;
     setCurrentTime(seekTime);
   };
 
   const formatTime = (secs: number) => {
-    if (isNaN(secs) || secs < 0) return '0:00';
+    if (!secs || isNaN(secs) || !isFinite(secs) || secs < 0) return '0:00';
     const m = Math.floor(secs / 60);
     const s = Math.floor(secs % 60);
     return `${m}:${s < 10 ? '0' : ''}${s}`;
   };
 
-  const progressPercent = audioDuration > 0 ? (currentTime / audioDuration) * 100 : 0;
+  const progressPercent = effectiveDuration > 0 ? (currentTime / effectiveDuration) * 100 : 0;
 
   return (
     <div className="flex items-center space-x-3 py-1 select-none min-w-[200px] max-w-[290px]">
@@ -80,10 +106,10 @@ export const WaveformPlayer: React.FC<WaveformPlayerProps> = ({ audioUrl, durati
       <button
         type="button"
         onClick={togglePlay}
-        className={`flex h-9 w-9 items-center justify-center rounded-full transition-all shadow-sm shrink-0 ${
+        className={`flex h-9 w-9 items-center justify-center rounded-full transition-all shadow-xs shrink-0 ${
           isMe
-            ? 'bg-[#FAF7F2] text-[#422F0E] hover:bg-[#FCC4C0]'
-            : 'bg-[#422F0E] text-[#FAF7F2] hover:bg-[#EA5E86]'
+            ? 'bg-white text-[#125CB9] hover:bg-white/90'
+            : 'bg-[#125CB9] text-white hover:bg-[#0E4B99]'
         }`}
         aria-label={isPlaying ? 'Pause voice note' : 'Play voice note'}
       >
@@ -108,11 +134,11 @@ export const WaveformPlayer: React.FC<WaveformPlayerProps> = ({ audioUrl, durati
                 className={`w-[3px] rounded-full transition-all duration-150 ${
                   isPlayed
                     ? isMe
-                      ? 'bg-[#FCC4C0]'
-                      : 'bg-[#EA5E86]'
+                      ? 'bg-white'
+                      : 'bg-[#125CB9]'
                     : isMe
-                    ? 'bg-white/30 group-hover:bg-white/50'
-                    : 'bg-[#D4CEC2] group-hover:bg-[#A89F91]'
+                    ? 'bg-white/35 group-hover:bg-white/55'
+                    : 'bg-theme-muted/40 group-hover:bg-theme-muted/60'
                 } ${isPlaying && isPlayed ? 'animate-pulse' : ''}`}
               />
             );
@@ -122,7 +148,7 @@ export const WaveformPlayer: React.FC<WaveformPlayerProps> = ({ audioUrl, durati
         {/* Time Progress */}
         <div className="flex items-center justify-between text-[10px] font-mono opacity-80 leading-none">
           <span>{formatTime(currentTime)}</span>
-          <span>{formatTime(audioDuration || duration)}</span>
+          <span>{formatTime(effectiveDuration)}</span>
         </div>
       </div>
     </div>

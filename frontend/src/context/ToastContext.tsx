@@ -124,7 +124,7 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         return 'border-[#00D0FF]/30 bg-theme-card text-theme-primary shadow-lg ring-1 ring-[#00D0FF]/20';
       case 'love':
       default:
-        return 'border-[#5B58E6]/30 bg-theme-card text-theme-primary shadow-lg ring-1 ring-[#5B58E6]/20';
+        return 'border-[#125CB9]/30 bg-theme-card text-theme-primary shadow-lg ring-1 ring-[#125CB9]/20';
     }
   };
 
@@ -149,11 +149,11 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         {toasts.map((t) => (
           <div
             key={t.id}
-            className={`pointer-events-auto flex items-center space-x-2.5 rounded-lg border px-3.5 py-2 transition-all duration-200 animate-in fade-in zoom-in-95 slide-in-from-top-2 shadow-sm ${getToastStyles(
+            className={`pointer-events-auto flex items-center space-x-2.5 rounded-full border px-4 py-2 transition-all duration-200 animate-in fade-in zoom-in-95 slide-in-from-top-2 shadow-sm ${getToastStyles(
               t.type
             )}`}
           >
-            <div className="flex h-5 w-5 items-center justify-center rounded bg-theme-input shadow-xs shrink-0">
+            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-theme-input shadow-xs shrink-0">
               {getToastIcon(t.type)}
             </div>
 
@@ -170,7 +170,7 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
             <button
               onClick={() => t.id && removeToast(t.id)}
-              className="rounded p-0.5 text-theme-muted hover:text-theme-primary transition-colors ml-auto"
+              className="rounded-full p-1 text-theme-muted hover:text-theme-primary transition-colors ml-auto"
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -181,12 +181,12 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       {/* Clean Confirmation Modal Dialog */}
       {confirmDialog && (
         <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 p-4 backdrop-blur-[4px] animate-in fade-in duration-150">
-          <div className="w-full max-w-sm rounded-xl border border-theme bg-theme-card p-5 shadow-2xl text-center animate-in zoom-in-95 duration-150">
-            <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg bg-[#5B58E6]/10 text-[#5B58E6] mb-2.5">
+          <div className="w-full max-w-sm rounded-2xl border border-theme bg-theme-card p-5 shadow-2xl text-center animate-in zoom-in-95 duration-150">
+            <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-[#125CB9]/10 text-[#125CB9] mb-2.5">
               {confirmDialog.options.type === 'danger' ? (
                 <Trash2 className="h-5 w-5 text-[#F43F5E]" />
               ) : (
-                <Heart className="h-5 w-5 fill-current text-[#5B58E6]" />
+                <Heart className="h-5 w-5 fill-current text-[#125CB9]" />
               )}
             </div>
 
@@ -201,7 +201,7 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
               <button
                 type="button"
                 onClick={() => handleConfirmClose(false)}
-                className="flex-1 rounded-lg border border-theme bg-theme-input py-1.5 text-xs font-medium text-theme-secondary hover:bg-theme-card hover:text-theme-primary transition-colors"
+                className="flex-1 rounded-full border border-theme bg-theme-input py-2 text-xs font-medium text-theme-secondary hover:bg-theme-card hover:text-theme-primary transition-colors"
               >
                 {confirmDialog.options.cancelText || 'Cancel'}
               </button>
@@ -209,10 +209,10 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
               <button
                 type="button"
                 onClick={() => handleConfirmClose(true)}
-                className={`flex-1 rounded-lg py-1.5 text-xs font-medium text-white shadow-xs transition-colors ${
+                className={`flex-1 rounded-full py-2 text-xs font-medium text-white shadow-xs transition-colors ${
                   confirmDialog.options.type === 'danger'
                     ? 'bg-[#F43F5E] hover:bg-[#E11D48]'
-                    : 'bg-[#5B58E6] hover:bg-[#4A46DC]'
+                    : 'bg-[#125CB9] hover:bg-[#0E4B99]'
                 }`}
               >
                 {confirmDialog.options.confirmText || 'Confirm'}

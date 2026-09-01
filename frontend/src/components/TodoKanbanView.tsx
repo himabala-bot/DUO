@@ -49,9 +49,9 @@ const COLUMNS: ColumnConfig[] = [
     id: 'IN_PROGRESS',
     title: 'In Progress',
     icon: Clock,
-    accent: 'text-[#5B58E6]',
-    badgeBg: 'bg-[#5B58E6]/10 border-[#5B58E6]/30 text-[#5B58E6]',
-    borderTop: '#5B58E6',
+    accent: 'text-[#125CB9]',
+    badgeBg: 'bg-[#125CB9]/10 border-[#125CB9]/30 text-[#125CB9]',
+    borderTop: '#125CB9',
   },
   {
     id: 'COMPLETED',
@@ -302,7 +302,7 @@ export const TodoKanbanView: React.FC = () => {
 
         {/* Top Action & Progress Pill */}
         <div className="flex items-center gap-2.5 self-start sm:self-auto shrink-0">
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-mono font-medium border border-[#00D26A]/25 bg-[#00D26A]/10 text-[#00D26A]">
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-medium border border-[#00D26A]/25 bg-[#00D26A]/10 text-[#00D26A]">
             <CheckCircle2 className="h-3 w-3 fill-current" />
             <span>{completedTotal} / {tasks.length} Done</span>
           </div>
@@ -313,7 +313,7 @@ export const TodoKanbanView: React.FC = () => {
               setNewTitle('');
               setNewDescription('');
             }}
-            className="flex items-center space-x-1.5 rounded-lg bg-[#5B58E6] px-3.5 py-1.5 text-xs font-medium text-white hover:bg-[#4A46DC] transition-colors shadow-xs"
+            className="flex items-center space-x-1.5 rounded-full bg-[#125CB9] px-4 py-1.5 text-xs font-medium text-white hover:bg-[#0E4B99] transition-colors shadow-xs"
           >
             <Plus className="h-3.5 w-3.5" />
             <span>Add Task</span>
@@ -332,16 +332,16 @@ export const TodoKanbanView: React.FC = () => {
             <button
               key={col.id}
               onClick={() => setActiveMobileCol(col.id)}
-              className={`flex-1 flex items-center justify-center space-x-1.5 py-1.5 px-2.5 rounded-lg border text-xs font-medium transition-all ${
+              className={`flex-1 flex items-center justify-center space-x-1.5 py-1.5 px-3 rounded-full border text-xs font-medium transition-all ${
                 isActive
-                  ? 'border-[#5B58E6] bg-[#5B58E6] text-white font-semibold shadow-xs'
+                  ? 'border-[#125CB9] bg-[#125CB9] text-white font-semibold shadow-xs'
                   : 'border-theme bg-theme-card text-theme-secondary hover:bg-theme-card-hover'
               }`}
             >
               <Icon className="h-3.5 w-3.5" />
               <span>{col.title}</span>
               <span
-                className={`text-[10px] px-1.5 py-0.2 rounded font-mono ${
+                className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
                   isActive ? 'bg-white/20 text-white' : 'bg-theme-input text-theme-muted'
                 }`}
               >
@@ -368,8 +368,8 @@ export const TodoKanbanView: React.FC = () => {
                 onDragLeave={handleDragLeave}
                 onDrop={(e) => handleDrop(e, col.id)}
                 style={{ borderTopColor: col.borderTop }}
-                className={`h-full flex flex-col rounded-xl border border-theme border-t-3 bg-theme-card shadow-xs overflow-hidden transition-all duration-150 ${
-                  isDropTarget ? 'border-dashed border-2 border-[#5B58E6] bg-[#5B58E6]/10' : ''
+                className={`h-full flex flex-col rounded-2xl border border-theme border-t-3 bg-theme-card shadow-xs overflow-hidden transition-all duration-150 ${
+                  isDropTarget ? 'border-dashed border-2 border-[#125CB9] bg-[#125CB9]/10' : ''
                 }`}
               >
                 {/* Column Header */}
@@ -382,7 +382,7 @@ export const TodoKanbanView: React.FC = () => {
                   </div>
 
                   <span
-                    className={`text-[10px] font-mono font-medium px-2 py-0.2 rounded border ${col.badgeBg}`}
+                    className={`text-[10px] font-mono font-medium px-2 py-0.2 rounded-full border ${col.badgeBg}`}
                   >
                     {colTasks.length}
                   </span>
@@ -391,7 +391,7 @@ export const TodoKanbanView: React.FC = () => {
                 {/* Tasks List */}
                 <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-2">
                   {colTasks.length === 0 ? (
-                    <div className="p-6 text-center text-xs font-mono text-theme-muted border border-dashed border-theme rounded-lg">
+                    <div className="p-6 text-center text-xs font-mono text-theme-muted border border-dashed border-theme rounded-xl">
                       No tasks yet
                     </div>
                   ) : (
@@ -404,12 +404,12 @@ export const TodoKanbanView: React.FC = () => {
                           draggable
                           onDragStart={(e) => handleDragStart(e, task.id)}
                           onDragEnd={handleDragEnd}
-                          className={`group relative rounded-lg border p-2.5 transition-all duration-100 cursor-grab active:cursor-grabbing ${
+                          className={`group relative rounded-xl border p-3 transition-all duration-100 cursor-grab active:cursor-grabbing ${
                             isBeingDragged
-                              ? 'opacity-35 scale-95 border-dashed border-[#5B58E6] bg-[#5B58E6]/15'
+                              ? 'opacity-35 scale-95 border-dashed border-[#125CB9] bg-[#125CB9]/15'
                               : task.status === 'COMPLETED'
                               ? 'border-theme bg-theme-input/60 opacity-70 hover:opacity-100 hover:border-[#00D26A]'
-                              : 'border-theme bg-theme-card shadow-xs hover:border-[#5B58E6]'
+                              : 'border-theme bg-theme-card shadow-xs hover:border-[#125CB9]'
                           }`}
                         >
                           <div className="flex items-start gap-2">
@@ -417,13 +417,13 @@ export const TodoKanbanView: React.FC = () => {
                             <button
                               type="button"
                               onClick={() => handleToggleComplete(task)}
-                              className="mt-0.5 text-[#5B58E6] transition-transform shrink-0"
+                              className="mt-0.5 text-[#125CB9] transition-transform shrink-0"
                               title={task.status === 'COMPLETED' ? 'Mark incomplete' : 'Mark completed'}
                             >
                               {task.status === 'COMPLETED' ? (
                                 <CheckCircle2 className="h-3.5 w-3.5 fill-[#00D26A] text-white" />
                               ) : (
-                                <Circle className="h-3.5 w-3.5 text-theme-muted hover:text-[#5B58E6]" />
+                                <Circle className="h-3.5 w-3.5 text-theme-muted hover:text-[#125CB9]" />
                               )}
                             </button>
 
@@ -454,7 +454,7 @@ export const TodoKanbanView: React.FC = () => {
                                   setEditDescription(task.description || '');
                                   setEditStatus(task.status);
                                 }}
-                                className="p-1 text-theme-muted hover:text-theme-primary rounded hover:bg-theme-input transition-colors"
+                                className="p-1 text-theme-muted hover:text-theme-primary rounded-full hover:bg-theme-input transition-colors"
                                 title="Edit task"
                               >
                                 <Edit3 className="h-3 w-3" />
@@ -462,7 +462,7 @@ export const TodoKanbanView: React.FC = () => {
 
                               <button
                                 onClick={() => handleDeleteTask(task)}
-                                className="p-1 text-theme-muted hover:text-[#F43F5E] rounded hover:bg-[#F43F5E]/10 transition-colors"
+                                className="p-1 text-theme-muted hover:text-[#F43F5E] rounded-full hover:bg-[#F43F5E]/10 transition-colors"
                                 title="Delete task"
                               >
                                 <Trash2 className="h-3 w-3" />
@@ -481,7 +481,7 @@ export const TodoKanbanView: React.FC = () => {
                               {col.id !== 'TODO' && (
                                 <button
                                   onClick={() => handleMoveStatus(task.id, 'TODO')}
-                                  className="hover:text-[#5B58E6] hover:underline"
+                                  className="hover:text-[#125CB9] hover:underline"
                                 >
                                   To Do
                                 </button>
@@ -489,7 +489,7 @@ export const TodoKanbanView: React.FC = () => {
                               {col.id !== 'IN_PROGRESS' && (
                                 <button
                                   onClick={() => handleMoveStatus(task.id, 'IN_PROGRESS')}
-                                  className="hover:text-[#5B58E6] hover:underline"
+                                  className="hover:text-[#125CB9] hover:underline"
                                 >
                                   In Progress
                                 </button>
@@ -524,27 +524,27 @@ export const TodoKanbanView: React.FC = () => {
                           if (e.key === 'Enter') handleAddTask(col.id);
                           if (e.key === 'Escape') setAddingToCol(null);
                         }}
-                        className="w-full rounded-lg border border-theme bg-theme-input px-3 py-1.5 text-xs text-theme-primary focus:border-[#5B58E6] focus:bg-theme-card focus:outline-none"
+                        className="w-full rounded-xl border border-theme bg-theme-input px-3 py-1.5 text-xs text-theme-primary focus:border-[#125CB9] focus:bg-theme-card focus:outline-none"
                       />
                       <input
                         type="text"
                         value={newDescription}
                         onChange={(e) => setNewDescription(e.target.value)}
                         placeholder="Optional details..."
-                        className="w-full rounded-lg border border-theme bg-theme-input px-3 py-1 text-[11px] text-theme-primary focus:border-[#5B58E6] focus:bg-theme-card focus:outline-none"
+                        className="w-full rounded-xl border border-theme bg-theme-input px-3 py-1 text-[11px] text-theme-primary focus:border-[#125CB9] focus:bg-theme-card focus:outline-none"
                       />
                       <div className="flex gap-1.5 justify-end pt-0.5">
                         <button
                           type="button"
                           onClick={() => setAddingToCol(null)}
-                          className="px-2.5 py-1 rounded text-xs text-theme-secondary hover:bg-theme-card"
+                          className="px-3 py-1 rounded-full text-xs text-theme-secondary hover:bg-theme-card"
                         >
                           Cancel
                         </button>
                         <button
                           type="button"
                           onClick={() => handleAddTask(col.id)}
-                          className="px-3 py-1 rounded-lg bg-[#5B58E6] text-white hover:bg-[#4A46DC] text-xs font-medium shadow-xs"
+                          className="px-3.5 py-1 rounded-full bg-[#125CB9] text-white hover:bg-[#0E4B99] text-xs font-medium shadow-xs"
                         >
                           Add
                         </button>
@@ -558,9 +558,9 @@ export const TodoKanbanView: React.FC = () => {
                         setNewTitle('');
                         setNewDescription('');
                       }}
-                      className="w-full flex items-center justify-center space-x-1.5 py-1.5 rounded-lg border border-dashed border-theme hover:border-[#5B58E6] hover:bg-theme-card text-xs font-medium text-theme-secondary hover:text-theme-primary transition-all"
+                      className="w-full flex items-center justify-center space-x-1.5 py-1.5 rounded-xl border border-dashed border-theme hover:border-[#125CB9] hover:bg-theme-card text-xs font-medium text-theme-secondary hover:text-theme-primary transition-all"
                     >
-                      <Plus className="h-3 w-3 text-[#5B58E6]" />
+                      <Plus className="h-3 w-3 text-[#125CB9]" />
                       <span>Add task</span>
                     </button>
                   )}
@@ -571,7 +571,7 @@ export const TodoKanbanView: React.FC = () => {
         </div>
 
         {/* Mobile Single Column View (<768px) */}
-        <div className="md:hidden h-full flex flex-col rounded-xl border border-theme bg-theme-card shadow-xs overflow-hidden">
+        <div className="md:hidden h-full flex flex-col rounded-2xl border border-theme bg-theme-card shadow-xs overflow-hidden">
           {(() => {
             const activeColConfig = COLUMNS.find((c) => c.id === activeMobileCol) || COLUMNS[0];
             const colTasks = tasks.filter((t) => t.status === activeColConfig.id);
@@ -586,7 +586,7 @@ export const TodoKanbanView: React.FC = () => {
                       {activeColConfig.title}
                     </h3>
                   </div>
-                  <span className={`text-[11px] font-mono font-medium px-2 py-0.2 rounded border ${activeColConfig.badgeBg}`}>
+                  <span className={`text-[11px] font-mono font-medium px-2.5 py-0.2 rounded-full border ${activeColConfig.badgeBg}`}>
                     {colTasks.length} tasks
                   </span>
                 </div>
@@ -600,7 +600,7 @@ export const TodoKanbanView: React.FC = () => {
                     colTasks.map((task) => (
                       <div
                         key={task.id}
-                        className={`rounded-lg border p-3 flex flex-col space-y-2 ${
+                        className={`rounded-xl border p-3 flex flex-col space-y-2 ${
                           task.status === 'COMPLETED'
                             ? 'border-theme bg-theme-input/60 opacity-70'
                             : 'border-theme bg-theme-card shadow-xs'
@@ -610,7 +610,7 @@ export const TodoKanbanView: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => handleToggleComplete(task)}
-                            className="mt-0.5 text-[#5B58E6] shrink-0"
+                            className="mt-0.5 text-[#125CB9] shrink-0"
                           >
                             {task.status === 'COMPLETED' ? (
                               <CheckCircle2 className="h-4 w-4 fill-[#00D26A] text-white" />
@@ -663,7 +663,7 @@ export const TodoKanbanView: React.FC = () => {
                               <button
                                 key={c.id}
                                 onClick={() => handleMoveStatus(task.id, c.id)}
-                                className="px-2 py-0.5 rounded border border-theme bg-theme-input text-theme-secondary hover:text-theme-primary"
+                                className="px-2.5 py-0.5 rounded-full border border-theme bg-theme-input text-theme-secondary hover:text-theme-primary"
                               >
                                 {c.title}
                               </button>
@@ -686,13 +686,13 @@ export const TodoKanbanView: React.FC = () => {
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') handleAddTask(activeColConfig.id);
                       }}
-                      className="flex-1 rounded-lg border border-theme bg-theme-input px-3 py-1.5 text-xs text-theme-primary focus:outline-none focus:border-[#5B58E6]"
+                      className="flex-1 rounded-full border border-theme bg-theme-input px-3.5 py-1.5 text-xs text-theme-primary focus:outline-none focus:border-[#125CB9]"
                     />
                     <button
                       type="button"
                       onClick={() => handleAddTask(activeColConfig.id)}
                       disabled={!newTitle.trim()}
-                      className="rounded-lg bg-[#5B58E6] p-1.5 text-white hover:bg-[#4A46DC] disabled:opacity-30"
+                      className="rounded-full bg-[#125CB9] p-2 text-white hover:bg-[#0E4B99] disabled:opacity-30"
                     >
                       <Plus className="h-4 w-4" />
                     </button>
@@ -707,12 +707,12 @@ export const TodoKanbanView: React.FC = () => {
       {/* Edit Task Modal Dialog */}
       {editingTask && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-[3px]">
-          <div className="w-full max-w-md rounded-xl border border-theme bg-theme-card p-5 shadow-xl animate-in zoom-in-95 duration-150 space-y-3.5">
+          <div className="w-full max-w-md rounded-2xl border border-theme bg-theme-card p-5 shadow-2xl animate-in zoom-in-95 duration-150 space-y-3.5">
             <div className="flex items-center justify-between pb-2.5 border-b border-theme">
               <h3 className="font-serif text-base font-bold text-theme-primary">Edit Task</h3>
               <button
                 onClick={() => setEditingTask(null)}
-                className="p-1 text-theme-muted hover:text-theme-primary rounded"
+                className="p-1 text-theme-muted hover:text-theme-primary rounded-full"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -726,7 +726,7 @@ export const TodoKanbanView: React.FC = () => {
                   value={editTitle}
                   onChange={(e) => setEditTitle(e.target.value)}
                   required
-                  className="w-full rounded-lg border border-theme bg-theme-input px-3 py-1.5 text-xs text-theme-primary focus:border-[#5B58E6] focus:bg-theme-card focus:outline-none"
+                  className="w-full rounded-xl border border-theme bg-theme-input px-3.5 py-2 text-xs text-theme-primary focus:border-[#125CB9] focus:bg-theme-card focus:outline-none"
                 />
               </div>
 
@@ -736,7 +736,7 @@ export const TodoKanbanView: React.FC = () => {
                   value={editDescription}
                   onChange={(e) => setEditDescription(e.target.value)}
                   rows={2}
-                  className="w-full rounded-lg border border-theme bg-theme-input p-2.5 text-xs text-theme-primary focus:border-[#5B58E6] focus:bg-theme-card focus:outline-none"
+                  className="w-full rounded-xl border border-theme bg-theme-input p-3 text-xs text-theme-primary focus:border-[#125CB9] focus:bg-theme-card focus:outline-none"
                 />
               </div>
 
@@ -748,9 +748,9 @@ export const TodoKanbanView: React.FC = () => {
                       key={col.id}
                       type="button"
                       onClick={() => setEditStatus(col.id)}
-                      className={`flex-1 py-1.5 rounded-lg border text-xs font-medium transition-all ${
+                      className={`flex-1 py-1.5 rounded-full border text-xs font-medium transition-all ${
                         editStatus === col.id
-                          ? 'border-[#5B58E6] bg-[#5B58E6] text-white font-semibold shadow-xs'
+                          ? 'border-[#125CB9] bg-[#125CB9] text-white font-semibold shadow-xs'
                           : 'border-theme bg-theme-input text-theme-secondary'
                       }`}
                     >
@@ -764,14 +764,14 @@ export const TodoKanbanView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setEditingTask(null)}
-                  className="px-3 py-1.5 rounded-lg border border-theme text-xs font-medium text-theme-secondary hover:bg-theme-input"
+                  className="px-3.5 py-1.5 rounded-full border border-theme text-xs font-medium text-theme-secondary hover:bg-theme-input"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={!editTitle.trim()}
-                  className="px-4 py-1.5 rounded-lg bg-[#5B58E6] text-white hover:bg-[#4A46DC] text-xs font-medium shadow-xs disabled:opacity-40"
+                  className="px-4 py-1.5 rounded-full bg-[#125CB9] text-white hover:bg-[#0E4B99] text-xs font-medium shadow-xs disabled:opacity-40"
                 >
                   Save Changes
                 </button>
