@@ -280,21 +280,21 @@
 }
 
 .card-container {
-  border-radius: 45px;
+  border-radius: 35px;
   border: 1px solid var(--border-color);
   background-color: var(--bg-card);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-/* 45px Corner Radius System */
+/* 35px Corner Radius System */
 .rounded-card,
 .rounded-box,
 .rounded-3xl {
-  border-radius: 45px !important;
+  border-radius: 35px !important;
 }
 
 .rounded-2xl {
-  border-radius: 36px;
+  border-radius: 28px;
 }
 
 .folder-tab-clip {

@@ -585,7 +585,7 @@ export const LittleNotesView: React.FC = () => {
               const count = categoryNotes.length;
 
               return (
-                <div className="w-full max-w-4xl max-h-[88vh] rounded-[45px] border border-theme bg-theme-card p-6 sm:p-8 shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 space-y-5">
+                <div className="w-full max-w-4xl max-h-[88vh] rounded-[35px] border border-theme bg-theme-card p-6 sm:p-8 shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 space-y-5">
                   {/* Modal Header */}
                   <div className="flex items-center justify-between pb-4 border-b border-theme shrink-0">
                     <div className="flex items-center space-x-3">
@@ -767,7 +767,7 @@ export const LittleNotesView: React.FC = () => {
       ───────────────────────────────────────────────────────────── */}
       {previewNote && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 sm:p-6 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="w-full max-w-md rounded-[45px] border border-theme bg-theme-card p-6 sm:p-7 shadow-2xl animate-in zoom-in-95 duration-150 space-y-4 max-h-[85vh] overflow-y-auto">
+          <div className="w-full max-w-md rounded-[35px] border border-theme bg-theme-card p-6 sm:p-7 shadow-2xl animate-in zoom-in-95 duration-150 space-y-4 max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-3 border-b border-theme">
               <div className="flex items-center space-x-2.5">
                 <Avatar src={previewNote.author.avatar_url} name={previewNote.author.name} size="xs" />
@@ -840,7 +840,7 @@ export const LittleNotesView: React.FC = () => {
       ───────────────────────────────────────────────────────────── */}
       {showCreateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 sm:p-6 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto">
-          <div className="w-full max-w-lg rounded-[45px] border border-theme bg-theme-card p-6 sm:p-8 shadow-2xl animate-in zoom-in-95 duration-150 space-y-4">
+          <div className="w-full max-w-lg rounded-[35px] border border-theme bg-theme-card p-6 sm:p-8 shadow-2xl animate-in zoom-in-95 duration-150 space-y-4">
             {/* Modal Header */}
             <div className="flex items-center justify-between pb-3 border-b border-theme">
               <div className="flex items-center space-x-2.5">

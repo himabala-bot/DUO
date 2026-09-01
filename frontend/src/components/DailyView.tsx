@@ -274,7 +274,7 @@ export const DailyView: React.FC = () => {
         </div>
 
         {/* Partner Progress Status Bar */}
-        <div className="flex items-center justify-between rounded-[45px] border border-theme bg-theme-card p-4 sm:p-5 shadow-xs">
+        <div className="flex items-center justify-between rounded-[35px] border border-theme bg-theme-card p-4 sm:p-5 shadow-xs">
           <div className="flex items-center space-x-3">
             <span className="flex h-9 w-9 items-center justify-center rounded-2xl border border-theme bg-theme-input text-theme-secondary">
               <Avatar src={partner?.avatar_url} name={partner?.name} size="xs" />
@@ -325,7 +325,7 @@ export const DailyView: React.FC = () => {
             return (
               <div
                 key={q.id}
-                className="rounded-[45px] border border-theme bg-theme-card p-5 sm:p-7 shadow-xs transition-all"
+                className="rounded-[35px] border border-theme bg-theme-card p-5 sm:p-7 shadow-xs transition-all"
               >
                 {/* Question Header & Genre Tags */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-theme-subtle">
