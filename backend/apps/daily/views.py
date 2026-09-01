@@ -31,15 +31,32 @@ def get_or_create_daily_assignments(user, duo, partner, target_date):
     - No question is EVER repeated for either user in this duo.
     """
     with transaction.atomic():
-        # 1. Existing active assignment for today
-        today_assignment = DailyPromptAssignment.objects.filter(
-            user=user,
-            duo=duo,
-            assigned_date=target_date
-        ).exclude(status='REPLACED').select_related('question').first()
+        # 1. Existing active assignments for today
+        today_assignments = list(
+            DailyPromptAssignment.objects.filter(
+                user=user,
+                duo=duo,
+                assigned_date=target_date
+            ).exclude(status='REPLACED').select_related('question').order_by('created_at')
+        )
 
-        if today_assignment:
-            return [today_assignment]
+        if today_assignments:
+            # If multiple assignments existed previously from old 3-question logic,
+            # keep the answered one (or the first one) and mark any excess un-answered ones as REPLACED.
+            primary_assignment = None
+            for a in today_assignments:
+                if a.status == 'ANSWERED':
+                    primary_assignment = a
+                    break
+            if not primary_assignment:
+                primary_assignment = today_assignments[0]
+
+            for a in today_assignments:
+                if a.id != primary_assignment.id and a.status != 'ANSWERED':
+                    a.status = 'REPLACED'
+                    a.save()
+
+            return [primary_assignment]
 
         # 2. Check for unanswered carry-forward question from prior days
         unanswered_past = DailyPromptAssignment.objects.filter(
@@ -221,14 +238,6 @@ class DailyResponsesView(APIView):
 
             if partner_submitted_qs.exists():
                 partner_status = "SUBMITTED"
-                # If viewing history or archive, ensure partner's submitted questions are present in questions list
-                existing_q_ids = {q['id'] for q in questions_data}
-                for resp in partner_submitted_qs:
-                    if str(resp.question_id) not in existing_q_ids:
-                        p_q_dict = DailyQuestionSerializer(resp.question).data
-                        p_q_dict['genre'] = resp.question.genre
-                        questions_data.append(p_q_dict)
-                        existing_q_ids.add(str(resp.question_id))
 
         return Response({
             "date": target_date.isoformat(),

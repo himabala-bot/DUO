@@ -310,13 +310,13 @@ export const DailyView: React.FC = () => {
           </span>
         </div>
 
-        {/* Daily Questions List (3 genres) */}
+        {/* Single Daily Question */}
         <div className="space-y-4">
-          {questions.map((q, idx) => {
+          {questions.slice(0, 1).map((q) => {
             const status = questionStatuses[q.id] || 'NOT_STARTED';
             const actionState = activeActions[q.id];
             const isFeedback = feedbackMsg?.id === q.id;
-            const partnerAns = partnerResponses.find((r) => r.question_id === q.id);
+            const partnerAns = partnerResponses[0];
             const currentAns = answers[q.id] || '';
             const isVoiceAns = currentAns.startsWith('[voice:');
             const genreInfo = getGenreInfo(q.genre);
@@ -325,10 +325,10 @@ export const DailyView: React.FC = () => {
             return (
               <div
                 key={q.id}
-                className="rounded-[45px] border border-theme bg-theme-card p-5 sm:p-6 shadow-xs transition-all"
+                className="rounded-[45px] border border-theme bg-theme-card p-5 sm:p-7 shadow-xs transition-all"
               >
                 {/* Question Header & Genre Tags */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-theme-subtle">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-theme-subtle">
                   <div className="flex items-center flex-wrap gap-2">
                     {/* Genre Badge */}
                     <span className={`inline-flex items-center space-x-1 rounded-full px-2.5 py-0.5 text-[11px] font-mono font-medium border ${genreInfo.badge}`}>
@@ -353,7 +353,7 @@ export const DailyView: React.FC = () => {
                         onClick={() => handleChangeQuestion(q)}
                         disabled={actionState === 'changing' || actionState === 'submitting'}
                         className="inline-flex items-center space-x-1 rounded-full border border-theme bg-theme-input px-2.5 py-1 text-[11px] font-mono text-theme-secondary hover:text-theme-primary hover:border-[#125CB9] transition-all disabled:opacity-40"
-                        title="Randomly change to another question of this genre"
+                        title="Randomly change to another question"
                       >
                         <Shuffle className={`h-3 w-3 ${actionState === 'changing' ? 'animate-spin text-[#125CB9]' : ''}`} />
                         <span>{actionState === 'changing' ? 'Changing...' : 'Change question'}</span>
@@ -378,21 +378,19 @@ export const DailyView: React.FC = () => {
                 </div>
 
                 {/* Question Text */}
-                <div className="pt-3">
-                  <div className="flex items-baseline space-x-2.5">
-                    <span className="font-mono text-xs text-theme-muted font-semibold">
-                      {String(idx + 1).padStart(2, '0')}.
-                    </span>
-                    <h3 className="font-serif text-base sm:text-lg font-bold text-theme-primary leading-snug">
-                      {q.question}
-                    </h3>
-                  </div>
+                <div className="pt-3.5">
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-theme-muted block mb-1">
+                    Your Prompt for Today:
+                  </span>
+                  <h3 className="font-serif text-lg sm:text-xl font-bold text-theme-primary leading-snug">
+                    {q.question}
+                  </h3>
                 </div>
 
                 {/* Answer Input or Voice Preview */}
-                <div className="mt-3">
+                <div className="mt-3.5">
                   {isVoiceAns ? (
-                    <div className="rounded-xl border border-theme bg-theme-input p-3 flex items-center justify-between">
+                    <div className="rounded-2xl border border-theme bg-theme-input p-3.5 flex items-center justify-between">
                       <div>
                         <span className="text-[10px] font-mono uppercase tracking-wider text-theme-muted block mb-1">
                           Your Voice Reflection:
@@ -419,7 +417,7 @@ export const DailyView: React.FC = () => {
                 </div>
 
                 {/* Action Toolbar */}
-                <div className="mt-3 flex flex-wrap items-center justify-between gap-2.5 pt-2.5 border-t border-theme-subtle">
+                <div className="mt-3.5 flex flex-wrap items-center justify-between gap-2.5 pt-3 border-t border-theme-subtle">
                   <div className="flex items-center space-x-2">
                     {/* Voice Note Option */}
                     {!isVoiceAns && (
@@ -469,14 +467,34 @@ export const DailyView: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Partner's Submitted Response */}
+                {/* Partner's Submitted Response & Unique Question */}
                 {partnerStatus === 'SUBMITTED' && partnerAns ? (
-                  <div className="mt-3.5 rounded-2xl border border-[#125CB9]/20 bg-[#125CB9]/5 p-3.5 space-y-1">
-                    <div className="flex items-center space-x-1.5 text-[11px] font-mono text-[#125CB9] font-medium">
-                      <Heart className="h-3 w-3 fill-current" />
-                      <span>{partner?.name}'s response:</span>
+                  <div className="mt-4 rounded-3xl border border-[#125CB9]/25 bg-[#125CB9]/5 p-4 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-1.5 text-xs font-mono text-[#125CB9] font-semibold">
+                        <Heart className="h-3.5 w-3.5 fill-current" />
+                        <span>{partner?.name}'s Reflection</span>
+                      </div>
+                      <span className="text-[11px] font-mono text-[#125CB9]/70">
+                        Shared Today
+                      </span>
                     </div>
-                    <div className="pt-0.5">
+
+                    {partnerAns.question_text && partnerAns.question_text !== q.question && (
+                      <div className="pt-1">
+                        <span className="text-[10px] font-mono uppercase tracking-wider text-theme-muted block">
+                          {partner?.name}'s Prompt:
+                        </span>
+                        <p className="font-serif text-sm font-semibold text-theme-primary mt-0.5">
+                          {partnerAns.question_text}
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="pt-1.5 border-t border-[#125CB9]/15">
+                      <span className="text-[10px] font-mono uppercase tracking-wider text-theme-muted block mb-1">
+                        Answer:
+                      </span>
                       {renderAnswerBody(partnerAns.answer, false) || (
                         <p className="text-xs sm:text-sm text-theme-primary italic font-serif">
                           "(Left blank)"
@@ -485,9 +503,9 @@ export const DailyView: React.FC = () => {
                     </div>
                   </div>
                 ) : (
-                  <div className="mt-2.5 flex items-center space-x-1.5 text-[11px] font-mono text-theme-muted">
-                    <Clock className="h-3 w-3" />
-                    <span>{partner?.name}'s note will appear here once shared.</span>
+                  <div className="mt-3 flex items-center space-x-1.5 text-xs font-mono text-theme-muted pt-2 border-t border-theme-subtle">
+                    <Clock className="h-3.5 w-3.5" />
+                    <span>{partner?.name || 'Partner'}'s response will appear here once shared.</span>
                   </div>
                 )}
               </div>
