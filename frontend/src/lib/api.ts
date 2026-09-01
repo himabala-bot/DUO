@@ -1,8 +1,10 @@
 import { supabase } from './supabase';
 import {
   UserProfile,
+  PartnerProfile,
   Duo,
   ConnectionRequest,
+  PairingSession,
   Message,
   Drawing,
   DailyQuestion,
@@ -134,6 +136,40 @@ export const duoApi = {
 
   leave: async (): Promise<{ success: boolean; message: string }> => {
     return request('/api/duo/leave/', { method: 'POST' });
+  },
+
+  createPairingSession: async (): Promise<{ success: boolean; session: PairingSession }> => {
+    return request('/api/duo/pairing/create/', { method: 'POST' });
+  },
+
+  getPairingSession: async (params: { token?: string; code?: string }): Promise<{
+    success: boolean;
+    session: PairingSession;
+    is_valid: boolean;
+  }> => {
+    const searchParams = new URLSearchParams();
+    if (params.token) searchParams.set('token', params.token);
+    if (params.code) searchParams.set('code', params.code);
+    return request(`/api/duo/pairing/?${searchParams.toString()}`);
+  },
+
+  claimPairingSession: async (data: { token?: string; code?: string }): Promise<{
+    success: boolean;
+    message: string;
+    duo_id: string;
+    partner: PartnerProfile;
+  }> => {
+    return request('/api/duo/pairing/claim/', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  cancelPairingSession: async (token?: string): Promise<{ success: boolean; message: string }> => {
+    return request('/api/duo/pairing/cancel/', {
+      method: 'POST',
+      body: JSON.stringify({ token }),
+    });
   },
 };
 

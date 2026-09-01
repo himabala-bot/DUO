@@ -7,11 +7,13 @@ from rest_framework import status, permissions
 from apps.core.permissions import HasProfile, HasActiveDuo
 from apps.authentication.models import Profile
 from apps.notifications.services import create_notification
-from .models import Duo, DuoMember, ConnectionRequest
+from .models import Duo, DuoMember, ConnectionRequest, PairingSession
 from .serializers import (
     DuoDetailSerializer,
     ConnectionRequestSerializer,
     ConnectByCodeSerializer,
+    PairingSessionPublicSerializer,
+    ClaimPairingSerializer,
 )
 
 logger = logging.getLogger(__name__)
@@ -303,4 +305,137 @@ class LeaveDuoView(APIView):
         return Response({
             "success": True,
             "message": "You have left the DUO."
+        })
+
+
+class CreatePairingSessionView(APIView):
+    """
+    POST /api/duo/pairing/create/ - Generates a short-lived QR pairing session.
+    """
+    permission_classes = [permissions.IsAuthenticated, HasProfile]
+
+    def post(self, request):
+        profile = request.user.profile
+
+        # Validate that user is not already in an active DUO
+        if profile.active_duo is not None:
+            return Response(
+                {"error": "You already belong to an active DUO relationship."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        session = PairingSession.create_session(creator=profile)
+        serializer = PairingSessionPublicSerializer(session)
+        return Response({
+            "success": True,
+            "session": serializer.data
+        }, status=status.HTTP_201_CREATED)
+
+
+class GetPairingSessionView(APIView):
+    """
+    GET /api/duo/pairing/?token=... or ?code=... - Lookup pairing session details for second device preview.
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        token = request.query_params.get('token')
+        code = request.query_params.get('code')
+
+        if not token and not code:
+            return Response(
+                {"error": "Please provide a 'token' or 'code' query parameter."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        session = None
+        if token:
+            session = PairingSession.objects.filter(token=token).select_related('creator').first()
+        elif code:
+            clean_code = code.strip().upper()
+            session = PairingSession.objects.filter(code=clean_code).select_related('creator').first()
+
+        if not session:
+            return Response(
+                {"error": "Pairing session not found. It may have expired or been cancelled."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = PairingSessionPublicSerializer(session)
+        return Response({
+            "success": True,
+            "session": serializer.data,
+            "is_valid": session.is_valid()
+        })
+
+
+class ClaimPairingSessionView(APIView):
+    """
+    POST /api/duo/pairing/claim/ - Claim a pairing session and establish DUO relationship.
+    """
+    permission_classes = [permissions.IsAuthenticated, HasProfile]
+
+    def post(self, request):
+        serializer = ClaimPairingSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        token = serializer.validated_data.get('token')
+        code = serializer.validated_data.get('code')
+        claimant = request.user.profile
+
+        session = None
+        if token:
+            session = PairingSession.objects.filter(token=token).select_related('creator').first()
+        elif code:
+            clean_code = code.strip().upper()
+            session = PairingSession.objects.filter(code=clean_code).select_related('creator').first()
+
+        if not session:
+            return Response(
+                {"error": "Pairing session not found. Please scan the QR code again."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        try:
+            new_duo = session.claim(claimant)
+            create_notification(
+                recipient=session.creator,
+                n_type='CONNECTION_ACCEPTED',
+                title='DUO Connected via QR!',
+                body=f"{claimant.name} joined your DUO via QR code. Your private space is ready!",
+                reference_id=str(new_duo.id)
+            )
+            return Response({
+                "success": True,
+                "message": f"Successfully paired with {session.creator.name}!",
+                "duo_id": str(new_duo.id),
+                "partner": {
+                    "id": str(session.creator.id),
+                    "name": session.creator.name,
+                    "avatar_url": session.creator.avatar_url,
+                }
+            }, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class CancelPairingSessionView(APIView):
+    """
+    POST /api/duo/pairing/cancel/ - Cancel active pairing session.
+    """
+    permission_classes = [permissions.IsAuthenticated, HasProfile]
+
+    def post(self, request):
+        token = request.data.get('token')
+        profile = request.user.profile
+
+        query = PairingSession.objects.filter(creator=profile, status='PENDING')
+        if token:
+            query = query.filter(token=token)
+
+        updated_count = query.update(status='CANCELLED')
+        return Response({
+            "success": True,
+            "message": f"Cancelled {updated_count} pairing session(s)."
         })

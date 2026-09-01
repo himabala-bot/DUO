@@ -49,6 +49,17 @@ export interface ConnectionRequest {
   updated_at: string;
 }
 
+export interface PairingSession {
+  id: string;
+  token: string;
+  code: string;
+  creator: PartnerProfile;
+  status: 'PENDING' | 'CLAIMED' | 'EXPIRED' | 'CANCELLED';
+  expires_at: string;
+  is_valid: boolean;
+  created_at: string;
+}
+
 export interface MessageReply {
   id: string;
   sender_name: string;

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from apps.authentication.serializers import PartnerProfileSerializer
-from .models import Duo, DuoMember, ConnectionRequest
+from .models import Duo, DuoMember, ConnectionRequest, PairingSession
 from apps.authentication.models import Profile
 
 class DuoMemberSerializer(serializers.ModelSerializer):
@@ -55,3 +55,22 @@ class ConnectByCodeSerializer(serializers.Serializer):
         if not code.startswith('DUO-') and len(code) == 6:
             code = f"DUO-{code}"
         return code
+
+
+class PairingSessionPublicSerializer(serializers.ModelSerializer):
+    creator = PartnerProfileSerializer(read_only=True)
+    is_valid = serializers.BooleanField(read_only=True)
+
+    class Meta:
+        model = PairingSession
+        fields = ['id', 'token', 'code', 'creator', 'status', 'expires_at', 'is_valid', 'created_at']
+
+
+class ClaimPairingSerializer(serializers.Serializer):
+    token = serializers.CharField(required=False, allow_blank=True)
+    code = serializers.CharField(required=False, allow_blank=True)
+
+    def validate(self, attrs):
+        if not attrs.get('token') and not attrs.get('code'):
+            raise serializers.ValidationError("Either 'token' or 'code' must be provided.")
+        return attrs
