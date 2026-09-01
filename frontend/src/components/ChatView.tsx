@@ -281,11 +281,7 @@ export const ChatView: React.FC = () => {
       if (partner?.id) {
         const partnerNotifChannel = supabase.channel(`user:${partner.id}`);
         if (typeof (partnerNotifChannel as any).httpSend === 'function') {
-          (partnerNotifChannel as any).httpSend({
-            type: 'broadcast',
-            event: 'new_message',
-            payload: confirmedMsg,
-          });
+          (partnerNotifChannel as any).httpSend('new_message', confirmedMsg).catch(() => {});
         }
       }
     } catch (err) {
@@ -338,11 +334,7 @@ export const ChatView: React.FC = () => {
       if (partner?.id) {
         const partnerNotifChannel = supabase.channel(`user:${partner.id}`);
         if (typeof (partnerNotifChannel as any).httpSend === 'function') {
-          (partnerNotifChannel as any).httpSend({
-            type: 'broadcast',
-            event: 'new_message',
-            payload: confirmedMsg,
-          });
+          (partnerNotifChannel as any).httpSend('new_message', confirmedMsg).catch(() => {});
         }
       }
       toast.love('Voice note sent', 'Voice Note');

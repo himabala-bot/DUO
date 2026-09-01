@@ -302,11 +302,7 @@ export const DrawingCanvas: React.FC = () => {
       if (partner?.id) {
         const partnerNotifChannel = supabase.channel(`user:${partner.id}`);
         if (typeof (partnerNotifChannel as any).httpSend === 'function') {
-          (partnerNotifChannel as any).httpSend({
-            type: 'broadcast',
-            event: 'new_drawing',
-            payload: confirmedDrawing,
-          });
+          (partnerNotifChannel as any).httpSend('new_drawing', confirmedDrawing).catch(() => {});
         }
       }
 

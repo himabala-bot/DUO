@@ -210,11 +210,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
       if (profile?.active_duo_id) {
         const channel = supabase.channel(`chat:${profile.active_duo_id}`);
         if (typeof (channel as any).httpSend === 'function') {
-          (channel as any).httpSend({
-            type: 'broadcast',
-            event: 'messages_cleared',
-            payload: {},
-          });
+          (channel as any).httpSend('messages_cleared', {}).catch(() => {});
         }
       }
       setConfirmClearChat(false);
