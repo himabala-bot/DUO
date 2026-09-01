@@ -20,6 +20,8 @@ import {
   Camera,
   ArrowRight,
   ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
   Clock,
   Volume2,
 } from 'lucide-react';
@@ -100,6 +102,36 @@ export const LittleNotesView: React.FC = () => {
   // Active view: null means "All Memos Category Hub" (4 main cards), otherwise the opened category
   const [selectedCategory, setSelectedCategory] = useState<CategoryType | null>(null);
   const [previewNote, setPreviewNote] = useState<LittleNote | null>(null);
+
+  // Read Notes Tracking for Unopened Note Preview
+  const [readNoteIds, setReadNoteIds] = useState<Set<string>>(() => {
+    if (typeof window !== 'undefined' && profile?.id) {
+      try {
+        const stored = localStorage.getItem(`read_notes_${profile.id}`);
+        return stored ? new Set(JSON.parse(stored)) : new Set();
+      } catch {
+        return new Set();
+      }
+    }
+    return new Set();
+  });
+  const [unopenedIndex, setUnopenedIndex] = useState(0);
+
+  const markNoteAsRead = useCallback(
+    (noteId: string) => {
+      setReadNoteIds((prev) => {
+        const updated = new Set(prev);
+        updated.add(noteId);
+        if (typeof window !== 'undefined' && profile?.id) {
+          try {
+            localStorage.setItem(`read_notes_${profile.id}`, JSON.stringify(Array.from(updated)));
+          } catch {}
+        }
+        return updated;
+      });
+    },
+    [profile?.id]
+  );
 
   // Create Note Modal State
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -299,50 +331,151 @@ export const LittleNotesView: React.FC = () => {
         </div>
 
         {/* ─────────────────────────────────────────────────────────────
-            "NEW NOTE FOR YOU" BANNER (When a note exists)
+            SPECIAL "NEW / UNOPENED NOTES" PREVIEW CARD
+            Only rendered when partner has created notes that the user hasn't opened yet.
+            Occupies ~50% width on desktop (max-w-[640px]), centered horizontally.
         ───────────────────────────────────────────────────────────── */}
-        {latestNoteForYou && (
-          <div
-            onClick={() => setPreviewNote(latestNoteForYou)}
-            className="group relative cursor-pointer overflow-hidden rounded-2xl border border-theme bg-theme-card p-3.5 sm:p-4 shadow-xs transition-all hover:border-[#125CB9]"
-          >
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-              <div className="flex items-center space-x-3 min-w-0">
-                <Avatar src={latestNoteForYou.author.avatar_url} name={latestNoteForYou.author.name} size="sm" />
+        {(() => {
+          const unopenedPartnerNotes = notes.filter((n) => !n.is_me && !readNoteIds.has(n.id));
+          if (unopenedPartnerNotes.length === 0) return null;
 
-                <div className="min-w-0">
-                  <div className="flex items-center space-x-2">
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-medium border border-[#125CB9]/25 bg-[#125CB9]/10 text-[#125CB9]">
-                      <Heart className="h-2.5 w-2.5 fill-current" />
-                      <span>Note for you</span>
+          const safeIndex = unopenedIndex < unopenedPartnerNotes.length ? unopenedIndex : 0;
+          const currentUnopened = unopenedPartnerNotes[safeIndex];
+
+          const handleOpenCard = () => {
+            markNoteAsRead(currentUnopened.id);
+            setPreviewNote(currentUnopened);
+          };
+
+          return (
+            <div className="mx-auto w-full max-w-[640px] pt-1">
+              <div
+                onClick={handleOpenCard}
+                className="group relative w-full h-[240px] sm:h-[255px] overflow-hidden rounded-[30px] border border-white/20 bg-black/10 shadow-[0_20px_60px_rgba(0,0,0,0.14)] transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_24px_70px_rgba(0,0,0,0.20)] cursor-pointer text-left select-none"
+              >
+                {/* 1. Blurred Note Preview Background Layer */}
+                {currentUnopened.note_type === 'PHOTO' && currentUnopened.media_url ? (
+                  <div
+                    className="absolute inset-0 scale-110 bg-cover bg-center blur-[20px] transition-all duration-500 group-hover:blur-[12px]"
+                    style={{ backgroundImage: `url(${currentUnopened.media_url})` }}
+                  />
+                ) : currentUnopened.note_type === 'DRAWING' && currentUnopened.media_url ? (
+                  <div
+                    className="absolute inset-0 scale-110 bg-contain bg-center bg-no-repeat blur-[18px] transition-all duration-500 group-hover:blur-[10px]"
+                    style={{
+                      backgroundImage: `url(${currentUnopened.media_url})`,
+                      backgroundColor: '#1E293B',
+                    }}
+                  />
+                ) : currentUnopened.note_type === 'VOICE' ? (
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#3D2214] via-[#24160E] to-[#141416] transition-all duration-500">
+                    <div className="absolute inset-0 flex items-center justify-center opacity-35 blur-[12px] group-hover:blur-[6px] transition-all">
+                      <div className="flex items-center gap-1.5 h-16">
+                        {[40, 75, 55, 90, 60, 85, 45, 95, 70, 50, 80, 65, 35, 75, 60, 85, 40].map((h, i) => (
+                          <div key={i} className="w-2.5 bg-[#F97316] rounded-full" style={{ height: `${h}%` }} />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#1E293B] via-[#0F172A] to-[#18181B]">
+                    <div className="absolute inset-0 p-8 flex flex-col justify-center opacity-25 blur-[12px] group-hover:blur-[6px] transition-all select-none">
+                      <p className="text-xl text-white font-serif italic line-clamp-3 leading-relaxed">
+                        {currentUnopened.content}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* 2. Readability Glass Overlays */}
+                <div className="absolute inset-0 bg-black/40 backdrop-blur-[16px]" />
+                <div className="pointer-events-none absolute inset-0 rounded-[30px] border-[2.5px] border-white/15 z-20" />
+
+                {/* 3. Card Content */}
+                <div className="relative z-10 flex h-full flex-col justify-between p-6 sm:p-7 text-left text-white">
+                  {/* Top Row: Note Type Badge & Optional Stack Indicator */}
+                  <div className="flex items-center justify-between">
+                    <span className="inline-flex items-center rounded-full border border-white/20 bg-white/10 px-3.5 py-1 text-xs font-medium text-white/90 backdrop-blur-md shadow-xs">
+                      {currentUnopened.note_type === 'TEXT'
+                        ? 'Text note'
+                        : currentUnopened.note_type === 'PHOTO'
+                        ? 'Photo keepsake'
+                        : currentUnopened.note_type === 'VOICE'
+                        ? 'Voice note'
+                        : 'Doodle art'}
                     </span>
-                    <span className="text-[10px] font-mono text-theme-muted">
-                      {format(new Date(latestNoteForYou.created_at), 'hh:mm a')}
-                    </span>
+
+                    {/* Stack Pagination (if multiple unopened notes exist) */}
+                    {unopenedPartnerNotes.length > 1 && (
+                      <div
+                        className="flex items-center space-x-1 rounded-full border border-white/20 bg-black/30 px-2.5 py-1 text-[11px] font-mono text-white/85 backdrop-blur-md"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setUnopenedIndex((prev) =>
+                              prev > 0 ? prev - 1 : unopenedPartnerNotes.length - 1
+                            );
+                          }}
+                          className="p-0.5 hover:text-white transition-colors"
+                          title="Previous note"
+                        >
+                          <ChevronLeft className="h-3 w-3" />
+                        </button>
+                        <span>
+                          {safeIndex + 1} of {unopenedPartnerNotes.length}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setUnopenedIndex((prev) =>
+                              prev < unopenedPartnerNotes.length - 1 ? prev + 1 : 0
+                            );
+                          }}
+                          className="p-0.5 hover:text-white transition-colors"
+                          title="Next note"
+                        >
+                          <ChevronRight className="h-3 w-3" />
+                        </button>
+                      </div>
+                    )}
                   </div>
 
-                  <h4 className="mt-0.5 font-serif text-sm sm:text-base font-bold text-theme-primary truncate">
-                    {latestNoteForYou.is_me ? `You posted a ${latestNoteForYou.note_type.toLowerCase()}` : `New note for you by ${latestNoteForYou.author.name}`}
-                  </h4>
+                  {/* Center Main Message */}
+                  <div>
+                    <h3 className="max-w-[85%] font-serif text-2xl sm:text-3xl font-semibold leading-tight text-white tracking-tight">
+                      Something is waiting for you.
+                    </h3>
+                    {currentUnopened.note_type === 'VOICE' && (
+                      <p className="text-xs text-white/70 font-mono mt-1">
+                        Voice whisper · Tap to listen
+                      </p>
+                    )}
+                  </div>
 
-                  <p className="text-xs text-theme-secondary line-clamp-1">
-                    {latestNoteForYou.content || (latestNoteForYou.note_type === 'DRAWING' ? 'Sent a hand-drawn doodle' : latestNoteForYou.note_type === 'VOICE' ? 'Recorded a voice whisper' : 'Attached a photo')}
-                  </p>
+                  {/* Bottom Row: Metadata & Open CTA */}
+                  <div className="flex items-end justify-between gap-3">
+                    <div>
+                      <p className="text-xs sm:text-sm font-medium text-white/80">
+                        From {currentUnopened.author.name}
+                      </p>
+                      <p className="text-[11px] text-white/55 font-mono mt-0.5">
+                        {format(new Date(currentUnopened.created_at), 'MMMM dd · hh:mm a')}
+                      </p>
+                    </div>
+
+                    <span className="rounded-full border border-white/25 bg-white/15 px-5 py-2 text-xs sm:text-sm font-medium text-white backdrop-blur-md transition-all duration-200 group-hover:bg-white/25 group-hover:border-white/40 shadow-xs">
+                      Open note
+                    </span>
+                  </div>
                 </div>
               </div>
-
-              {/* Right CTA */}
-              <div className="flex items-center space-x-1.5 shrink-0 self-end sm:self-center">
-                <span className="text-xs font-semibold text-[#125CB9] group-hover:underline">
-                  Open Note
-                </span>
-                <span className="flex h-8 w-8 items-center justify-center rounded-full border border-theme bg-theme-input text-theme-secondary group-hover:bg-[#125CB9] group-hover:text-white transition-colors">
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </span>
-              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* ─────────────────────────────────────────────────────────────
             MAIN VIEW: ALL MEMOS 4 FILE-SHAPED FOLDER CARDS
