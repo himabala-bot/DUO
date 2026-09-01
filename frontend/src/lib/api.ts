@@ -241,13 +241,21 @@ export const dailyApi = {
   },
 
   saveResponses: async (
-    responses: { question_id: string; answer: string }[],
+    responses: { question_id: string; answer: string; assignment_id?: string }[],
     action: 'SAVE_DRAFT' | 'SUBMIT' = 'SUBMIT',
     date?: string
   ): Promise<{ success: boolean; status: string; date: string; message: string; responses: DailyResponse[] }> => {
     return request('/api/daily/responses/', {
       method: 'POST',
       body: JSON.stringify({ responses, action, date }),
+    });
+  },
+
+  changeQuestion: async (
+    assignmentId: string
+  ): Promise<{ success: boolean; message: string; assignment: any; question: DailyQuestion }> => {
+    return request(`/api/daily/questions/${assignmentId}/change/`, {
+      method: 'POST',
     });
   },
 

@@ -4,18 +4,20 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
 import { dailyApi } from '@/lib/api';
-import { DailyQuestion, DailyResponse } from '@/types';
+import { DailyQuestion, DailyResponse, QuestionGenre } from '@/types';
 import {
   Check,
   Clock,
-  Lock,
   Bookmark,
   Send,
   CheckCircle2,
   Heart,
   Sparkles,
   BookOpen,
-  Mic,
+  Shuffle,
+  Smile,
+  Compass,
+  ArrowRight,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { KeepsakeArchiveModal } from './KeepsakeArchiveModal';
@@ -31,7 +33,7 @@ export const DailyView: React.FC = () => {
   const [partnerResponses, setPartnerResponses] = useState<DailyResponse[]>([]);
   const [partnerStatus, setPartnerStatus] = useState<string>('NOT_STARTED');
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [activeActions, setActiveActions] = useState<Record<string, 'saving' | 'submitting' | null>>({});
+  const [activeActions, setActiveActions] = useState<Record<string, 'saving' | 'submitting' | 'changing' | null>>({});
   const [feedbackMsg, setFeedbackMsg] = useState<{ id: string; type: 'success' | 'draft'; text: string } | null>(null);
   const [showArchiveModal, setShowArchiveModal] = useState(false);
 
@@ -50,7 +52,7 @@ export const DailyView: React.FC = () => {
         });
       }
 
-      setAnswers(initialAnswers);
+      setAnswers((prev) => ({ ...initialAnswers, ...prev }));
       setQuestionStatuses(initialStatuses);
       setPartnerResponses(data.partner_responses || []);
       setPartnerStatus(data.partner_status || 'NOT_STARTED');
@@ -69,17 +71,19 @@ export const DailyView: React.FC = () => {
     setAnswers((prev) => ({ ...prev, [qId]: value }));
   };
 
-  const handleSaveQuestionDraft = async (qId: string) => {
-    const text = answers[qId] || '';
-    setActiveActions((prev) => ({ ...prev, [qId]: 'saving' }));
+  const handleSaveQuestionDraft = async (q: DailyQuestion) => {
+    const text = answers[q.id] || '';
+    setActiveActions((prev) => ({ ...prev, [q.id]: 'saving' }));
     setFeedbackMsg(null);
 
     try {
-      await dailyApi.saveResponses([{ question_id: qId, answer: text }], 'SAVE_DRAFT');
-      setQuestionStatuses((prev) => ({ ...prev, [qId]: 'DRAFT' }));
+      await dailyApi.saveResponses([
+        { question_id: q.id, answer: text, assignment_id: q.assignment_id }
+      ], 'SAVE_DRAFT');
+      setQuestionStatuses((prev) => ({ ...prev, [q.id]: 'DRAFT' }));
       toast.love('Saved privately in your drafts', 'Draft Saved');
       setFeedbackMsg({
-        id: qId,
+        id: q.id,
         type: 'draft',
         text: 'Saved privately in your drafts',
       });
@@ -87,52 +91,105 @@ export const DailyView: React.FC = () => {
     } catch (err: any) {
       toast.error(err.message || 'Failed to save draft.', 'Draft Error');
     } finally {
-      setActiveActions((prev) => ({ ...prev, [qId]: null }));
+      setActiveActions((prev) => ({ ...prev, [q.id]: null }));
     }
   };
 
-  const handleSendQuestion = async (qId: string) => {
-    const text = (answers[qId] || '').trim();
+  const handleSendQuestion = async (q: DailyQuestion) => {
+    const text = (answers[q.id] || '').trim();
     if (!text) {
-      toast.info('Please write a note before sending', 'Empty Note');
+      toast.info('Please write a reflection before sending', 'Empty Reflection');
       return;
     }
 
-    setActiveActions((prev) => ({ ...prev, [qId]: 'submitting' }));
+    setActiveActions((prev) => ({ ...prev, [q.id]: 'submitting' }));
     setFeedbackMsg(null);
 
     try {
-      await dailyApi.saveResponses([{ question_id: qId, answer: text }], 'SUBMIT');
-      setQuestionStatuses((prev) => ({ ...prev, [qId]: 'SUBMITTED' }));
-      toast.love(`Sealed and shared with ${partner?.name || 'partner'}`, 'Love Note Shared');
+      await dailyApi.saveResponses([
+        { question_id: q.id, answer: text, assignment_id: q.assignment_id }
+      ], 'SUBMIT');
+      setQuestionStatuses((prev) => ({ ...prev, [q.id]: 'SUBMITTED' }));
+      toast.love(`Sealed and shared with ${partner?.name || 'partner'}`, 'Shared With Partner');
       setFeedbackMsg({
-        id: qId,
+        id: q.id,
         type: 'success',
-        text: `Sealed and shared with ${partner?.name || 'partner'}`,
+        text: `Shared with ${partner?.name || 'partner'}`,
       });
       await fetchTodayData();
       setTimeout(() => setFeedbackMsg(null), 4000);
     } catch (err: any) {
       toast.error(err.message || 'Failed to submit response.', 'Error');
     } finally {
-      setActiveActions((prev) => ({ ...prev, [qId]: null }));
+      setActiveActions((prev) => ({ ...prev, [q.id]: null }));
     }
   };
 
-  const handleVoiceAnswer = async (qId: string, audioDataUrl: string, duration: number) => {
+  const handleVoiceAnswer = async (q: DailyQuestion, audioDataUrl: string, duration: number) => {
     const voicePayload = `[voice:${JSON.stringify({ url: audioDataUrl, duration })}]`;
-    setAnswers((prev) => ({ ...prev, [qId]: voicePayload }));
-    setActiveActions((prev) => ({ ...prev, [qId]: 'submitting' }));
+    setAnswers((prev) => ({ ...prev, [q.id]: voicePayload }));
+    setActiveActions((prev) => ({ ...prev, [q.id]: 'submitting' }));
 
     try {
-      await dailyApi.saveResponses([{ question_id: qId, answer: voicePayload }], 'SUBMIT');
-      setQuestionStatuses((prev) => ({ ...prev, [qId]: 'SUBMITTED' }));
+      await dailyApi.saveResponses([
+        { question_id: q.id, answer: voicePayload, assignment_id: q.assignment_id }
+      ], 'SUBMIT');
+      setQuestionStatuses((prev) => ({ ...prev, [q.id]: 'SUBMITTED' }));
       toast.love(`Voice reflection shared with ${partner?.name || 'partner'}`, 'Voice Note Shared');
       await fetchTodayData();
     } catch (err: any) {
       toast.error(err.message || 'Failed to submit voice note.', 'Error');
     } finally {
-      setActiveActions((prev) => ({ ...prev, [qId]: null }));
+      setActiveActions((prev) => ({ ...prev, [q.id]: null }));
+    }
+  };
+
+  const handleChangeQuestion = async (q: DailyQuestion) => {
+    if (!q.assignment_id) return;
+    setActiveActions((prev) => ({ ...prev, [q.id]: 'changing' }));
+
+    try {
+      const res = await dailyApi.changeQuestion(q.assignment_id);
+      if (res.success && res.question) {
+        setQuestions((prev) =>
+          prev.map((item) => (item.id === q.id ? res.question : item))
+        );
+        // Clear previous unsubmitted draft text for this question slot
+        setAnswers((prev) => {
+          const next = { ...prev };
+          delete next[q.id];
+          return next;
+        });
+        toast.love(`Replaced with a fresh ${getGenreInfo(q.genre).label} question!`, 'Question Changed');
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Could not change question.', 'Change Error');
+    } finally {
+      setActiveActions((prev) => ({ ...prev, [q.id]: null }));
+    }
+  };
+
+  const getGenreInfo = (genre?: QuestionGenre) => {
+    switch (genre) {
+      case 'FUN':
+        return {
+          label: 'Fun & Playful',
+          badge: 'bg-[#00D26A]/10 text-[#00D26A] border-[#00D26A]/25',
+          icon: Smile,
+        };
+      case 'DEEP':
+        return {
+          label: 'Deep & Emotional',
+          badge: 'bg-[#125CB9]/10 text-[#125CB9] border-[#125CB9]/25',
+          icon: Heart,
+        };
+      case 'IMAGINATIVE':
+      default:
+        return {
+          label: 'Imaginative & Hypothetical',
+          badge: 'bg-[#FB923C]/10 text-[#FB923C] border-[#FB923C]/25',
+          icon: Sparkles,
+        };
     }
   };
 
@@ -151,14 +208,13 @@ export const DailyView: React.FC = () => {
   };
 
   const todayFormatted = format(new Date(), 'EEEE, MMMM dd, yyyy');
-  const submittedCount = Object.values(questionStatuses).filter((s) => s === 'SUBMITTED').length;
 
   if (isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="text-center space-y-2">
-          <Heart className="h-6 w-6 text-[#EA5E86] animate-bounce mx-auto" />
-          <p className="text-xs font-mono text-[#A89F91]">Opening today's prompts...</p>
+          <Heart className="h-6 w-6 text-[#125CB9] animate-bounce mx-auto" />
+          <p className="text-xs font-mono text-theme-muted">Opening today's prompts...</p>
         </div>
       </div>
     );
@@ -179,7 +235,7 @@ export const DailyView: React.FC = () => {
               Daily Love Prompts
             </h2>
             <p className="mt-0.5 text-xs sm:text-sm text-theme-secondary">
-              Three tiny questions to draw closer every day. Answers unlock once shared together.
+              Three tiny questions to draw closer every day across distinct genres. Answers unlock once shared together.
             </p>
           </div>
 
@@ -214,7 +270,7 @@ export const DailyView: React.FC = () => {
           </div>
 
           <span
-            className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-medium ${
+            className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-mono font-medium ${
               partnerStatus === 'SUBMITTED'
                 ? 'bg-[#00D26A]/10 border border-[#00D26A]/25 text-[#00D26A]'
                 : 'bg-theme-input border border-theme text-theme-muted'
@@ -232,7 +288,7 @@ export const DailyView: React.FC = () => {
           </span>
         </div>
 
-        {/* Daily Questions List */}
+        {/* Daily Questions List (3 genres) */}
         <div className="space-y-4">
           {questions.map((q, idx) => {
             const status = questionStatuses[q.id] || 'NOT_STARTED';
@@ -241,24 +297,48 @@ export const DailyView: React.FC = () => {
             const partnerAns = partnerResponses.find((r) => r.question_id === q.id);
             const currentAns = answers[q.id] || '';
             const isVoiceAns = currentAns.startsWith('[voice:');
+            const genreInfo = getGenreInfo(q.genre);
+            const GenreIcon = genreInfo.icon;
 
             return (
               <div
                 key={q.id}
                 className="rounded-2xl border border-theme bg-theme-card p-4 sm:p-5 shadow-xs transition-all"
               >
-                {/* Question Header & Status */}
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-baseline space-x-2.5">
-                    <span className="font-mono text-xs text-theme-muted font-semibold">
-                      {String(idx + 1).padStart(2, '0')}.
+                {/* Question Header & Genre Tags */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-theme-subtle">
+                  <div className="flex items-center flex-wrap gap-2">
+                    {/* Genre Badge */}
+                    <span className={`inline-flex items-center space-x-1 rounded-full px-2.5 py-0.5 text-[11px] font-mono font-medium border ${genreInfo.badge}`}>
+                      <GenreIcon className="h-3 w-3" />
+                      <span>{genreInfo.label}</span>
                     </span>
-                    <h3 className="font-serif text-base sm:text-lg font-bold text-theme-primary leading-snug">
-                      {q.question}
-                    </h3>
+
+                    {/* Carry-Forward Indicator */}
+                    {q.is_carried_forward && (
+                      <span className="inline-flex items-center space-x-1 rounded-full px-2.5 py-0.5 text-[11px] font-mono font-medium border border-[#8B5CF6]/25 bg-[#8B5CF6]/10 text-[#8B5CF6]">
+                        <Clock className="h-3 w-3" />
+                        <span>Carried over</span>
+                      </span>
+                    )}
                   </div>
 
-                  <div className="shrink-0">
+                  <div className="flex items-center space-x-2 self-end sm:self-auto">
+                    {/* Change Question Button (Only available if unsubmitted) */}
+                    {status !== 'SUBMITTED' && q.assignment_id && (
+                      <button
+                        type="button"
+                        onClick={() => handleChangeQuestion(q)}
+                        disabled={actionState === 'changing' || actionState === 'submitting'}
+                        className="inline-flex items-center space-x-1 rounded-full border border-theme bg-theme-input px-2.5 py-1 text-[11px] font-mono text-theme-secondary hover:text-theme-primary hover:border-[#125CB9] transition-all disabled:opacity-40"
+                        title="Randomly change to another question of this genre"
+                      >
+                        <Shuffle className={`h-3 w-3 ${actionState === 'changing' ? 'animate-spin text-[#125CB9]' : ''}`} />
+                        <span>{actionState === 'changing' ? 'Changing...' : 'Change question'}</span>
+                      </button>
+                    )}
+
+                    {/* Submission Status Badge */}
                     {status === 'SUBMITTED' ? (
                       <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-mono font-medium border border-[#00D26A]/25 bg-[#00D26A]/10 text-[#00D26A]">
                         <Check className="h-3 w-3" /> Shared
@@ -272,6 +352,18 @@ export const DailyView: React.FC = () => {
                         Unwritten
                       </span>
                     )}
+                  </div>
+                </div>
+
+                {/* Question Text */}
+                <div className="pt-3">
+                  <div className="flex items-baseline space-x-2.5">
+                    <span className="font-mono text-xs text-theme-muted font-semibold">
+                      {String(idx + 1).padStart(2, '0')}.
+                    </span>
+                    <h3 className="font-serif text-base sm:text-lg font-bold text-theme-primary leading-snug">
+                      {q.question}
+                    </h3>
                   </div>
                 </div>
 
@@ -297,7 +389,7 @@ export const DailyView: React.FC = () => {
                     <textarea
                       value={currentAns}
                       onChange={(e) => handleAnswerChange(q.id, e.target.value)}
-                      placeholder="Write your reflection..."
+                      placeholder="Write your reflection here..."
                       rows={3}
                       className="w-full rounded-2xl border border-theme bg-theme-input p-3.5 text-xs sm:text-sm text-theme-primary placeholder-theme-muted focus:border-[#125CB9] focus:bg-theme-card focus:outline-none focus:ring-1 focus:ring-[#125CB9] leading-relaxed transition-colors"
                     />
@@ -310,7 +402,7 @@ export const DailyView: React.FC = () => {
                     {/* Voice Note Option */}
                     {!isVoiceAns && (
                       <VoiceRecorder
-                        onSendVoice={(url, dur) => handleVoiceAnswer(q.id, url, dur)}
+                        onSendVoice={(url, dur) => handleVoiceAnswer(q, url, dur)}
                       />
                     )}
 
@@ -333,8 +425,8 @@ export const DailyView: React.FC = () => {
                   <div className="flex items-center gap-2 ml-auto">
                     <button
                       type="button"
-                      onClick={() => handleSaveQuestionDraft(q.id)}
-                      disabled={actionState === 'saving' || actionState === 'submitting'}
+                      onClick={() => handleSaveQuestionDraft(q)}
+                      disabled={actionState === 'saving' || actionState === 'submitting' || actionState === 'changing'}
                       title="Save Draft (Private)"
                       className="flex items-center space-x-1.5 rounded-full border border-theme bg-theme-input px-3.5 py-1.5 text-xs font-medium text-theme-secondary hover:bg-theme-card hover:text-theme-primary disabled:opacity-40 transition-colors"
                     >
@@ -344,8 +436,8 @@ export const DailyView: React.FC = () => {
 
                     <button
                       type="button"
-                      onClick={() => handleSendQuestion(q.id)}
-                      disabled={actionState === 'submitting' || actionState === 'saving'}
+                      onClick={() => handleSendQuestion(q)}
+                      disabled={actionState === 'submitting' || actionState === 'saving' || actionState === 'changing'}
                       title="Send answer to partner"
                       className="flex items-center space-x-1.5 rounded-full bg-[#125CB9] px-4 py-1.5 text-xs font-medium text-white hover:bg-[#0E4B99] disabled:opacity-40 transition-colors shadow-xs"
                     >
@@ -390,3 +482,4 @@ export const DailyView: React.FC = () => {
     </div>
   );
 };
+

@@ -531,12 +531,15 @@ export const ChatView: React.FC = () => {
                 }
               }
 
+              const hasReactions = reactionEntries.length > 0;
+              const bottomSpacing = hasReactions ? 'mb-4' : showTimestamp ? 'mb-2.5' : 'mb-1';
+
               return (
                 <div
                   key={msg.id}
                   className={`group relative flex flex-col ${
                     msg.is_me ? 'items-end' : 'items-start'
-                  } ${showTimestamp ? 'mb-2' : 'mb-0.5'}`}
+                  } ${bottomSpacing} transition-all`}
                 >
                   {/* Replied Message Header */}
                   {msg.reply_to && (
@@ -553,12 +556,83 @@ export const ChatView: React.FC = () => {
                     </div>
                   )}
 
-                  {/* Bubble + Action Container (Actions face the center whitespace) */}
+                  {/* Bubble + Timestamp + Action Container (Actions & Time beside bubble facing center whitespace) */}
                   <div
                     className={`flex items-center gap-2 max-w-[85%] sm:max-w-[75%] ${
                       msg.is_me ? 'flex-row-reverse' : 'flex-row'
                     }`}
                   >
+                    {/* The Message Bubble with Soft Rounded Curves */}
+                    <div
+                      onClick={() => handleMessageTap(msg)}
+                      onDoubleClick={() => handleToggleReaction(msg, 'heart')}
+                      onTouchStart={(e) => handleTouchStart(e, msg)}
+                      onTouchMove={handleTouchMove}
+                      onTouchEnd={() => handleTouchEnd(msg)}
+                      style={{
+                        transform: isSwiping ? `translateX(${swipeOffset}px)` : 'none',
+                        transition: isSwiping ? 'none' : 'transform 0.15s ease',
+                      }}
+                      className={`relative select-none cursor-pointer px-4 py-2.5 text-xs sm:text-sm leading-relaxed transition-all shadow-xs shrink-0 max-w-full ${
+                        msg.is_me
+                          ? 'bg-[#125CB9] text-white rounded-2xl rounded-tr-md'
+                          : 'bg-theme-card text-theme-primary border border-theme rounded-2xl rounded-tl-md'
+                      }`}
+                    >
+                      {voiceData ? (
+                        <WaveformPlayer
+                          audioUrl={voiceData.url}
+                          duration={voiceData.duration}
+                          isMe={msg.is_me}
+                        />
+                      ) : (
+                        <p className="whitespace-pre-wrap break-words">{msg.content}</p>
+                      )}
+
+                      {/* Inline Reactions Pill */}
+                      {hasReactions && (
+                        <div
+                          className={`absolute -bottom-3 ${
+                            msg.is_me ? 'right-3' : 'left-3'
+                          } flex items-center space-x-1 rounded-full border border-theme bg-theme-card px-2 py-0.5 shadow-sm z-10`}
+                        >
+                          {reactionEntries.map(([userId, reactionKey]) => (
+                            <span
+                              key={userId}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (profile && userId === profile.id) {
+                                   handleToggleReaction(msg, reactionKey);
+                                }
+                              }}
+                              className="hover:scale-110 transition-transform flex items-center"
+                              title={userId === profile?.id ? 'You reacted' : `${partner?.name} reacted`}
+                            >
+                              {renderReactionIcon(reactionKey)}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Timestamp & Read Status (Vertically centered beside text bubble) */}
+                    {showTimestamp && (
+                      <div className="flex items-center space-x-1 px-1 text-[10px] font-mono text-theme-muted shrink-0 select-none">
+                        <span>
+                          {msg.created_at ? format(new Date(msg.created_at), 'hh:mm a') : 'Just now'}
+                        </span>
+                        {msg.is_me && (
+                          <span title={msg.read_at ? 'Read' : 'Sent'}>
+                            {msg.read_at ? (
+                              <CheckCheck className="h-3 w-3 text-[#125CB9]" />
+                            ) : (
+                              <Check className="h-3 w-3 text-theme-muted" />
+                            )}
+                          </span>
+                        )}
+                      </div>
+                    )}
+
                     {/* Hover Reaction & Actions (Positioned on the whitespace side in the center) */}
                     <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 flex items-center space-x-1 shrink-0 bg-theme-card/95 backdrop-blur-xs border border-theme rounded-full px-2 py-1 shadow-sm">
                       <button
@@ -585,59 +659,6 @@ export const ChatView: React.FC = () => {
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
-                    </div>
-
-                    {/* The Message Bubble with Soft Rounded Curves */}
-                    <div
-                      onClick={() => handleMessageTap(msg)}
-                      onDoubleClick={() => handleToggleReaction(msg, 'heart')}
-                      onTouchStart={(e) => handleTouchStart(e, msg)}
-                      onTouchMove={handleTouchMove}
-                      onTouchEnd={() => handleTouchEnd(msg)}
-                      style={{
-                        transform: isSwiping ? `translateX(${swipeOffset}px)` : 'none',
-                        transition: isSwiping ? 'none' : 'transform 0.15s ease',
-                      }}
-                      className={`relative select-none cursor-pointer px-4 py-2.5 text-xs sm:text-sm leading-relaxed transition-all shadow-xs ${
-                        msg.is_me
-                          ? 'bg-[#125CB9] text-white rounded-2xl rounded-tr-md'
-                          : 'bg-theme-card text-theme-primary border border-theme rounded-2xl rounded-tl-md'
-                      }`}
-                    >
-                      {voiceData ? (
-                        <WaveformPlayer
-                          audioUrl={voiceData.url}
-                          duration={voiceData.duration}
-                          isMe={msg.is_me}
-                        />
-                      ) : (
-                        <p className="whitespace-pre-wrap break-words">{msg.content}</p>
-                      )}
-
-                      {/* Inline Reactions Pill */}
-                      {reactionEntries.length > 0 && (
-                        <div
-                          className={`absolute -bottom-2.5 ${
-                            msg.is_me ? 'right-3' : 'left-3'
-                          } flex items-center space-x-1 rounded-full border border-theme bg-theme-card px-2 py-0.5 shadow-sm`}
-                        >
-                          {reactionEntries.map(([userId, reactionKey]) => (
-                            <span
-                              key={userId}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (profile && userId === profile.id) {
-                                   handleToggleReaction(msg, reactionKey);
-                                }
-                              }}
-                              className="hover:scale-110 transition-transform flex items-center"
-                              title={userId === profile?.id ? 'You reacted' : `${partner?.name} reacted`}
-                            >
-                              {renderReactionIcon(reactionKey)}
-                            </span>
-                          ))}
-                        </div>
-                      )}
                     </div>
                   </div>
 
@@ -667,24 +688,6 @@ export const ChatView: React.FC = () => {
                       >
                         <X className="h-3 w-3" />
                       </button>
-                    </div>
-                  )}
-
-                  {/* Timestamp & Read Status (Only visible when interval exceeds 1 minute or last in chain) */}
-                  {showTimestamp && (
-                    <div className="mt-1 flex items-center space-x-1.5 px-2 text-[10px] font-mono text-theme-muted">
-                      <span>
-                        {msg.created_at ? format(new Date(msg.created_at), 'hh:mm a') : 'Just now'}
-                      </span>
-                      {msg.is_me && (
-                        <span title={msg.read_at ? 'Read' : 'Sent'}>
-                          {msg.read_at ? (
-                            <CheckCheck className="h-3 w-3 text-[#125CB9]" />
-                          ) : (
-                            <Check className="h-3 w-3 text-theme-muted" />
-                          )}
-                        </span>
-                      )}
                     </div>
                   )}
                 </div>

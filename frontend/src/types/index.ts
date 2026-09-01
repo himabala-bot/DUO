@@ -82,17 +82,25 @@ export interface Drawing {
   created_at: string;
 }
 
+export type QuestionGenre = 'FUN' | 'DEEP' | 'IMAGINATIVE';
+
 export interface DailyQuestion {
   id: string;
   question: string;
-  category: string;
-  order: number;
+  genre: QuestionGenre;
+  category?: string;
+  order?: number;
+  assignment_id?: string;
+  is_carried_forward?: boolean;
+  original_assigned_date?: string | null;
 }
 
 export interface DailyResponse {
   id: string;
+  assignment_id?: string;
   question_id: string;
   question_text: string;
+  question_genre?: QuestionGenre;
   user_id: string;
   user_name: string;
   answer: string;

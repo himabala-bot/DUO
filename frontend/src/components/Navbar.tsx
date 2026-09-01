@@ -173,7 +173,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
                 </button>
 
                 {showNotifications && (
-                  <div className="absolute right-0 bottom-full mb-2 w-72 rounded-2xl border border-theme bg-theme-card p-3.5 shadow-xl z-50 animate-in zoom-in-95 duration-150">
+                  <div className="absolute -left-40 sm:-left-36 bottom-full mb-3 w-80 max-w-[calc(100vw-2rem)] rounded-2xl border border-theme bg-theme-card p-3.5 shadow-2xl z-50 animate-in zoom-in-95 duration-150">
                     <div className="flex items-center justify-between border-b border-theme pb-2">
                       <span className="font-serif text-xs font-bold text-theme-primary">Notifications</span>
                       {unreadCount > 0 && (
@@ -199,7 +199,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
                               if (notif.type === 'DAILY_RESPONSE') setActiveTab('daily');
                               setShowNotifications(false);
                             }}
-                            className={`cursor-pointer rounded-xl p-2 text-left text-xs ${
+                            className={`cursor-pointer rounded-xl p-2.5 text-left text-xs transition-colors ${
                               notif.is_read ? 'bg-theme-input text-theme-secondary' : 'bg-[#125CB9]/10 border border-[#125CB9]/25 text-theme-primary'
                             }`}
                           >
@@ -293,7 +293,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
               </button>
 
               {showNotifications && (
-                <div className="absolute right-0 top-full mt-2 w-72 rounded-2xl border border-theme bg-theme-card p-3.5 shadow-lg z-50 animate-in zoom-in-95 duration-150">
+                <div className="absolute right-0 top-full mt-2 w-80 max-w-[calc(100vw-2rem)] rounded-2xl border border-theme bg-theme-card p-3.5 shadow-2xl z-50 animate-in zoom-in-95 duration-150">
                   <div className="flex items-center justify-between border-b border-theme pb-2">
                     <span className="font-serif text-xs font-bold text-theme-primary">Notifications</span>
                     {unreadCount > 0 && (
@@ -319,7 +319,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
                             if (notif.type === 'DAILY_RESPONSE') setActiveTab('daily');
                             setShowNotifications(false);
                           }}
-                          className={`cursor-pointer rounded-xl p-2 text-left text-xs ${
+                          className={`cursor-pointer rounded-xl p-2.5 text-left text-xs transition-colors ${
                             notif.is_read ? 'bg-theme-input text-theme-secondary' : 'bg-[#125CB9]/10 border border-[#125CB9]/25 text-theme-primary'
                           }`}
                         >
