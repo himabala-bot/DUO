@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { ProfileSettingsModal } from './ProfileSettingsModal';
 import { NotificationPopout } from './NotificationPopout';
+import { Avatar } from './Avatar';
 
 interface NavbarProps {
   activeTab: string;
@@ -80,13 +81,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
                 </span>
               </div>
               <div className="flex items-center space-x-2.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-[#F9D4F8]/40 text-base border border-[#EFE8DC]">
-                  {partner.avatar_url && !partner.avatar_url.startsWith('http') ? (
-                    <span>{partner.avatar_url}</span>
-                  ) : (
-                    <span>🌸</span>
-                  )}
-                </div>
+                <Avatar src={partner.avatar_url} name={partner.name} size="sm" />
                 <div className="truncate">
                   <h4 className="font-serif text-sm font-medium text-[#422F0E] truncate">{partner.name}</h4>
                   <p className="text-[10px] font-mono text-[#A89F91] truncate">{partner.email}</p>
@@ -95,7 +90,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
             </div>
           ) : (
             <div className="rounded-3xl border border-[#EFE8DC] bg-[#FFF8EE] p-3.5 text-center">
-              <p className="text-xs text-[#8C857B]">Waiting to pair keys ✨</p>
+              <p className="text-xs text-[#8C857B]">Waiting to pair keys</p>
             </div>
           )}
 
@@ -160,7 +155,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
                   <div className="mt-3 max-h-72 overflow-y-auto space-y-2 pr-1">
                     {notifications.length === 0 ? (
                       <div className="py-6 text-center text-xs text-[#A89F91] font-mono">
-                        No new updates yet 💌
+                        No new updates yet
                       </div>
                     ) : (
                       notifications.map((notif) => (
@@ -201,17 +196,13 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
               <Settings className="h-4.5 w-4.5" />
             </button>
 
-            {/* Separate Profile Icon Button (Pill Icon Only) */}
+            {/* Separate Profile Icon Button */}
             <button
               onClick={() => setShowSettingsModal(true)}
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-[#EFE8DC] bg-[#FFFFFF] text-sm text-[#422F0E] hover:border-[#EA5E86] hover:scale-105 transition-all shadow-sm"
+              className="rounded-full hover:scale-105 transition-all focus:outline-none"
               title="My Profile"
             >
-              {profile?.avatar_url && !profile.avatar_url.startsWith('http') ? (
-                <span>{profile.avatar_url}</span>
-              ) : (
-                <User className="h-4 w-4 text-[#EA5E86]" />
-              )}
+              <Avatar src={profile?.avatar_url} name={profile?.name} size="sm" />
             </button>
 
             {/* Sign Out */}
@@ -229,92 +220,64 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
       {/* ─────────────────────────────────────────────────────────────
           2. MOBILE & TABLET TOP HEADER & PILL NAVBAR (<1024px)
       ───────────────────────────────────────────────────────────── */}
-      <header className="lg:hidden sticky top-0 z-40 w-full border-b border-[#EFE8DC] bg-[#FAF7F2]/95 backdrop-blur-md shrink-0">
-        <div className="flex h-14 items-center justify-between px-4 sm:px-6">
-          {/* Logo & Partner Status */}
-          <div className="flex items-center space-x-2.5">
-            <button
-              onClick={() => setActiveTab('daily')}
-              className="flex items-center space-x-1.5 text-left group focus:outline-none"
-            >
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#FCC4C0] text-[#EA5E86]">
-                <Heart className="h-3 w-3 fill-current" />
-              </span>
-              <span className="font-serif text-xl font-normal tracking-tight text-[#422F0E]">
-                Duo
-              </span>
-            </button>
-
-            {hasActiveDuo && partner && (
-              <div className="flex items-center space-x-1.5 border-l border-[#EFE8DC] pl-2 text-xs">
-                <span
-                  className={`h-2 w-2 rounded-full ${
-                    partnerOnline ? 'bg-[#037F71]' : 'bg-[#D4C3AD]'
-                  }`}
-                />
-                <span className="font-serif italic text-[#422F0E] truncate max-w-[100px] sm:max-w-[160px]">
-                  {partner.name}
-                </span>
-              </div>
-            )}
+      <header className="lg:hidden flex items-center justify-between border-b border-[#EFE8DC] bg-[#FAF7F2] px-4 py-3 shrink-0">
+        <button
+          onClick={() => setActiveTab('daily')}
+          className="flex items-center space-x-2 text-left group focus:outline-none"
+        >
+          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#FCC4C0]/40 text-[#EA5E86]">
+            <Heart className="h-4 w-4 fill-current" />
           </div>
+          <span className="font-serif text-xl font-bold tracking-tight text-[#422F0E]">
+            Duo
+          </span>
+        </button>
 
-          {/* Tablet Middle Pill Navigation (640px to 1023px) */}
-          {hasActiveDuo && (
-            <nav className="hidden sm:flex md:flex items-center space-x-1 border border-[#EFE8DC] rounded-full bg-[#F2ECE1] p-1 shadow-sm">
-              {NAV_TABS.map((tab) => {
-                const Icon = tab.icon;
-                const isActive = activeTab === tab.id;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center space-x-1.5 rounded-full px-3 py-1 text-xs font-medium transition-all ${
-                      isActive
-                        ? 'bg-[#422F0E] text-[#FAF7F2] shadow-sm font-semibold'
-                        : 'text-[#6B5E4E] hover:text-[#422F0E]'
-                    }`}
-                  >
-                    <Icon className={`h-3.5 w-3.5 ${isActive ? 'text-[#FCC4C0]' : tab.accent}`} />
-                    <span>{tab.shortLabel}</span>
-                  </button>
-                );
-              })}
-            </nav>
+        {/* Right Header Controls: Partner Status Badge + Notifications + Settings + Profile */}
+        <div className="flex items-center space-x-2">
+          {hasActiveDuo && partner && (
+            <div className="flex items-center space-x-1.5 rounded-full border border-[#EFE8DC] bg-[#FFFFFF] px-2.5 py-1 shadow-sm">
+              <span
+                className={`h-1.5 w-1.5 rounded-full ${
+                  partnerOnline ? 'bg-[#037F71] animate-pulse' : 'bg-[#A89F91]'
+                }`}
+              />
+              <span className="text-[10px] font-mono text-[#6B5E4E] truncate max-w-[80px] sm:max-w-[120px]">
+                {partner.name}
+              </span>
+            </div>
           )}
 
-          {/* Top Utility Controls */}
-          <div className="flex items-center space-x-1 sm:space-x-2">
+          <div className="flex items-center space-x-1">
             {/* Notification Bell */}
             <div className="relative">
               <button
                 onClick={() => setShowNotifications(!showNotifications)}
-                className="relative rounded-full p-2 text-[#6B5E4E] hover:bg-[#F2ECE1]"
-                aria-label="Notifications"
+                className="relative rounded-full p-2 text-[#6B5E4E] hover:bg-[#F2ECE1] transition-colors"
+                title="Notifications"
               >
                 <Bell className="h-4 w-4" />
                 {unreadCount > 0 && (
-                  <span className="absolute top-1.5 right-1.5 flex h-2 w-2 rounded-full bg-[#EA5E86]" />
+                  <span className="absolute top-1 right-1 flex h-2 w-2 rounded-full bg-[#EA5E86] ring-2 ring-[#FAF7F2]" />
                 )}
               </button>
 
-              {/* Notifications Dropdown for Mobile/Tablet */}
               {showNotifications && (
-                <div className="absolute right-0 mt-2 w-80 rounded-3xl border border-[#EFE8DC] bg-[#FFFFFF] p-4 shadow-[0_12px_32px_rgba(66,47,14,0.08)] z-50">
-                  <div className="flex items-center justify-between pb-3 border-b border-[#EFE8DC]">
-                    <span className="text-xs font-serif font-medium text-[#422F0E]">Little Updates</span>
+                <div className="absolute right-0 top-full mt-2 w-72 rounded-3xl border border-[#EFE8DC] bg-[#FFFFFF] p-4 shadow-xl z-50 animate-in zoom-in-95 duration-150">
+                  <div className="flex items-center justify-between border-b border-[#EFE8DC] pb-2">
+                    <span className="font-serif text-sm font-semibold text-[#422F0E]">Notifications</span>
                     {unreadCount > 0 && (
                       <button
                         onClick={markAllNotificationsAsRead}
-                        className="text-[10px] text-[#EA5E86] hover:underline font-mono"
+                        className="text-[10px] font-mono text-[#EA5E86] hover:underline"
                       >
-                        Mark all read
+                        All read
                       </button>
                     )}
                   </div>
-                  <div className="mt-3 max-h-72 overflow-y-auto space-y-2">
+                  <div className="mt-2 max-h-60 overflow-y-auto space-y-1.5 pr-1">
                     {notifications.length === 0 ? (
-                      <div className="py-6 text-center text-xs text-[#A89F91] font-mono">No updates yet 💌</div>
+                      <div className="py-6 text-center text-xs text-[#A89F91] font-mono">No updates yet</div>
                     ) : (
                       notifications.map((notif) => (
                         <div
@@ -329,10 +292,12 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
                             }
                             setShowNotifications(false);
                           }}
-                          className="rounded-2xl p-2 text-xs bg-[#FAF7F2] hover:bg-[#F2ECE1] cursor-pointer"
+                          className={`cursor-pointer rounded-2xl p-2 text-left text-xs ${
+                            notif.is_read ? 'bg-[#FAF7F2] text-[#6B5E4E]' : 'bg-[#FCC4C0]/20 border border-[#FCC4C0] text-[#422F0E]'
+                          }`}
                         >
-                          <span className="font-medium text-[#422F0E] block">{notif.title}</span>
-                          <p className="text-[#6B5E4E] mt-0.5">{notif.body}</p>
+                          <span className="font-medium block">{notif.title}</span>
+                          <p className="text-[11px] text-[#6B5E4E] line-clamp-1">{notif.body}</p>
                         </div>
                       ))
                     )}
@@ -353,14 +318,10 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
             {/* Separate Profile Icon Button */}
             <button
               onClick={() => setShowSettingsModal(true)}
-              className="flex h-8 w-8 items-center justify-center rounded-full border border-[#EFE8DC] bg-[#FFFFFF] text-xs shadow-sm"
+              className="rounded-full hover:scale-105 transition-all focus:outline-none"
               title="Profile"
             >
-              {profile?.avatar_url && !profile.avatar_url.startsWith('http') ? (
-                <span>{profile.avatar_url}</span>
-              ) : (
-                <User className="h-4 w-4 text-[#EA5E86]" />
-              )}
+              <Avatar src={profile?.avatar_url} name={profile?.name} size="xs" />
             </button>
 
             {/* Sign Out */}

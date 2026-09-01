@@ -14,18 +14,27 @@ import {
   Check,
   CheckCheck,
   ArrowUp,
-  SmilePlus,
   Smile,
   CornerDownRight,
   Heart,
-  Mic,
+  Sparkles,
+  Star,
+  ThumbsUp,
+  Flame,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { VoiceRecorder } from './VoiceRecorder';
 import { WaveformPlayer } from './WaveformPlayer';
+import { Avatar } from './Avatar';
 
-const QUICK_EMOJIS = ['❤️', '🥺', '✨', '🥰', '☕', '🌸'];
+const QUICK_REACTIONS = [
+  { id: 'heart', icon: Heart, color: 'text-[#EA5E86]', fill: 'fill-[#EA5E86]' },
+  { id: 'sparkles', icon: Sparkles, color: 'text-[#F49625]', fill: 'fill-[#F49625]' },
+  { id: 'smile', icon: Smile, color: 'text-[#57B1A8]', fill: '' },
+  { id: 'star', icon: Star, color: 'text-[#F49625]', fill: 'fill-[#F49625]' },
+  { id: 'thumbsup', icon: ThumbsUp, color: 'text-[#037F71]', fill: 'fill-[#037F71]' },
+];
 
 export const ChatView: React.FC = () => {
   const { profile, partner } = useAuth();
@@ -314,7 +323,7 @@ export const ChatView: React.FC = () => {
           payload: confirmedMsg,
         });
       }
-      toast.love('Voice note sent 🎙️', 'Voice Note');
+      toast.love('Voice note sent', 'Voice Note');
     } catch (err) {
       console.error('Failed to send voice note:', err);
       setMessages((prev) => prev.filter((m) => m.id !== tempId));
@@ -324,16 +333,16 @@ export const ChatView: React.FC = () => {
     }
   };
 
-  // Toggle Reaction
-  const handleToggleReaction = async (msg: Message, emoji: string = '❤️') => {
+  // Toggle Reaction (SVG icon keys: heart, sparkles, smile, star, thumbsup)
+  const handleToggleReaction = async (msg: Message, reactionKey: string = 'heart') => {
     if (!profile) return;
     const userKey = profile.id;
     const currentReactions = { ...(msg.reactions || {}) };
 
-    if (currentReactions[userKey] === emoji) {
+    if (currentReactions[userKey] === reactionKey) {
       delete currentReactions[userKey];
     } else {
-      currentReactions[userKey] = emoji;
+      currentReactions[userKey] = reactionKey;
     }
 
     setMessages((prev) =>
@@ -353,7 +362,7 @@ export const ChatView: React.FC = () => {
     }
 
     try {
-      await messagesApi.react(msg.id, emoji);
+      await messagesApi.react(msg.id, reactionKey);
     } catch (err) {
       console.warn('Failed to save reaction:', err);
     }
@@ -365,11 +374,20 @@ export const ChatView: React.FC = () => {
     const lastTap = lastTapRef.current;
 
     if (lastTap && lastTap.id === msg.id && now - lastTap.time < 350) {
-      handleToggleReaction(msg, '❤️');
+      handleToggleReaction(msg, 'heart');
       lastTapRef.current = null;
     } else {
       lastTapRef.current = { id: msg.id, time: now };
     }
+  };
+
+  const renderReactionIcon = (reactionKey: string) => {
+    const found = QUICK_REACTIONS.find((r) => r.id === reactionKey);
+    if (found) {
+      const Icon = found.icon;
+      return <Icon className={`h-3.5 w-3.5 ${found.color} ${found.fill}`} />;
+    }
+    return <Heart className="h-3.5 w-3.5 text-[#EA5E86] fill-current" />;
   };
 
   // Unsend / Delete Message
@@ -554,7 +572,7 @@ export const ChatView: React.FC = () => {
                     {/* The Message Bubble */}
                     <div
                       onClick={() => handleMessageTap(msg)}
-                      onDoubleClick={() => handleToggleReaction(msg, '❤️')}
+                      onDoubleClick={() => handleToggleReaction(msg, 'heart')}
                       onTouchStart={(e) => handleTouchStart(e, msg)}
                       onTouchMove={handleTouchMove}
                       onTouchEnd={() => handleTouchEnd(msg)}
@@ -583,21 +601,21 @@ export const ChatView: React.FC = () => {
                         <div
                           className={`absolute -bottom-2.5 ${
                             msg.is_me ? 'right-3' : 'left-3'
-                          } flex items-center space-x-1 rounded-full border border-[#EFE8DC] bg-[#FFFFFF] px-2 py-0.5 text-xs shadow-sm`}
+                          } flex items-center space-x-1.5 rounded-full border border-[#EFE8DC] bg-[#FFFFFF] px-2 py-0.5 shadow-sm`}
                         >
-                          {reactionEntries.map(([userId, emoji]) => (
+                          {reactionEntries.map(([userId, reactionKey]) => (
                             <span
                               key={userId}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 if (profile && userId === profile.id) {
-                                  handleToggleReaction(msg, emoji);
+                                  handleToggleReaction(msg, reactionKey);
                                 }
                               }}
-                              className="hover:scale-125 transition-transform"
+                              className="hover:scale-125 transition-transform flex items-center"
                               title={userId === profile?.id ? 'You reacted' : `${partner?.name} reacted`}
                             >
-                              {emoji}
+                              {renderReactionIcon(reactionKey)}
                             </span>
                           ))}
                         </div>
@@ -612,15 +630,19 @@ export const ChatView: React.FC = () => {
                         msg.is_me ? 'mr-2' : 'ml-2'
                       }`}
                     >
-                      {QUICK_EMOJIS.map((emoji) => (
-                        <button
-                          key={emoji}
-                          onClick={() => handleToggleReaction(msg, emoji)}
-                          className="rounded-full p-1 text-base hover:scale-125 transition-transform"
-                        >
-                          {emoji}
-                        </button>
-                      ))}
+                      {QUICK_REACTIONS.map((r) => {
+                        const Icon = r.icon;
+                        return (
+                          <button
+                            key={r.id}
+                            onClick={() => handleToggleReaction(msg, r.id)}
+                            className={`rounded-full p-1.5 hover:bg-[#FAF7F2] hover:scale-125 transition-transform ${r.color}`}
+                            title={r.id}
+                          >
+                            <Icon className={`h-4 w-4 ${r.fill}`} />
+                          </button>
+                        );
+                      })}
                       <button
                         onClick={() => setActiveReactionMenu(null)}
                         className="rounded-full p-1 text-[#A89F91] hover:text-[#422F0E]"
@@ -653,9 +675,7 @@ export const ChatView: React.FC = () => {
           {/* 3-Dot Partner Typing Indicator Bubble */}
           {isPartnerTyping && (
             <div className="flex items-start space-x-2 animate-in fade-in slide-in-from-bottom-2 duration-200">
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#FCC4C0]/40 text-xs border border-[#EFE8DC]">
-                🌸
-              </div>
+              <Avatar src={partner?.avatar_url} name={partner?.name} size="xs" />
               <div className="flex items-center space-x-1.5 rounded-full border border-[#EFE8DC] bg-[#FFFFFF] px-4 py-2.5 shadow-sm">
                 <span className="h-2 w-2 rounded-full bg-[#EA5E86] animate-bounce [animation-delay:0ms]" />
                 <span className="h-2 w-2 rounded-full bg-[#EA5E86] animate-bounce [animation-delay:150ms]" />

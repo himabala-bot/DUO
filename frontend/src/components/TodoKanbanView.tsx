@@ -10,6 +10,8 @@ import {
   Plus,
   CheckCircle2,
   Circle,
+  CircleDot,
+  Clock,
   Trash2,
   Edit3,
   MoveRight,
@@ -28,7 +30,7 @@ import { RealtimeChannel } from '@supabase/supabase-js';
 interface ColumnConfig {
   id: TaskStatus;
   title: string;
-  emoji: string;
+  icon: React.ComponentType<{ className?: string }>;
   accent: string;
   badgeBg: string;
   borderTop: string;
@@ -38,7 +40,7 @@ const COLUMNS: ColumnConfig[] = [
   {
     id: 'TODO',
     title: 'To Do',
-    emoji: '📝',
+    icon: CircleDot,
     accent: 'text-[#F49625]',
     badgeBg: 'bg-[#FFF9EE] border-[#FFD094]',
     borderTop: '#F49625',
@@ -46,7 +48,7 @@ const COLUMNS: ColumnConfig[] = [
   {
     id: 'IN_PROGRESS',
     title: 'In Progress',
-    emoji: '⚡',
+    icon: Clock,
     accent: 'text-[#EA5E86]',
     badgeBg: 'bg-[#FFF5F5] border-[#FCC4C0]',
     borderTop: '#EA5E86',
@@ -54,7 +56,7 @@ const COLUMNS: ColumnConfig[] = [
   {
     id: 'COMPLETED',
     title: 'Completed',
-    emoji: '✨',
+    icon: CheckCircle2,
     accent: 'text-[#037F71]',
     badgeBg: 'bg-[#F5FBEF] border-[#DDF2B8]',
     borderTop: '#037F71',
@@ -149,7 +151,7 @@ export const TodoKanbanView: React.FC = () => {
       setNewTitle('');
       setNewDescription('');
       setAddingToCol(null);
-      toast.love('Task added to list ✨', 'Task Added');
+      toast.love('Task added to list', 'Task Added');
       broadcastUpdate();
     } catch (err: any) {
       toast.error(err.message || 'Failed to add task.', 'Error');
@@ -161,6 +163,7 @@ export const TodoKanbanView: React.FC = () => {
     const task = tasks.find((t) => t.id === taskId);
     if (!task || task.status === newStatus) return;
 
+    // Single source of truth update in local state - instant with zero duplicates
     setTasks((prev) =>
       prev.map((t) => (t.id === taskId ? { ...t, status: newStatus } : t))
     );
@@ -168,7 +171,7 @@ export const TodoKanbanView: React.FC = () => {
     try {
       await tasksApi.update(taskId, { status: newStatus });
       if (newStatus === 'COMPLETED') {
-        toast.love(`Completed "${task.title}" 🎉`, 'Great Job!');
+        toast.love(`Completed "${task.title}"`, 'Task Complete');
       } else {
         toast.love(`Moved to ${newStatus === 'IN_PROGRESS' ? 'In Progress' : 'To Do'}`, 'Updated');
       }
@@ -199,7 +202,7 @@ export const TodoKanbanView: React.FC = () => {
 
       setTasks((prev) => prev.map((t) => (t.id === editingTask.id ? updated : t)));
       setEditingTask(null);
-      toast.love('Task updated ✨', 'Saved');
+      toast.love('Task updated', 'Saved');
       broadcastUpdate();
     } catch (err: any) {
       toast.error(err.message || 'Failed to update task.', 'Error');
@@ -228,11 +231,16 @@ export const TodoKanbanView: React.FC = () => {
     }
   };
 
-  // HTML5 Drag and Drop Handlers
+  // HTML5 Drag and Drop Handlers with Visual Feedback
   const handleDragStart = (e: React.DragEvent, taskId: string) => {
     e.dataTransfer.setData('text/plain', taskId);
     e.dataTransfer.effectAllowed = 'move';
     setDraggedTaskId(taskId);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedTaskId(null);
+    setDragOverCol(null);
   };
 
   const handleDragOver = (e: React.DragEvent, colId: TaskStatus) => {
@@ -243,8 +251,12 @@ export const TodoKanbanView: React.FC = () => {
     }
   };
 
-  const handleDragLeave = () => {
-    setDragOverCol(null);
+  const handleDragLeave = (e: React.DragEvent) => {
+    // Prevent flickering when hovering child elements
+    const related = e.relatedTarget as HTMLElement;
+    if (!related || !e.currentTarget.contains(related)) {
+      setDragOverCol(null);
+    }
   };
 
   const handleDrop = (e: React.DragEvent, colId: TaskStatus) => {
@@ -314,6 +326,7 @@ export const TodoKanbanView: React.FC = () => {
         {COLUMNS.map((col) => {
           const colTasks = tasks.filter((t) => t.status === col.id);
           const isActive = activeMobileCol === col.id;
+          const Icon = col.icon;
 
           return (
             <button
@@ -325,7 +338,7 @@ export const TodoKanbanView: React.FC = () => {
                   : 'border-[#EFE8DC] bg-[#FFFFFF] text-[#6B5E4E] hover:bg-[#FAF7F2]'
               }`}
             >
-              <span>{col.emoji}</span>
+              <Icon className="h-3.5 w-3.5" />
               <span>{col.title}</span>
               <span
                 className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono ${
@@ -346,6 +359,7 @@ export const TodoKanbanView: React.FC = () => {
           {COLUMNS.map((col) => {
             const colTasks = tasks.filter((t) => t.status === col.id);
             const isDropTarget = dragOverCol === col.id;
+            const Icon = col.icon;
 
             return (
               <div
@@ -354,14 +368,14 @@ export const TodoKanbanView: React.FC = () => {
                 onDragLeave={handleDragLeave}
                 onDrop={(e) => handleDrop(e, col.id)}
                 style={{ borderTopColor: col.borderTop }}
-                className={`h-full flex flex-col rounded-3xl border border-[#EFE8DC] border-t-4 bg-[#FFFFFF] shadow-[0_2px_12px_rgba(66,47,14,0.03)] overflow-hidden transition-all ${
-                  isDropTarget ? 'ring-2 ring-[#EA5E86] bg-[#FFF8FA]/50 scale-[1.01]' : ''
+                className={`h-full flex flex-col rounded-3xl border border-[#EFE8DC] border-t-4 bg-[#FFFFFF] shadow-[0_2px_12px_rgba(66,47,14,0.03)] overflow-hidden transition-all duration-200 ${
+                  isDropTarget ? 'border-dashed border-2 border-[#EA5E86] bg-[#FFF8FA]/60 scale-[1.01]' : ''
                 }`}
               >
                 {/* Column Header */}
                 <div className="p-4 border-b border-[#EFE8DC] bg-[#FAF7F2] flex items-center justify-between shrink-0">
                   <div className="flex items-center space-x-2">
-                    <span className="text-lg">{col.emoji}</span>
+                    <Icon className={`h-4 w-4 ${col.accent}`} />
                     <h3 className="font-serif text-base font-bold text-[#422F0E]">
                       {col.title}
                     </h3>
@@ -378,114 +392,121 @@ export const TodoKanbanView: React.FC = () => {
                 <div className="flex-1 min-h-0 overflow-y-auto p-3.5 space-y-3">
                   {colTasks.length === 0 ? (
                     <div className="p-8 text-center text-xs text-[#A89F91] border-2 border-dashed border-[#EFE8DC] rounded-2xl">
-                      Drop tasks here or add one below ✨
+                      Drop tasks here or add one below
                     </div>
                   ) : (
-                    colTasks.map((task) => (
-                      <div
-                        key={task.id}
-                        draggable
-                        onDragStart={(e) => handleDragStart(e, task.id)}
-                        className={`group relative rounded-2xl border p-3.5 transition-all cursor-grab active:cursor-grabbing ${
-                          task.status === 'COMPLETED'
-                            ? 'border-[#EFE8DC] bg-[#FAF7F2]/60 opacity-70'
-                            : 'border-[#EFE8DC] bg-[#FFFFFF] shadow-sm hover:border-[#FCC4C0] hover:shadow-md'
-                        }`}
-                      >
-                        <div className="flex items-start gap-2.5">
-                          {/* Complete Toggle Checkbox */}
-                          <button
-                            type="button"
-                            onClick={() => handleToggleComplete(task)}
-                            className="mt-0.5 text-[#EA5E86] hover:scale-110 transition-transform shrink-0"
-                            title={task.status === 'COMPLETED' ? 'Mark incomplete' : 'Mark completed'}
-                          >
-                            {task.status === 'COMPLETED' ? (
-                              <CheckCircle2 className="h-4 w-4 fill-[#037F71] text-white" />
-                            ) : (
-                              <Circle className="h-4 w-4 text-[#D4CEC2] hover:text-[#EA5E86]" />
-                            )}
-                          </button>
+                    colTasks.map((task) => {
+                      const isBeingDragged = draggedTaskId === task.id;
 
-                          {/* Title & Description */}
-                          <div className="flex-1 min-w-0">
-                            <span
-                              className={`text-xs sm:text-sm font-medium leading-snug break-words block ${
-                                task.status === 'COMPLETED'
-                                  ? 'line-through text-[#8C857B]'
-                                  : 'text-[#422F0E]'
-                              }`}
+                      return (
+                        <div
+                          key={task.id}
+                          draggable
+                          onDragStart={(e) => handleDragStart(e, task.id)}
+                          onDragEnd={handleDragEnd}
+                          className={`group relative rounded-2xl border p-3.5 transition-all duration-150 cursor-grab active:cursor-grabbing ${
+                            isBeingDragged
+                              ? 'opacity-35 scale-95 border-dashed border-[#EA5E86] bg-[#FFF8FA] shadow-inner'
+                              : task.status === 'COMPLETED'
+                              ? 'border-[#EFE8DC] bg-[#FAF7F2]/60 opacity-70 hover:opacity-100 hover:border-[#DDF2B8]'
+                              : 'border-[#EFE8DC] bg-[#FFFFFF] shadow-sm hover:border-[#FCC4C0] hover:shadow-md'
+                          }`}
+                        >
+                          <div className="flex items-start gap-2.5">
+                            {/* Complete Toggle Checkbox */}
+                            <button
+                              type="button"
+                              onClick={() => handleToggleComplete(task)}
+                              className="mt-0.5 text-[#EA5E86] hover:scale-110 transition-transform shrink-0"
+                              title={task.status === 'COMPLETED' ? 'Mark incomplete' : 'Mark completed'}
                             >
-                              {task.title}
+                              {task.status === 'COMPLETED' ? (
+                                <CheckCircle2 className="h-4 w-4 fill-[#037F71] text-white" />
+                              ) : (
+                                <Circle className="h-4 w-4 text-[#D4CEC2] hover:text-[#EA5E86]" />
+                              )}
+                            </button>
+
+                            {/* Title & Description */}
+                            <div className="flex-1 min-w-0">
+                              <span
+                                className={`text-xs sm:text-sm font-medium leading-snug break-words block ${
+                                  task.status === 'COMPLETED'
+                                    ? 'line-through text-[#8C857B]'
+                                    : 'text-[#422F0E]'
+                                }`}
+                              >
+                                {task.title}
+                              </span>
+                              {task.description && (
+                                <p className="mt-1 text-[11px] text-[#A89F91] leading-relaxed break-words">
+                                  {task.description}
+                                </p>
+                              )}
+                            </div>
+
+                            {/* Action Buttons (Edit / Delete) */}
+                            <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center space-x-1 shrink-0">
+                              <button
+                                onClick={() => {
+                                  setEditingTask(task);
+                                  setEditTitle(task.title);
+                                  setEditDescription(task.description || '');
+                                  setEditStatus(task.status);
+                                }}
+                                className="p-1 text-[#A89F91] hover:text-[#422F0E] rounded-full hover:bg-black/5"
+                                title="Edit task"
+                              >
+                                <Edit3 className="h-3.5 w-3.5" />
+                              </button>
+
+                              <button
+                                onClick={() => handleDeleteTask(task)}
+                                className="p-1 text-[#A89F91] hover:text-[#EA5E86] rounded-full hover:bg-black/5"
+                                title="Delete task"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Drag Handle & Quick Move Links */}
+                          <div className="mt-2 pt-2 border-t border-[#F5EFE6] flex items-center justify-between text-[10px] font-mono text-[#A89F91]">
+                            <span className="flex items-center gap-1">
+                              <GripVertical className="h-3 w-3 text-[#D4CEC2]" />
+                              {task.is_me ? 'You' : task.created_by.name}
                             </span>
-                            {task.description && (
-                              <p className="mt-1 text-[11px] text-[#A89F91] leading-relaxed break-words">
-                                {task.description}
-                              </p>
-                            )}
-                          </div>
 
-                          {/* Action Buttons (Edit / Move / Delete) */}
-                          <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center space-x-1 shrink-0">
-                            <button
-                              onClick={() => {
-                                setEditingTask(task);
-                                setEditTitle(task.title);
-                                setEditDescription(task.description || '');
-                                setEditStatus(task.status);
-                              }}
-                              className="p-1 text-[#A89F91] hover:text-[#422F0E] rounded-full hover:bg-black/5"
-                              title="Edit task"
-                            >
-                              <Edit3 className="h-3.5 w-3.5" />
-                            </button>
-
-                            <button
-                              onClick={() => handleDeleteTask(task)}
-                              className="p-1 text-[#A89F91] hover:text-[#EA5E86] rounded-full hover:bg-black/5"
-                              title="Delete task"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
+                            <div className="flex items-center space-x-2">
+                              {col.id !== 'TODO' && (
+                                <button
+                                  onClick={() => handleMoveStatus(task.id, 'TODO')}
+                                  className="hover:text-[#422F0E] hover:underline"
+                                >
+                                  To Do
+                                </button>
+                              )}
+                              {col.id !== 'IN_PROGRESS' && (
+                                <button
+                                  onClick={() => handleMoveStatus(task.id, 'IN_PROGRESS')}
+                                  className="hover:text-[#EA5E86] hover:underline"
+                                >
+                                  In Progress
+                                </button>
+                              )}
+                              {col.id !== 'COMPLETED' && (
+                                <button
+                                  onClick={() => handleMoveStatus(task.id, 'COMPLETED')}
+                                  className="hover:text-[#037F71] hover:underline"
+                                >
+                                  Done
+                                </button>
+                              )}
+                            </div>
                           </div>
                         </div>
-
-                        {/* Drag Handle & Quick Move Links */}
-                        <div className="mt-2 pt-2 border-t border-[#F5EFE6] flex items-center justify-between text-[10px] font-mono text-[#A89F91]">
-                          <span className="flex items-center gap-1">
-                            <GripVertical className="h-3 w-3 text-[#D4CEC2]" />
-                            {task.is_me ? 'You' : task.created_by.name}
-                          </span>
-
-                          <div className="flex items-center space-x-2">
-                            {col.id !== 'TODO' && (
-                              <button
-                                onClick={() => handleMoveStatus(task.id, 'TODO')}
-                                className="hover:text-[#422F0E] hover:underline"
-                              >
-                                ← To Do
-                              </button>
-                            )}
-                            {col.id !== 'IN_PROGRESS' && (
-                              <button
-                                onClick={() => handleMoveStatus(task.id, 'IN_PROGRESS')}
-                                className="hover:text-[#EA5E86] hover:underline"
-                              >
-                                In Progress
-                              </button>
-                            )}
-                            {col.id !== 'COMPLETED' && (
-                              <button
-                                onClick={() => handleMoveStatus(task.id, 'COMPLETED')}
-                                className="hover:text-[#037F71] hover:underline"
-                              >
-                                Done →
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))
+                      );
+                    })
                   )}
                 </div>
 
@@ -509,7 +530,7 @@ export const TodoKanbanView: React.FC = () => {
                         type="text"
                         value={newDescription}
                         onChange={(e) => setNewDescription(e.target.value)}
-                        placeholder="Optional details or link..."
+                        placeholder="Optional details..."
                         className="w-full rounded-full border border-[#EFE8DC] bg-white px-3.5 py-1.5 text-[11px] text-[#422F0E] focus:border-[#EA5E86] focus:outline-none"
                       />
                       <div className="flex gap-2 justify-end pt-1">
@@ -554,12 +575,13 @@ export const TodoKanbanView: React.FC = () => {
           {(() => {
             const activeColConfig = COLUMNS.find((c) => c.id === activeMobileCol) || COLUMNS[0];
             const colTasks = tasks.filter((t) => t.status === activeColConfig.id);
+            const Icon = activeColConfig.icon;
 
             return (
               <>
                 <div className="p-4 border-b border-[#EFE8DC] bg-[#FAF7F2] flex items-center justify-between shrink-0">
                   <div className="flex items-center space-x-2">
-                    <span className="text-xl">{activeColConfig.emoji}</span>
+                    <Icon className={`h-4 w-4 ${activeColConfig.accent}`} />
                     <h3 className="font-serif text-lg font-bold text-[#422F0E]">
                       {activeColConfig.title}
                     </h3>
@@ -643,7 +665,7 @@ export const TodoKanbanView: React.FC = () => {
                                 onClick={() => handleMoveStatus(task.id, c.id)}
                                 className="px-2.5 py-1 rounded-full border border-[#EFE8DC] bg-[#FAF7F2] text-[#422F0E] hover:bg-[#F2ECE1]"
                               >
-                                {c.emoji} {c.title}
+                                {c.title}
                               </button>
                             ))}
                           </div>
@@ -732,7 +754,7 @@ export const TodoKanbanView: React.FC = () => {
                           : 'border-[#EFE8DC] bg-[#FAF7F2] text-[#6B5E4E]'
                       }`}
                     >
-                      {col.emoji} {col.title}
+                      {col.title}
                     </button>
                   ))}
                 </div>
@@ -751,7 +773,7 @@ export const TodoKanbanView: React.FC = () => {
                   disabled={!editTitle.trim()}
                   className="px-6 py-2 rounded-full bg-[#422F0E] text-white hover:bg-[#EA5E86] text-xs font-medium shadow-sm disabled:opacity-40"
                 >
-                  Save Changes ✨
+                  Save Changes
                 </button>
               </div>
             </form>

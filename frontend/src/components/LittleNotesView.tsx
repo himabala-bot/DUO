@@ -24,6 +24,7 @@ import { format } from 'date-fns';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { VoiceRecorder } from './VoiceRecorder';
 import { WaveformPlayer } from './WaveformPlayer';
+import { Avatar } from './Avatar';
 
 const NOTE_COLORS = [
   { id: 'cream', bg: '#FAF7F2', border: '#EFE8DC', name: 'Cozy Paper' },
@@ -119,7 +120,7 @@ export const LittleNotesView: React.FC = () => {
       setTextContent('');
       setMediaUrl('');
       setShowCreateModal(false);
-      toast.love('Little note pinned to board 💌', 'Note Created');
+      toast.love('Little note pinned to board', 'Note Created');
       broadcastUpdate();
     } catch (err: any) {
       toast.error(err.message || 'Failed to create note.', 'Error');
@@ -137,7 +138,7 @@ export const LittleNotesView: React.FC = () => {
 
     try {
       await notesApi.update(note.id, { is_pinned: nextPinned });
-      toast.love(nextPinned ? 'Note pinned to top 📌' : 'Note unpinned', 'Pinned');
+      toast.love(nextPinned ? 'Note pinned to top' : 'Note unpinned', 'Pinned');
       broadcastUpdate();
     } catch (err: any) {
       toast.error('Failed to pin note.', 'Error');
@@ -262,14 +263,14 @@ export const LittleNotesView: React.FC = () => {
             <Heart className="h-8 w-8 text-[#FCC4C0] mx-auto mb-1 animate-bounce" />
             <h4 className="font-serif text-xl font-bold text-[#422F0E]">No notes pinned yet</h4>
             <p className="text-xs sm:text-sm text-[#6B5E4E] max-w-md mx-auto leading-relaxed">
-              Post a cute note, a photo of your lunch, a quick voice whisper, or a hand-drawn doodle to brighten {partner?.name}&apos;s day!
+              Post a note, a photo of your lunch, a quick voice whisper, or a hand-drawn doodle to brighten {partner?.name}&apos;s day.
             </p>
             <button
               onClick={() => setShowCreateModal(true)}
               className="mt-3 inline-flex items-center space-x-2 rounded-full bg-[#422F0E] px-6 py-2.5 text-xs font-medium text-white hover:bg-[#EA5E86] transition-all shadow-sm"
             >
               <Plus className="h-4 w-4" />
-              <span>Write First Note 💕</span>
+              <span>Write First Note</span>
             </button>
           </div>
         ) : (
@@ -288,13 +289,7 @@ export const LittleNotesView: React.FC = () => {
                   {/* Top Bar: Author, Pin & Actions */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
-                      <div className="flex h-7 w-7 items-center justify-center rounded-full bg-white border border-[#EFE8DC] text-xs shadow-sm">
-                        {note.author.avatar_url && !note.author.avatar_url.startsWith('http') ? (
-                          <span>{note.author.avatar_url}</span>
-                        ) : (
-                          <span>🌸</span>
-                        )}
-                      </div>
+                      <Avatar src={note.author.avatar_url} name={note.author.name} size="xs" />
                       <span className="text-xs font-semibold text-[#422F0E] truncate max-w-[120px]">
                         {note.is_me ? 'You' : note.author.name}
                       </span>
@@ -545,7 +540,7 @@ export const LittleNotesView: React.FC = () => {
                   disabled={isSubmitting || (noteType === 'TEXT' && !textContent.trim())}
                   className="px-6 py-2 rounded-full bg-[#422F0E] text-white hover:bg-[#EA5E86] text-xs font-medium shadow-sm disabled:opacity-40 transition-all"
                 >
-                  {isSubmitting ? 'Posting...' : 'Post Little Note 💌'}
+                  {isSubmitting ? 'Posting...' : 'Post Little Note'}
                 </button>
               </div>
             </form>

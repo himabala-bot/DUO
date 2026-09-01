@@ -45,7 +45,7 @@ export const ConnectionHub: React.FC = () => {
     if (!profile?.duo_code) return;
     navigator.clipboard.writeText(profile.duo_code);
     setCopied(true);
-    toast.love('Secret key copied to clipboard 💕', 'Copied');
+    toast.love('Secret key copied to clipboard', 'Copied');
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -62,8 +62,8 @@ export const ConnectionHub: React.FC = () => {
     try {
       await duoApi.regenerateCode();
       await refreshProfile();
-      toast.love('New secret key generated ✨', 'Key Generated');
-      setMessage({ type: 'success', text: 'New secret key generated ✨' });
+      toast.love('New secret key generated', 'Key Generated');
+      setMessage({ type: 'success', text: 'New secret key generated' });
     } catch (err: any) {
       toast.error(err.message || 'Failed to regenerate key.', 'Error');
       setMessage({ type: 'error', text: err.message || 'Failed to regenerate key.' });
@@ -79,8 +79,8 @@ export const ConnectionHub: React.FC = () => {
 
     try {
       const res = await duoApi.connect(partnerCode.trim());
-      toast.love(res.message || 'Pairing invite sent 💌', 'Invite Sent');
-      setMessage({ type: 'success', text: res.message || 'Pairing invite sent 💌' });
+      toast.love(res.message || 'Pairing invite sent', 'Invite Sent');
+      setMessage({ type: 'success', text: res.message || 'Pairing invite sent' });
       setPartnerCode('');
       await fetchRequests();
       await refreshProfile();
@@ -98,8 +98,8 @@ export const ConnectionHub: React.FC = () => {
       await duoApi.acceptRequest(reqId);
       await refreshProfile();
       await fetchRequests();
-      toast.love('Room connected! Welcome to your private space 💕', 'Connected');
-      setMessage({ type: 'success', text: 'Room connected! Welcome to your private space 💕' });
+      toast.love('Room connected! Welcome to your private space', 'Connected');
+      setMessage({ type: 'success', text: 'Room connected! Welcome to your private space' });
     } catch (err: any) {
       toast.error(err.message || 'Failed to accept pairing.', 'Error');
       setMessage({ type: 'error', text: err.message || 'Failed to accept pairing.' });
@@ -166,7 +166,7 @@ export const ConnectionHub: React.FC = () => {
                   <span>Room Linked & Active</span>
                 </div>
                 <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-normal text-[#422F0E]">
-                  {profile?.name} <span className="text-[#EA5E86] font-light">♥</span> {partner.name}
+                  {profile?.name} <span className="text-[#EA5E86] font-light">&amp;</span> {partner.name}
                 </h2>
                 <p className="mt-2 text-xs sm:text-sm text-[#6B5E4E] max-w-lg leading-relaxed">
                   Your private world is active. All chats, love notes, drawings, and daily reflections are shared only between the two of you.
@@ -231,7 +231,7 @@ export const ConnectionHub: React.FC = () => {
                       disabled={isSubmitting}
                       className="rounded-full bg-[#422F0E] px-5 py-2 text-xs font-medium text-[#FAF7F2] hover:bg-[#EA5E86] transition-all disabled:opacity-50 min-h-[38px] shadow-sm"
                     >
-                      Accept & Link 💕
+                      Accept & Link
                     </button>
                     <button
                       onClick={() => handleDecline(req.id)}
@@ -284,7 +284,7 @@ export const ConnectionHub: React.FC = () => {
                 className="w-full flex items-center justify-center space-x-2 rounded-full border border-[#EFE8DC] bg-[#FAF7F2] py-3 text-xs sm:text-sm font-medium text-[#422F0E] hover:bg-[#F2ECE1] hover:border-[#FCC4C0] transition-all min-h-[42px]"
               >
                 {copied ? <Check className="h-4 w-4 text-[#037F71]" /> : <Copy className="h-4 w-4 text-[#A89F91]" />}
-                <span>{copied ? 'Copied to clipboard 💕' : 'Copy Secret Key'}</span>
+                <span>{copied ? 'Copied to clipboard' : 'Copy Secret Key'}</span>
               </button>
             </div>
           </div>
@@ -321,7 +321,7 @@ export const ConnectionHub: React.FC = () => {
                   disabled={isSubmitting || !partnerCode.trim() || hasActiveDuo}
                   className="flex w-full items-center justify-center space-x-2 rounded-full bg-[#422F0E] py-3 text-xs sm:text-sm font-medium text-[#FAF7F2] hover:bg-[#EA5E86] transition-all disabled:opacity-40 min-h-[42px] shadow-sm"
                 >
-                  <span>{isSubmitting ? 'Linking...' : 'Send Pairing Request 💌'}</span>
+                  <span>{isSubmitting ? 'Linking...' : 'Send Pairing Request'}</span>
                   <ArrowRight className="h-4 w-4 text-[#FCC4C0]" />
                 </button>
               </form>

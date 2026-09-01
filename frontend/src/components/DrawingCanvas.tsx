@@ -315,7 +315,7 @@ export const DrawingCanvas: React.FC = () => {
 
       setCaption('');
       initCanvas();
-      toast.drawing(`Doodle sent to ${partner?.name || 'partner'}! 🎨`, 'Shared');
+      toast.drawing(`Doodle sent to ${partner?.name || 'partner'}!`, 'Shared');
     } catch (err: any) {
       console.error('Failed to send drawing:', err);
       toast.error(err.message || 'Failed to send drawing. Please check your connection.', 'Error');

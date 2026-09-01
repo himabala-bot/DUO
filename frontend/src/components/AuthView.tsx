@@ -225,7 +225,7 @@ export const AuthView: React.FC = () => {
 
             {isSuccessRegistration && (
               <div className="mb-4 rounded-2xl border border-[#DDF2B8] bg-[#F5FBEF] p-3.5 text-xs text-[#037F71]">
-                Account created! If email confirmation is enabled on your Supabase project, check your inbox 💕
+                Account created! If email confirmation is enabled on your Supabase project, check your inbox.
               </div>
             )}
 
@@ -275,7 +275,7 @@ export const AuthView: React.FC = () => {
                 disabled={isLoading}
                 className="mt-2 flex w-full items-center justify-center space-x-2 rounded-full bg-[#422F0E] py-3 text-xs sm:text-sm font-medium text-[#FAF7F2] transition-all hover:bg-[#EA5E86] disabled:opacity-40 shadow-sm"
               >
-                <span>{isLoading ? 'Opening space...' : isLogin ? 'Enter Room' : 'Create Room 💕'}</span>
+                <span>{isLoading ? 'Opening space...' : isLogin ? 'Enter Room' : 'Create Room'}</span>
                 <ArrowRight className="h-4 w-4 text-[#FCC4C0]" />
               </button>
             </form>

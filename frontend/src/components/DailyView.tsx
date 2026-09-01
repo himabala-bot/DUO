@@ -77,11 +77,11 @@ export const DailyView: React.FC = () => {
     try {
       await dailyApi.saveResponses([{ question_id: qId, answer: text }], 'SAVE_DRAFT');
       setQuestionStatuses((prev) => ({ ...prev, [qId]: 'DRAFT' }));
-      toast.love('Saved privately in your drafts ✨', 'Draft Saved');
+      toast.love('Saved privately in your drafts', 'Draft Saved');
       setFeedbackMsg({
         id: qId,
         type: 'draft',
-        text: 'Saved privately in your drafts ✨',
+        text: 'Saved privately in your drafts',
       });
       setTimeout(() => setFeedbackMsg(null), 3000);
     } catch (err: any) {
@@ -94,7 +94,7 @@ export const DailyView: React.FC = () => {
   const handleSendQuestion = async (qId: string) => {
     const text = (answers[qId] || '').trim();
     if (!text) {
-      toast.info('Please write a note before sending 💕', 'Empty Note');
+      toast.info('Please write a note before sending', 'Empty Note');
       return;
     }
 
@@ -104,11 +104,11 @@ export const DailyView: React.FC = () => {
     try {
       await dailyApi.saveResponses([{ question_id: qId, answer: text }], 'SUBMIT');
       setQuestionStatuses((prev) => ({ ...prev, [qId]: 'SUBMITTED' }));
-      toast.love(`Sealed & shared with ${partner?.name || 'partner'} 💌`, 'Love Note Shared');
+      toast.love(`Sealed and shared with ${partner?.name || 'partner'}`, 'Love Note Shared');
       setFeedbackMsg({
         id: qId,
         type: 'success',
-        text: `Sealed & shared with ${partner?.name || 'partner'} 💌`,
+        text: `Sealed and shared with ${partner?.name || 'partner'}`,
       });
       await fetchTodayData();
       setTimeout(() => setFeedbackMsg(null), 4000);
@@ -127,7 +127,7 @@ export const DailyView: React.FC = () => {
     try {
       await dailyApi.saveResponses([{ question_id: qId, answer: voicePayload }], 'SUBMIT');
       setQuestionStatuses((prev) => ({ ...prev, [qId]: 'SUBMITTED' }));
-      toast.love(`Voice reflection shared with ${partner?.name || 'partner'} 🎙️`, 'Voice Note Shared');
+      toast.love(`Voice reflection shared with ${partner?.name || 'partner'}`, 'Voice Note Shared');
       await fetchTodayData();
     } catch (err: any) {
       toast.error(err.message || 'Failed to submit voice note.', 'Error');
@@ -239,7 +239,7 @@ export const DailyView: React.FC = () => {
                   <div className="shrink-0">
                     {status === 'SUBMITTED' ? (
                       <span className="inline-flex items-center gap-1.5 rounded-full border border-[#DDF2B8] bg-[#F5FBEF] px-3 py-1 text-xs font-mono font-medium text-[#037F71]">
-                        <Check className="h-3 w-3" /> Shared 💕
+                        <Check className="h-3 w-3" /> Shared
                       </span>
                     ) : status === 'DRAFT' ? (
                       <span className="inline-flex items-center gap-1.5 rounded-full border border-[#FFD094] bg-[#FFF9EE] px-3 py-1 text-xs font-mono font-medium text-[#F49625]">

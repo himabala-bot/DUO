@@ -25,16 +25,13 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
+import { Avatar, AVATAR_OPTIONS, DEFAULT_AVATAR } from './Avatar';
 
 interface ProfileSettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
   onNavigateTab?: (tab: string) => void;
 }
-
-const AVATAR_OPTIONS = [
-  '🌸', '🍓', '🧸', '💌', '✨', '☕', '🕊️', '🐱', '🥑', '🌙', '🎨', '🐾'
-];
 
 export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
   isOpen,
@@ -48,7 +45,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 
   // Form states
   const [name, setName] = useState(profile?.name || '');
-  const [selectedAvatar, setSelectedAvatar] = useState(profile?.avatar_url || '🌸');
+  const [selectedAvatar, setSelectedAvatar] = useState(profile?.avatar_url || DEFAULT_AVATAR);
   const [customAvatarUrl, setCustomAvatarUrl] = useState('');
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [profileSaveSuccess, setProfileSaveSuccess] = useState(false);
@@ -79,7 +76,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
   useEffect(() => {
     if (profile) {
       setName(profile.name || '');
-      setSelectedAvatar(profile.avatar_url || '🌸');
+      setSelectedAvatar(profile.avatar_url || DEFAULT_AVATAR);
       setEnterToSend(profile.enter_to_send ?? true);
       setReadReceipts(profile.read_receipts ?? true);
       setNotificationsEnabled(profile.notifications_enabled ?? true);
@@ -105,7 +102,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
       });
       await refreshProfile();
       setProfileSaveSuccess(true);
-      toast.love('Profile updated with love 💕', 'Profile Saved');
+      toast.love('Profile updated', 'Profile Saved');
       setTimeout(() => setProfileSaveSuccess(false), 3000);
     } catch (err: any) {
       toast.error(err.message || 'Failed to update profile.', 'Error');
@@ -126,37 +123,39 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
     try {
       await authApi.updateProfile({ [key]: value });
       await refreshProfile();
-    } catch (err) {
-      console.warn('Failed to save preference:', err);
+      toast.love('Setting updated', 'Saved');
+    } catch (err: any) {
+      toast.error('Failed to update setting.', 'Error');
     }
   };
 
-  // Switch Theme
-  const handleSelectTheme = async (selected: 'light' | 'dark' | 'system') => {
-    setTheme(selected);
+  // Change Theme
+  const handleThemeChange = async (newTheme: 'light' | 'dark' | 'system') => {
+    setTheme(newTheme);
     try {
-      await authApi.updateProfile({ theme: selected });
+      await authApi.updateProfile({ theme: newTheme });
       await refreshProfile();
-    } catch (err) {
-      console.warn('Failed to save theme:', err);
+      toast.love(`Theme set to ${newTheme}`, 'Theme Updated');
+    } catch (err: any) {
+      toast.error('Failed to update theme.', 'Error');
     }
   };
 
-  // Copy Duo Key
+  // Copy Duo Code
   const handleCopyCode = () => {
     if (!profile?.duo_code) return;
     navigator.clipboard.writeText(profile.duo_code);
     setCopiedCode(true);
+    toast.love('Secret key copied to clipboard', 'Copied');
     setTimeout(() => setCopiedCode(false), 2500);
   };
 
-  // Regenerate Duo Key
+  // Regenerate Secret Key
   const handleRegenerateCode = async () => {
     const ok = await confirmModal({
-      title: 'Regenerate Secret Key?',
-      message: 'Your previous key will no longer work. You will get a fresh key to share.',
+      title: 'Generate New Key?',
+      message: 'Generating a new secret key will replace your existing unpaired room code.',
       confirmText: 'Generate New Key',
-      cancelText: 'Keep Current',
       type: 'warning',
     });
     if (!ok) return;
@@ -164,57 +163,39 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
     try {
       await duoApi.regenerateCode();
       await refreshProfile();
-      toast.love('New secret key generated ✨', 'Key Updated');
+      toast.love('New secret key generated', 'Key Updated');
     } catch (err: any) {
-      toast.error(err.message || 'Failed to regenerate key.', 'Error');
+      toast.error('Failed to generate key.', 'Error');
     }
   };
 
   // Change Password
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    setPasswordStatus(null);
-
+    if (!newPassword || newPassword !== confirmPassword) {
+      setPasswordStatus({ type: 'error', msg: 'Passwords do not match.' });
+      return;
+    }
     if (newPassword.length < 6) {
       setPasswordStatus({ type: 'error', msg: 'Password must be at least 6 characters.' });
       return;
     }
-    if (newPassword !== confirmPassword) {
-      setPasswordStatus({ type: 'error', msg: 'Passwords do not match.' });
-      return;
-    }
 
     setPasswordLoading(true);
+    setPasswordStatus(null);
+
     try {
       const { error } = await supabase.auth.updateUser({ password: newPassword });
       if (error) throw error;
 
-      setPasswordStatus({ type: 'success', msg: 'Password updated successfully ✨' });
-      toast.love('Password updated successfully ✨', 'Security');
       setNewPassword('');
       setConfirmPassword('');
+      setPasswordStatus({ type: 'success', msg: 'Password updated successfully' });
+      toast.love('Password updated successfully', 'Security');
     } catch (err: any) {
       setPasswordStatus({ type: 'error', msg: err.message || 'Failed to update password.' });
-      toast.error(err.message || 'Failed to update password.', 'Error');
     } finally {
       setPasswordLoading(false);
-    }
-  };
-
-  // Leave Duo Room
-  const handleLeaveDuo = async () => {
-    setActionLoading(true);
-    try {
-      await duoApi.leave();
-      await refreshProfile();
-      setConfirmLeaveDuo(false);
-      onClose();
-      toast.love('Room disconnected.', 'Room Status');
-      if (onNavigateTab) onNavigateTab('duo');
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to disconnect room.', 'Error');
-    } finally {
-      setActionLoading(false);
     }
   };
 
@@ -232,11 +213,28 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
         });
       }
       setConfirmClearChat(false);
-      setActionMessage({ type: 'success', msg: res.message || 'Chat history cleared.' });
       toast.love('Chat history cleared for both partners.', 'Chat Cleared');
-      setTimeout(() => setActionMessage(null), 3500);
+      setActionMessage({ type: 'success', msg: res.message || 'Chat history cleared.' });
+      setTimeout(() => setActionMessage(null), 3000);
     } catch (err: any) {
       toast.error(err.message || 'Failed to clear chat.', 'Error');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Leave Duo
+  const handleLeaveDuo = async () => {
+    setActionLoading(true);
+    try {
+      await duoApi.leave();
+      await refreshProfile();
+      setConfirmLeaveDuo(false);
+      toast.love('Left room connection.', 'Room Disconnected');
+      if (onNavigateTab) onNavigateTab('duo');
+      onClose();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to leave room.', 'Error');
     } finally {
       setActionLoading(false);
     }
@@ -327,13 +325,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
             <div className="space-y-6">
               {/* Profile Card & Avatar */}
               <div className="rounded-3xl border border-[#EFE8DC] bg-[#FAF7F2] p-5 flex flex-col sm:flex-row items-center gap-5">
-                <div className="flex h-16 w-16 items-center justify-center rounded-3xl border border-[#E5DAC9] bg-[#FFFFFF] text-3xl shadow-sm shrink-0">
-                  {selectedAvatar.startsWith('http') || selectedAvatar.startsWith('data:') ? (
-                    <img src={selectedAvatar} alt="Avatar" className="h-full w-full object-cover rounded-3xl" />
-                  ) : (
-                    <span>{selectedAvatar || '🌸'}</span>
-                  )}
-                </div>
+                <Avatar src={selectedAvatar} name={name} size="lg" />
 
                 <div className="flex-1 text-center sm:text-left">
                   <h3 className="font-serif text-lg font-medium text-[#422F0E]">{profile?.name}</h3>
@@ -348,24 +340,28 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
               {/* Avatar Selector */}
               <div>
                 <label className="block text-[10px] font-mono uppercase tracking-widest text-[#A89F91] mb-2.5">
-                  Pick a Cute Avatar
+                  Choose Your Monster Avatar
                 </label>
-                <div className="grid grid-cols-6 gap-2">
-                  {AVATAR_OPTIONS.map((emoji) => (
+                <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
+                  {AVATAR_OPTIONS.map((avatarPath, index) => (
                     <button
-                      key={emoji}
+                      key={avatarPath}
                       type="button"
                       onClick={() => {
-                        setSelectedAvatar(emoji);
+                        setSelectedAvatar(avatarPath);
                         setCustomAvatarUrl('');
                       }}
-                      className={`h-11 w-full rounded-2xl border flex items-center justify-center text-xl transition-all hover:scale-105 ${
-                        selectedAvatar === emoji
-                          ? 'border-[#422F0E] bg-[#FFF8FA] ring-2 ring-[#FCC4C0] shadow-sm'
-                          : 'border-[#EFE8DC] bg-[#FAF7F2]'
+                      className={`relative aspect-square rounded-full p-1 border-2 transition-all hover:scale-105 ${
+                        selectedAvatar === avatarPath
+                          ? 'border-[#EA5E86] ring-2 ring-[#FCC4C0] shadow-md scale-105'
+                          : 'border-[#EFE8DC] bg-[#FAF7F2] hover:border-[#FCC4C0]'
                       }`}
                     >
-                      {emoji}
+                      <img
+                        src={avatarPath}
+                        alt={`Avatar ${index + 1}`}
+                        className="w-full h-full object-cover rounded-full select-none"
+                      />
                     </button>
                   ))}
                 </div>
@@ -379,7 +375,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="Your sweet name"
+                    placeholder="Your name"
                     className="w-full rounded-full border border-[#EFE8DC] bg-[#FAF7F2] px-5 py-2.5 text-xs sm:text-sm text-[#422F0E] focus:border-[#EA5E86] focus:bg-[#FFFFFF] focus:outline-none focus:ring-2 focus:ring-[#FCC4C0]/40"
                     required
                   />
@@ -399,7 +395,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                 <div className="flex items-center justify-between pt-2">
                   {profileSaveSuccess && (
                     <span className="text-xs font-mono text-[#037F71] flex items-center gap-1">
-                      <Check className="h-3.5 w-3.5" /> Profile updated 💕
+                      <Check className="h-3.5 w-3.5" /> Profile updated
                     </span>
                   )}
                   <button
@@ -429,13 +425,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                   </div>
 
                   <div className="flex items-center space-x-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#FFFFFF] border border-[#EFE8DC] text-2xl shadow-sm">
-                      {partner.avatar_url?.startsWith('http') ? (
-                        <img src={partner.avatar_url} alt={partner.name} className="h-full w-full object-cover rounded-2xl" />
-                      ) : (
-                        <span>{partner.avatar_url || '🌸'}</span>
-                      )}
-                    </div>
+                    <Avatar src={partner.avatar_url} name={partner.name} size="md" />
                     <div>
                       <h4 className="font-serif text-base sm:text-lg font-medium text-[#422F0E]">{partner.name}</h4>
                       <p className="text-xs font-mono text-[#A89F91]">{partner.email}</p>
@@ -445,7 +435,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                   {connectedDateFormatted && (
                     <div className="flex items-center space-x-2 text-xs font-mono text-[#6B5E4E] pt-2 border-t border-[#EFE8DC]">
                       <Calendar className="h-3.5 w-3.5 text-[#EA5E86]" />
-                      <span>Paired since {connectedDateFormatted} 💕</span>
+                      <span>Paired since {connectedDateFormatted}</span>
                     </div>
                   )}
                 </div>
@@ -492,7 +482,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                   className="w-full flex items-center justify-center space-x-2 rounded-full border border-[#EFE8DC] bg-[#FAF7F2] py-2.5 text-xs font-medium text-[#422F0E] hover:bg-[#F2ECE1] hover:border-[#FCC4C0] transition-all"
                 >
                   {copiedCode ? <Check className="h-4 w-4 text-[#037F71]" /> : <Copy className="h-4 w-4 text-[#A89F91]" />}
-                  <span>{copiedCode ? 'Key copied to clipboard 💕' : 'Copy Secret Key'}</span>
+                  <span>{copiedCode ? 'Key copied to clipboard' : 'Copy Secret Key'}</span>
                 </button>
               </div>
 
@@ -678,7 +668,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                   return (
                     <button
                       key={item.id}
-                      onClick={() => handleSelectTheme(item.id as any)}
+                      onClick={() => handleThemeChange(item.id as any)}
                       className={`flex flex-col items-start p-4 rounded-3xl border text-left transition-all ${
                         isSelected
                           ? 'border-[#422F0E] bg-[#FFF8FA] ring-2 ring-[#FCC4C0] shadow-sm'
