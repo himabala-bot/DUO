@@ -60,11 +60,12 @@ class MessageListCreateView(APIView):
         )
 
         # Notify partner
+        notif_body = "🎤 Voice note" if content.startswith('[voice:') else (content if len(content) <= 100 else f"{content[:97]}...")
         create_notification(
             recipient=partner,
             n_type='MESSAGE',
             title=f"Message from {profile.name}",
-            body=content if len(content) <= 100 else f"{content[:97]}...",
+            body=notif_body,
             reference_id=str(message.id)
         )
 

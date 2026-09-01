@@ -15,12 +15,13 @@ export const WaveformPlayer: React.FC<WaveformPlayerProps> = ({ audioUrl, durati
   const [audioDuration, setAudioDuration] = useState<number>(isFinite(duration) && duration > 0 ? duration : 0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Generate 28 waveform bars with pseudo-random aesthetic heights
+  // Generate 24 aesthetic waveform bars
   const bars = [
-    30, 45, 70, 85, 40, 60, 95, 80, 50, 75, 90, 65, 40, 55, 80, 100, 70, 45, 60, 85, 90, 50, 65, 40, 75, 60, 45, 30
+    30, 45, 70, 85, 40, 60, 95, 80, 50, 75, 90, 65, 40, 55, 80, 100, 70, 45, 60, 85, 90, 50, 65, 40
   ];
 
   useEffect(() => {
+    if (!audioUrl) return;
     const audio = new Audio(audioUrl);
     audioRef.current = audio;
 
@@ -57,6 +58,14 @@ export const WaveformPlayer: React.FC<WaveformPlayerProps> = ({ audioUrl, durati
       setCurrentTime(0);
     });
 
+    audio.addEventListener('pause', () => {
+      setIsPlaying(false);
+    });
+
+    audio.addEventListener('play', () => {
+      setIsPlaying(true);
+    });
+
     return () => {
       audio.pause();
       audio.src = '';
@@ -69,26 +78,46 @@ export const WaveformPlayer: React.FC<WaveformPlayerProps> = ({ audioUrl, durati
     }
   }, [duration]);
 
-  const togglePlay = () => {
+  const togglePlay = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
     if (!audioRef.current) return;
+
     if (isPlaying) {
       audioRef.current.pause();
       setIsPlaying(false);
     } else {
-      audioRef.current.play().catch((err) => console.warn('Audio play error:', err));
-      setIsPlaying(true);
+      audioRef.current.play().then(() => {
+        setIsPlaying(true);
+      }).catch((err) => {
+        console.warn('Audio play error:', err);
+        setIsPlaying(false);
+      });
     }
   };
 
-  const effectiveDuration = isFinite(audioDuration) && audioDuration > 0 ? audioDuration : (duration && isFinite(duration) && duration > 0 ? duration : 0);
+  const effectiveDuration = isFinite(audioDuration) && audioDuration > 0
+    ? audioDuration
+    : (duration && isFinite(duration) && duration > 0 ? duration : 0);
 
-  const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
+  const seekToPosition = (clientX: number, target: HTMLElement) => {
     if (!audioRef.current || !effectiveDuration) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const pos = (e.clientX - rect.left) / rect.width;
-    const seekTime = Math.max(0, Math.min(effectiveDuration, pos * effectiveDuration));
+    const rect = target.getBoundingClientRect();
+    const pos = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    const seekTime = pos * effectiveDuration;
     audioRef.current.currentTime = seekTime;
     setCurrentTime(seekTime);
+  };
+
+  const handleSeekMouse = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+    seekToPosition(e.clientX, e.currentTarget);
+  };
+
+  const handleSeekTouch = (e: React.TouchEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+    if (e.touches.length > 0) {
+      seekToPosition(e.touches[0].clientX, e.currentTarget);
+    }
   };
 
   const formatTime = (secs: number) => {
@@ -101,26 +130,32 @@ export const WaveformPlayer: React.FC<WaveformPlayerProps> = ({ audioUrl, durati
   const progressPercent = effectiveDuration > 0 ? (currentTime / effectiveDuration) * 100 : 0;
 
   return (
-    <div className="flex items-center space-x-3 py-1 select-none min-w-[200px] max-w-[290px]">
+    <div className="flex items-center space-x-2.5 py-1 select-none min-w-0 w-full max-w-[270px]">
       {/* Play/Pause Button */}
       <button
         type="button"
         onClick={togglePlay}
-        className={`flex h-9 w-9 items-center justify-center rounded-full transition-all shadow-xs shrink-0 ${
+        className={`flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full transition-all shadow-xs shrink-0 ${
           isMe
             ? 'bg-white text-[#125CB9] hover:bg-white/90'
             : 'bg-[#125CB9] text-white hover:bg-[#0E4B99]'
         }`}
         aria-label={isPlaying ? 'Pause voice note' : 'Play voice note'}
       >
-        {isPlaying ? <Pause className="h-4 w-4 fill-current" /> : <Play className="h-4 w-4 ml-0.5 fill-current" />}
+        {isPlaying ? (
+          <Pause className="h-3.5 w-3.5 sm:h-4 sm:w-4 fill-current" />
+        ) : (
+          <Play className="h-3.5 w-3.5 sm:h-4 sm:w-4 ml-0.5 fill-current" />
+        )}
       </button>
 
       {/* Waveform Bars Container */}
-      <div className="flex-1 flex flex-col justify-center space-y-1">
+      <div className="flex-1 flex flex-col justify-center space-y-1 min-w-0">
         <div
-          onClick={handleSeek}
-          className="relative flex items-center gap-[2.5px] h-7 cursor-pointer group"
+          onClick={handleSeekMouse}
+          onTouchStart={handleSeekTouch}
+          onTouchMove={handleSeekTouch}
+          className="relative flex items-center justify-between gap-[2px] h-6 sm:h-7 cursor-pointer group w-full touch-none"
           title="Click to seek"
         >
           {bars.map((heightPercent, idx) => {
@@ -131,7 +166,7 @@ export const WaveformPlayer: React.FC<WaveformPlayerProps> = ({ audioUrl, durati
               <span
                 key={idx}
                 style={{ height: `${heightPercent}%` }}
-                className={`w-[3px] rounded-full transition-all duration-150 ${
+                className={`w-[2.5px] sm:w-[3px] rounded-full transition-all duration-150 shrink-0 ${
                   isPlayed
                     ? isMe
                       ? 'bg-white'
@@ -146,7 +181,7 @@ export const WaveformPlayer: React.FC<WaveformPlayerProps> = ({ audioUrl, durati
         </div>
 
         {/* Time Progress */}
-        <div className="flex items-center justify-between text-[10px] font-mono opacity-80 leading-none">
+        <div className="flex items-center justify-between text-[10px] font-mono opacity-80 leading-none px-0.5">
           <span>{formatTime(currentTime)}</span>
           <span>{formatTime(effectiveDuration)}</span>
         </div>
@@ -154,3 +189,4 @@ export const WaveformPlayer: React.FC<WaveformPlayerProps> = ({ audioUrl, durati
     </div>
   );
 };
+

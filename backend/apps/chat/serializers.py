@@ -41,7 +41,7 @@ class MessageSerializer(serializers.ModelSerializer):
 
 
 class CreateMessageSerializer(serializers.Serializer):
-    content = serializers.CharField(max_length=5000, required=True, trim_whitespace=True)
+    content = serializers.CharField(required=True, trim_whitespace=True)
     reply_to_id = serializers.UUIDField(required=False, allow_null=True)
 
     def validate_content(self, value):

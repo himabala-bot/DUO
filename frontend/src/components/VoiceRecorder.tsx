@@ -1,18 +1,20 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Mic, Square, Trash2, Send, Play, Pause, X } from 'lucide-react';
+import { Mic, Square, Trash2, Send, X } from 'lucide-react';
 import { WaveformPlayer } from './WaveformPlayer';
 
 interface VoiceRecorderProps {
   onSendVoice: (audioDataUrl: string, duration: number) => void;
   onCancel?: () => void;
+  onStateChange?: (state: 'idle' | 'recording' | 'preview') => void;
   compact?: boolean;
 }
 
 export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
   onSendVoice,
   onCancel,
+  onStateChange,
   compact = false,
 }) => {
   const [isRecording, setIsRecording] = useState(false);
@@ -35,6 +37,27 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
     };
   }, []);
 
+  const notifyState = (state: 'idle' | 'recording' | 'preview') => {
+    if (onStateChange) onStateChange(state);
+  };
+
+  const getSupportedMimeType = () => {
+    if (typeof window === 'undefined' || typeof MediaRecorder === 'undefined') return '';
+    const types = [
+      'audio/webm;codecs=opus',
+      'audio/webm',
+      'audio/ogg;codecs=opus',
+      'audio/mp4',
+      'audio/aac',
+    ];
+    for (const type of types) {
+      if (MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(type)) {
+        return type;
+      }
+    }
+    return '';
+  };
+
   const startRecording = async () => {
     setPermissionError(false);
     setAudioUrl(null);
@@ -42,7 +65,9 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
+      const selectedMime = getSupportedMimeType();
+      const options = selectedMime ? { mimeType: selectedMime } : undefined;
+      const mediaRecorder = options ? new MediaRecorder(stream, options) : new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
 
       mediaRecorder.ondataavailable = (e) => {
@@ -52,12 +77,13 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
       };
 
       mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const audioBlob = new Blob(audioChunksRef.current, { type: selectedMime || 'audio/webm' });
         const reader = new FileReader();
         reader.readAsDataURL(audioBlob);
         reader.onloadend = () => {
           const base64Data = reader.result as string;
           setAudioUrl(base64Data);
+          notifyState('preview');
         };
 
         // Stop all audio tracks
@@ -66,6 +92,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
 
       mediaRecorder.start(100);
       setIsRecording(true);
+      notifyState('recording');
       startTimeRef.current = Date.now();
       setRecordTime(0);
 
@@ -80,6 +107,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
     } catch (err) {
       console.warn('Microphone access denied or error:', err);
       setPermissionError(true);
+      notifyState('idle');
     }
   };
 
@@ -102,6 +130,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
     setIsRecording(false);
     setAudioUrl(null);
     setRecordTime(0);
+    notifyState('idle');
     if (onCancel) onCancel();
   };
 
@@ -110,6 +139,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
       onSendVoice(audioUrl, audioDuration || recordTime);
       setAudioUrl(null);
       setRecordTime(0);
+      notifyState('idle');
     }
   };
 
@@ -148,67 +178,76 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
   // State 2: Actively Recording
   if (isRecording) {
     return (
-      <div className="flex items-center space-x-2.5 bg-[#F43F5E]/10 border border-[#F43F5E]/30 rounded-full px-4 py-1.5 shadow-xs animate-in fade-in duration-150">
-        <span className="h-2.5 w-2.5 rounded-full bg-[#F43F5E] animate-ping" />
-        <span className="text-xs font-mono font-medium text-[#F43F5E]">
-          Rec {formatTimer(recordTime)}
-        </span>
+      <div className="flex items-center justify-between space-x-2 bg-[#F43F5E]/10 border border-[#F43F5E]/30 rounded-full px-3 sm:px-4 py-1.5 shadow-xs animate-in fade-in duration-150 w-full min-w-0">
+        <div className="flex items-center space-x-2 min-w-0">
+          <span className="h-2.5 w-2.5 rounded-full bg-[#F43F5E] animate-ping shrink-0" />
+          <span className="text-xs font-mono font-medium text-[#F43F5E] shrink-0">
+            Rec {formatTimer(recordTime)}
+          </span>
 
-        {/* Animated Sound Wave Indicator */}
-        <div className="flex items-center space-x-1 px-1">
-          <span className="h-3 w-1 bg-[#F43F5E] rounded-full animate-bounce [animation-delay:0ms]" />
-          <span className="h-5 w-1 bg-[#F43F5E] rounded-full animate-bounce [animation-delay:150ms]" />
-          <span className="h-2 w-1 bg-[#F43F5E] rounded-full animate-bounce [animation-delay:300ms]" />
-          <span className="h-4 w-1 bg-[#F43F5E] rounded-full animate-bounce [animation-delay:450ms]" />
+          {/* Animated Sound Wave Indicator */}
+          <div className="flex items-center space-x-1 px-1">
+            <span className="h-3 w-1 bg-[#F43F5E] rounded-full animate-bounce [animation-delay:0ms]" />
+            <span className="h-5 w-1 bg-[#F43F5E] rounded-full animate-bounce [animation-delay:150ms]" />
+            <span className="h-2 w-1 bg-[#F43F5E] rounded-full animate-bounce [animation-delay:300ms]" />
+            <span className="h-4 w-1 bg-[#F43F5E] rounded-full animate-bounce [animation-delay:450ms]" />
+          </div>
         </div>
 
-        {/* Stop Button */}
-        <button
-          type="button"
-          onClick={stopRecording}
-          className="flex h-7 w-7 items-center justify-center rounded-full bg-[#F43F5E] text-white hover:bg-[#E11D48] transition-colors"
-          title="Done recording"
-        >
-          <Square className="h-3 w-3 fill-current" />
-        </button>
+        <div className="flex items-center space-x-1.5 shrink-0">
+          {/* Stop / Done Button */}
+          <button
+            type="button"
+            onClick={stopRecording}
+            className="flex h-7 w-7 items-center justify-center rounded-full bg-[#F43F5E] text-white hover:bg-[#E11D48] transition-colors shadow-xs"
+            title="Done recording"
+          >
+            <Square className="h-3 w-3 fill-current" />
+          </button>
 
-        {/* Cancel Button */}
-        <button
-          type="button"
-          onClick={cancelRecording}
-          className="p-1 text-theme-muted hover:text-theme-primary rounded-full"
-          title="Discard"
-        >
-          <Trash2 className="h-4 w-4" />
-        </button>
+          {/* Cancel / Discard Button */}
+          <button
+            type="button"
+            onClick={cancelRecording}
+            className="p-1.5 text-theme-muted hover:text-[#F43F5E] rounded-full transition-colors"
+            title="Discard"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </div>
       </div>
     );
   }
 
-  // State 3: Recorded Audio Preview
+  // State 3: Recorded Audio Preview & Send
   return (
-    <div className="flex items-center space-x-2 bg-theme-input border border-theme rounded-full px-3 py-1 shadow-xs animate-in fade-in duration-150">
-      {audioUrl && <WaveformPlayer audioUrl={audioUrl} duration={audioDuration || recordTime} />}
+    <div className="flex items-center justify-between space-x-2 bg-theme-input border border-theme rounded-full px-2.5 sm:px-3 py-1 shadow-xs animate-in fade-in duration-150 w-full min-w-0">
+      <div className="flex-1 min-w-0">
+        {audioUrl && <WaveformPlayer audioUrl={audioUrl} duration={audioDuration || recordTime} />}
+      </div>
 
-      {/* Discard / Cancel */}
-      <button
-        type="button"
-        onClick={cancelRecording}
-        className="p-1.5 text-theme-muted hover:text-[#F43F5E] rounded-full hover:bg-black/5 transition-colors"
-        title="Discard"
-      >
-        <Trash2 className="h-4 w-4" />
-      </button>
+      <div className="flex items-center space-x-1 shrink-0">
+        {/* Discard / Cancel */}
+        <button
+          type="button"
+          onClick={cancelRecording}
+          className="p-1.5 text-theme-muted hover:text-[#F43F5E] rounded-full hover:bg-black/5 transition-colors"
+          title="Discard"
+        >
+          <Trash2 className="h-4 w-4" />
+        </button>
 
-      {/* Send Voice Note */}
-      <button
-        type="button"
-        onClick={handleSend}
-        className="flex h-8 w-8 items-center justify-center rounded-full bg-[#125CB9] text-white hover:bg-[#0E4B99] transition-colors shadow-xs shrink-0"
-        title="Send voice note"
-      >
-        <Send className="h-3.5 w-3.5" />
-      </button>
+        {/* Send Voice Note */}
+        <button
+          type="button"
+          onClick={handleSend}
+          className="flex h-8 w-8 items-center justify-center rounded-full bg-[#125CB9] text-white hover:bg-[#0E4B99] transition-colors shadow-xs shrink-0"
+          title="Send voice note"
+        >
+          <Send className="h-3.5 w-3.5" />
+        </button>
+      </div>
     </div>
   );
 };
+

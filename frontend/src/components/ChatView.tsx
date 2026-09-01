@@ -49,6 +49,7 @@ export const ChatView: React.FC = () => {
   const [swipeOffset, setSwipeOffset] = useState<number>(0);
   const [touchStartX, setTouchStartX] = useState<number>(0);
   const [isPartnerTyping, setIsPartnerTyping] = useState(false);
+  const [voiceRecorderState, setVoiceRecorderState] = useState<'idle' | 'recording' | 'preview'>('idle');
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const channelRef = useRef<RealtimeChannel | null>(null);
@@ -744,33 +745,45 @@ export const ChatView: React.FC = () => {
         )}
 
         {/* Input Composer & Voice Recorder */}
-        <form onSubmit={handleSendMessage} className="border-t border-theme bg-theme-card p-2.5 sm:p-3 shrink-0">
-          <div className="flex items-center space-x-2">
-            {/* Voice Recorder button */}
-            <VoiceRecorder onSendVoice={handleSendVoiceNote} />
+        <div className="border-t border-theme bg-theme-card p-2.5 sm:p-3 shrink-0">
+          {voiceRecorderState !== 'idle' ? (
+            <div className="flex items-center w-full min-h-[40px]">
+              <VoiceRecorder
+                onSendVoice={handleSendVoiceNote}
+                onStateChange={(state) => setVoiceRecorderState(state)}
+              />
+            </div>
+          ) : (
+            <form onSubmit={handleSendMessage} className="flex items-center space-x-2 w-full">
+              {/* Voice Recorder button */}
+              <VoiceRecorder
+                onSendVoice={handleSendVoiceNote}
+                onStateChange={(state) => setVoiceRecorderState(state)}
+              />
 
-            {/* Textarea */}
-            <textarea
-              ref={textareaRef}
-              value={inputText}
-              onChange={handleInputChange}
-              onKeyDown={handleKeyDown}
-              placeholder={`Message ${partner?.name || 'your partner'}...`}
-              rows={1}
-              className="flex-1 max-h-32 min-h-[40px] resize-none rounded-2xl border border-theme bg-theme-input px-4 py-2 text-xs sm:text-sm text-theme-primary placeholder-theme-muted focus:border-[#125CB9] focus:bg-theme-card focus:outline-none focus:ring-1 focus:ring-[#125CB9] transition-all leading-normal"
-            />
+              {/* Textarea */}
+              <textarea
+                ref={textareaRef}
+                value={inputText}
+                onChange={handleInputChange}
+                onKeyDown={handleKeyDown}
+                placeholder={`Message ${partner?.name || 'your partner'}...`}
+                rows={1}
+                className="flex-1 max-h-32 min-h-[40px] resize-none rounded-2xl border border-theme bg-theme-input px-4 py-2 text-xs sm:text-sm text-theme-primary placeholder-theme-muted focus:border-[#125CB9] focus:bg-theme-card focus:outline-none focus:ring-1 focus:ring-[#125CB9] transition-all leading-normal"
+              />
 
-            {/* Send Button */}
-            <button
-              type="submit"
-              disabled={!inputText.trim() || isSending}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-[#125CB9] text-white shadow-xs hover:bg-[#0E4B99] disabled:opacity-40 disabled:hover:bg-[#125CB9] transition-all shrink-0"
-              title="Send Message"
-            >
-              <Send className="h-4 w-4" />
-            </button>
-          </div>
-        </form>
+              {/* Send Button */}
+              <button
+                type="submit"
+                disabled={!inputText.trim() || isSending}
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-[#125CB9] text-white shadow-xs hover:bg-[#0E4B99] disabled:opacity-40 disabled:hover:bg-[#125CB9] transition-all shrink-0"
+                title="Send Message"
+              >
+                <Send className="h-4 w-4" />
+              </button>
+            </form>
+          )}
+        </div>
       </div>
     </div>
   );
