@@ -549,9 +549,17 @@ export const ChatView: React.FC = () => {
   return (
     <div className="flex-1 w-full h-full flex flex-col items-center justify-center p-2 sm:p-4 md:p-6 min-h-0">
       {/* Centered Conversation Container (~840–880px) */}
-      <div className="w-full max-w-3xl xl:max-w-4xl h-full flex flex-col overflow-hidden rounded-2xl border border-theme bg-theme-card shadow-sm transition-colors">
+      <div
+        className={`w-full max-w-3xl xl:max-w-4xl h-full flex flex-col overflow-hidden rounded-2xl bg-theme-card shadow-sm transition-all ${
+          disappearingMode ? 'border-2 border-dashed border-[#FB923C]/50' : 'border border-theme'
+        }`}
+      >
         {/* Chat Room Subheader */}
-        <div className="flex items-center justify-between border-b border-theme bg-theme-page px-4 py-2.5 shrink-0">
+        <div
+          className={`flex items-center justify-between px-4 py-2.5 shrink-0 bg-theme-page transition-colors ${
+            disappearingMode ? 'border-b-2 border-dashed border-[#FB923C]/35' : 'border-b border-theme'
+          }`}
+        >
           <div className="flex items-center space-x-2.5">
             <Avatar src={partner?.avatar_url} name={partner?.name} size="sm" />
             <div>
@@ -572,21 +580,14 @@ export const ChatView: React.FC = () => {
           </div>
 
           <div className="flex items-center space-x-2">
-            {/* Subtle indicator when Disappearing Mode is active (no emojis) */}
-            {disappearingMode && (
-              <span className="text-[10px] font-mono font-medium text-[#FB923C] bg-[#FB923C]/10 border border-[#FB923C]/25 px-2.5 py-0.5 rounded-full animate-in fade-in duration-200">
-                Disappearing Mode
-              </span>
-            )}
-
-            {/* Disappearing Mode Toggle Button */}
+            {/* Disappearing Mode Toggle Button (Looks activated directly when on) */}
             <button
               type="button"
               onClick={handleToggleDisappearingMode}
-              className={`flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-mono transition-all border ${
+              className={`flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-mono transition-all ${
                 disappearingMode
-                  ? 'bg-[#FB923C]/15 border-[#FB923C]/40 text-[#FB923C] font-semibold shadow-xs'
-                  : 'bg-theme-input border-theme text-theme-secondary hover:text-theme-primary hover:bg-theme-card'
+                  ? 'bg-[#FB923C] text-white font-semibold shadow-xs border border-[#FB923C]'
+                  : 'bg-theme-input border border-theme text-theme-secondary hover:text-theme-primary hover:bg-theme-card'
               }`}
               title={disappearingMode ? 'Turn off Disappearing Mode' : 'Turn on Disappearing Mode'}
             >
@@ -602,7 +603,13 @@ export const ChatView: React.FC = () => {
         </div>
 
         {/* Message Stream */}
-        <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-2.5 bg-theme-page">
+        <div
+          className={`flex-1 min-h-0 overflow-y-auto p-4 space-y-2.5 transition-all ${
+            disappearingMode
+              ? 'bg-theme-page bg-[radial-gradient(#FB923C_1.5px,transparent_1.5px)] [background-size:20px_20px]'
+              : 'bg-theme-page'
+          }`}
+        >
           {isLoading ? (
             <div className="flex h-full items-center justify-center text-xs font-mono text-theme-muted">
               Loading messages...
@@ -875,7 +882,11 @@ export const ChatView: React.FC = () => {
         )}
 
         {/* Input Composer & Voice Recorder */}
-        <div className="border-t border-theme bg-theme-card p-2.5 sm:p-3 shrink-0">
+        <div
+          className={`p-2.5 sm:p-3 shrink-0 bg-theme-card transition-colors ${
+            disappearingMode ? 'border-t-2 border-dashed border-[#FB923C]/35' : 'border-t border-theme'
+          }`}
+        >
           {voiceRecorderState !== 'idle' ? (
             <div className="flex items-center w-full min-h-[40px]">
               <VoiceRecorder
