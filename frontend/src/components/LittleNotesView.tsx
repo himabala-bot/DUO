@@ -29,6 +29,7 @@ import { VoiceRecorder } from './VoiceRecorder';
 import { WaveformPlayer } from './WaveformPlayer';
 import { Avatar } from './Avatar';
 import { MiniDoodleCanvas } from './MiniDoodleCanvas';
+import { FolderCard } from './FolderCard';
 import { cn } from '@/lib/utils';
 
 const NOTE_COLORS = [
@@ -358,7 +359,7 @@ export const LittleNotesView: React.FC = () => {
             </div>
           </div>
 
-          {/* 4 File Folder Cards (Interactive Tilting Papers on Hover) */}
+          {/* 4 File Folder Cards (Refined Physical Digital Folders) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
               {
@@ -366,130 +367,41 @@ export const LittleNotesView: React.FC = () => {
                 title: 'Text notes',
                 subtitle: 'Notes & More',
                 gradient: 'from-[#3B82F6] via-[#1D4ED8] to-[#1E3A8A]',
-                icon: FileText,
-                iconColor: 'text-[#3B82F6]',
-                badgeColor: 'bg-[#3B82F6]/15 text-[#3B82F6] border-[#3B82F6]/30',
               },
               {
                 id: 'PHOTO' as CategoryType,
                 title: 'Photo memories',
                 subtitle: 'Pictures & More',
                 gradient: 'from-[#F43F5E] via-[#E11D48] to-[#881337]',
-                icon: Camera,
-                iconColor: 'text-[#F43F5E]',
-                badgeColor: 'bg-[#F43F5E]/15 text-[#F43F5E] border-[#F43F5E]/30',
               },
               {
                 id: 'VOICE' as CategoryType,
                 title: 'Voice notes',
                 subtitle: 'Audio & More',
                 gradient: 'from-[#F97316] via-[#EA580C] to-[#9A3412]',
-                icon: Mic,
-                iconColor: 'text-[#F97316]',
-                badgeColor: 'bg-[#F97316]/15 text-[#F97316] border-[#F97316]/30',
               },
               {
                 id: 'DRAWING' as CategoryType,
                 title: 'Doodle sketches',
                 subtitle: 'Drawings & More',
                 gradient: 'from-[#10B981] via-[#059669] to-[#064E3B]',
-                icon: PenTool,
-                iconColor: 'text-[#10B981]',
-                badgeColor: 'bg-[#10B981]/15 text-[#10B981] border-[#10B981]/30',
               },
             ].map((folder) => {
-              const FolderIcon = folder.icon;
               const catNotes = notes.filter((n) => n.note_type === folder.id);
               const latestInCat = catNotes[0];
               const count = catNotes.length;
 
               return (
-                <div
+                <FolderCard
                   key={folder.id}
+                  id={folder.id}
+                  title={folder.title}
+                  subtitle={folder.subtitle}
+                  count={count}
+                  gradient={folder.gradient}
+                  latestNote={latestInCat}
                   onClick={() => setSelectedCategory(folder.id)}
-                  className="group relative flex flex-col justify-between w-full h-[320px] rounded-[45px] overflow-hidden cursor-pointer border border-black/10 dark:border-white/10 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 bg-[#1C1C1E] select-none"
-                  title={`Open ${folder.title}`}
-                >
-                  {/* Top Background: Rich Gradient with Tilting Papers */}
-                  <div className={`relative h-[155px] w-full bg-gradient-to-b ${folder.gradient} overflow-hidden flex items-end justify-center pb-2`}>
-                    {/* Subtle ambient lighting orb */}
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
-
-                    {/* Left Sheet (Tilts Left on Hover) */}
-                    <div className="absolute bottom-1 left-[15%] w-[96px] sm:w-[110px] h-[92px] rounded-2xl bg-white/95 text-neutral-800 p-2.5 shadow-md origin-bottom transition-all duration-300 ease-out transform -rotate-[7deg] translate-y-1 group-hover:-rotate-[18deg] group-hover:-translate-y-4 group-hover:-translate-x-3">
-                      <div className="w-10 h-1.5 bg-neutral-300 rounded-full mb-2" />
-                      <div className="w-full h-1 bg-neutral-200 rounded-full mb-1" />
-                      <div className="w-4/5 h-1 bg-neutral-200 rounded-full mb-1" />
-                      <div className="w-3/5 h-1 bg-neutral-200 rounded-full" />
-                    </div>
-
-                    {/* Center Sheet (Lifts Up & Scales on Hover) */}
-                    <div className="relative z-10 w-[108px] sm:w-[124px] h-[105px] rounded-2xl bg-white text-neutral-800 p-2 shadow-xl origin-bottom transition-all duration-300 ease-out transform group-hover:-translate-y-6 group-hover:scale-105 flex flex-col justify-between overflow-hidden">
-                      {latestInCat ? (
-                        <>
-                          {folder.id === 'PHOTO' && latestInCat.media_url ? (
-                            <img src={latestInCat.media_url} className="w-full h-full object-cover rounded-xl" alt="" />
-                          ) : folder.id === 'DRAWING' && latestInCat.media_url ? (
-                            <img src={latestInCat.media_url} className="w-full h-full object-contain rounded-xl" alt="" />
-                          ) : folder.id === 'VOICE' ? (
-                            <div className="h-full flex flex-col justify-center items-center gap-1.5 p-1">
-                              <div className="p-2 rounded-full bg-[#F97316]/10 text-[#F97316]">
-                                <Mic className="h-4 w-4" />
-                              </div>
-                              <span className="text-[9px] font-mono text-neutral-600 font-semibold">Audio Memo</span>
-                            </div>
-                          ) : (
-                            <div className="p-1">
-                              <p className="text-[9px] font-medium text-neutral-700 leading-tight line-clamp-4">
-                                {latestInCat.content}
-                              </p>
-                            </div>
-                          )}
-                        </>
-                      ) : (
-                        <div className="p-1 space-y-1.5 pt-1">
-                          <div className="w-12 h-1.5 bg-neutral-300 rounded-full mb-2" />
-                          <div className="w-full h-1 bg-neutral-200 rounded-full" />
-                          <div className="w-5/6 h-1 bg-neutral-200 rounded-full" />
-                          <div className="w-4/6 h-1 bg-neutral-200 rounded-full" />
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Right Sheet (Tilts Right on Hover) */}
-                    <div className="absolute bottom-1 right-[15%] w-[96px] sm:w-[110px] h-[92px] rounded-2xl bg-white/95 text-neutral-800 p-2.5 shadow-md origin-bottom transition-all duration-300 ease-out transform rotate-[7deg] translate-y-1 group-hover:rotate-[18deg] group-hover:-translate-y-4 group-hover:translate-x-3">
-                      <div className="w-12 h-1.5 bg-neutral-300 rounded-full mb-2" />
-                      <div className="w-full h-1 bg-neutral-200 rounded-full mb-1" />
-                      <div className="w-4/5 h-1 bg-neutral-200 rounded-full mb-1" />
-                      <div className="w-3/5 h-1 bg-neutral-200 rounded-full" />
-                    </div>
-                  </div>
-
-                  {/* Folder Front Cutout Flap (Accurate Shape as in Reference Image) */}
-                  <div className="relative z-20 -mt-6 w-full flex-1 bg-[#1E1E22] dark:bg-[#18181B] rounded-b-[45px] p-6 pt-3 flex flex-col justify-between text-white border-t border-white/5">
-                    {/* Folder Tab Row: Title, Subtitle, and Ellipsis */}
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <h4 className="text-base font-semibold text-white tracking-tight leading-snug">
-                          {folder.title}
-                        </h4>
-                        <p className="text-xs text-neutral-400 font-normal mt-0.5">
-                          {folder.subtitle}
-                        </p>
-                      </div>
-
-                      <div className="flex h-6 w-6 items-center justify-center rounded-full text-neutral-400 group-hover:text-white transition-colors">
-                        <span className="tracking-widest font-bold text-sm">•••</span>
-                      </div>
-                    </div>
-
-                    {/* Footer: Document Icon + Total Count */}
-                    <div className="flex items-center space-x-2 text-xs font-mono text-neutral-400 pt-3 border-t border-white/5">
-                      <FileText className="h-3.5 w-3.5" />
-                      <span>{count.toLocaleString()} {count === 1 ? 'File' : 'Files'}</span>
-                    </div>
-                  </div>
-                </div>
+                />
               );
             })}
           </div>
