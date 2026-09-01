@@ -254,10 +254,10 @@ export const DailyView: React.FC = () => {
               <span>{todayFormatted}</span>
             </div>
             <h2 className="mt-1 font-serif text-2xl sm:text-3xl font-bold text-theme-primary">
-              Daily Love Prompts
+              Daily Love Prompt
             </h2>
             <p className="mt-0.5 text-xs sm:text-sm text-theme-secondary">
-              Three tiny questions to draw closer every day across distinct genres. Answers unlock once shared together.
+              One thoughtful question each day to draw closer. You and your partner receive unique non-repeating prompts.
             </p>
           </div>
 

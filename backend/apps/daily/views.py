@@ -24,146 +24,114 @@ GENRES = ['FUN', 'DEEP', 'IMAGINATIVE']
 
 def get_or_create_daily_assignments(user, duo, partner, target_date):
     """
-    Ensures 3 distinct genre questions are assigned for `user` on `target_date`.
-    Handles:
-    - Carrying forward unanswered questions from prior days.
-    - Deterministic assignment for today based on calendar day.
-    - Complete exclusion of questions ever answered by either partner.
-    - Independent non-overlapping questions between partners.
+    Ensures EXACTLY 1 daily prompt question is assigned for `user` on `target_date`.
+    Rules:
+    - Only 1 question per day.
+    - User and Partner receive DIFFERENT questions.
+    - No question is EVER repeated for either user in this duo.
     """
     with transaction.atomic():
-        # 1. Existing active assignments for today
-        today_assignments = list(
-            DailyPromptAssignment.objects.filter(
+        # 1. Existing active assignment for today
+        today_assignment = DailyPromptAssignment.objects.filter(
+            user=user,
+            duo=duo,
+            assigned_date=target_date
+        ).exclude(status='REPLACED').select_related('question').first()
+
+        if today_assignment:
+            return [today_assignment]
+
+        # 2. Check for unanswered carry-forward question from prior days
+        unanswered_past = DailyPromptAssignment.objects.filter(
+            user=user,
+            duo=duo,
+            assigned_date__lt=target_date,
+            status__in=['ASSIGNED', 'CARRIED_FORWARD']
+        ).exclude(
+            question__responses__user=user,
+            question__responses__status='SUBMITTED'
+        ).order_by('-assigned_date').select_related('question').first()
+
+        if unanswered_past:
+            orig_date = unanswered_past.original_assigned_date or unanswered_past.assigned_date
+            unanswered_past.status = 'CARRIED_FORWARD'
+            unanswered_past.save()
+
+            new_cf = DailyPromptAssignment.objects.create(
                 user=user,
+                partner=partner,
                 duo=duo,
-                assigned_date=target_date
-            ).exclude(status='REPLACED').select_related('question')
+                question=unanswered_past.question,
+                genre=unanswered_past.genre,
+                assigned_date=target_date,
+                status='ASSIGNED',
+                is_carried_forward=True,
+                original_assigned_date=orig_date,
+            )
+            return [new_cf]
+
+        # 3. Assign 1 fresh question
+        # Exclude questions ever answered by EITHER user in this duo
+        duo_answered_ids = set(
+            DailyResponse.objects.filter(
+                duo=duo,
+                status='SUBMITTED'
+            ).values_list('question_id', flat=True)
         )
 
-        assigned_genres = {a.genre for a in today_assignments}
+        # Exclude questions ever assigned to EITHER user in this duo
+        duo_assigned_ids = set(
+            DailyPromptAssignment.objects.filter(
+                duo=duo
+            ).exclude(status='REPLACED').values_list('question_id', flat=True)
+        )
 
-        # 2. Check for unanswered carry-forward questions from prior days if slots remain
-        if len(assigned_genres) < 3:
-            # Find recent unanswered assignments
-            unanswered_past = DailyPromptAssignment.objects.filter(
-                user=user,
-                duo=duo,
-                assigned_date__lt=target_date,
-                status__in=['ASSIGNED', 'CARRIED_FORWARD']
-            ).exclude(
-                question__responses__user=user,
-                question__responses__status='SUBMITTED'
-            ).order_by('-assigned_date').select_related('question')
-
-            for past_a in unanswered_past:
-                if past_a.genre not in assigned_genres:
-                    # Carry forward to today
-                    orig_date = past_a.original_assigned_date or past_a.assigned_date
-                    # Mark past record as CARRIED_FORWARD
-                    past_a.status = 'CARRIED_FORWARD'
-                    past_a.save()
-
-                    new_cf = DailyPromptAssignment.objects.create(
-                        user=user,
-                        partner=partner,
-                        duo=duo,
-                        question=past_a.question,
-                        genre=past_a.genre,
-                        assigned_date=target_date,
-                        status='ASSIGNED',
-                        is_carried_forward=True,
-                        original_assigned_date=orig_date,
-                    )
-                    today_assignments.append(new_cf)
-                    assigned_genres.add(past_a.genre)
-                    if len(assigned_genres) >= 3:
-                        break
-
-        # 3. For any missing genres, assign fresh questions for today
-        missing_genres = [g for g in GENRES if g not in assigned_genres]
-
-        if missing_genres:
-            # Find all questions ever answered by EITHER partner
-            partner_ids = [user.id]
-            if partner:
-                partner_ids.append(partner.id)
-
-            answered_question_ids = set(
-                DailyResponse.objects.filter(
-                    user_id__in=partner_ids,
-                    status='SUBMITTED'
-                ).values_list('question_id', flat=True)
-            )
-
-            # Questions currently assigned to partner today or in partner's active carry-forwards
-            partner_assigned_ids = set()
-            if partner:
-                partner_assigned_ids = set(
-                    DailyPromptAssignment.objects.filter(
-                        user=partner,
-                        duo=duo,
-                        assigned_date=target_date
-                    ).exclude(status='REPLACED').values_list('question_id', flat=True)
-                )
-
-            # Questions already assigned to this user in any state today
-            user_today_question_ids = {a.question_id for a in today_assignments}
-
-            # Questions previously assigned to this user
-            user_past_assigned_ids = set(
+        # Exclude partner's active question today
+        partner_today_ids = set()
+        if partner:
+            partner_today_ids = set(
                 DailyPromptAssignment.objects.filter(
-                    user=user,
-                    duo=duo
-                ).values_list('question_id', flat=True)
+                    user=partner,
+                    duo=duo,
+                    assigned_date=target_date
+                ).exclude(status='REPLACED').values_list('question_id', flat=True)
             )
 
-            for genre in missing_genres:
-                # Candidate pool
-                candidates = DailyQuestion.objects.filter(
-                    active=True,
-                    genre=genre
-                ).exclude(
-                    id__in=answered_question_ids | partner_assigned_ids | user_today_question_ids
-                )
+        excluded_ids = duo_answered_ids | duo_assigned_ids | partner_today_ids
 
-                # Prioritize questions not yet shown to user
-                fresh_candidates = candidates.exclude(id__in=user_past_assigned_ids)
-                pool = list(fresh_candidates) if fresh_candidates.exists() else list(candidates)
+        # Available candidate questions never seen by either partner
+        candidates = DailyQuestion.objects.filter(active=True).exclude(id__in=excluded_ids)
 
-                if not pool:
-                    # Fallback to any active question in this genre not answered by either and not assigned to partner today
-                    pool = list(
-                        DailyQuestion.objects.filter(active=True, genre=genre)
-                        .exclude(id__in=answered_question_ids | partner_assigned_ids | user_today_question_ids)
-                    )
+        if not candidates.exists():
+            # If all unique questions exhausted, exclude only submitted answers and partner's today question
+            candidates = DailyQuestion.objects.filter(active=True).exclude(id__in=duo_answered_ids | partner_today_ids)
 
-                if not pool:
-                    # Final fallback: any active in genre
-                    pool = list(DailyQuestion.objects.filter(active=True, genre=genre))
+        if not candidates.exists():
+            candidates = DailyQuestion.objects.filter(active=True).exclude(id__in=partner_today_ids)
 
-                if pool:
-                    # Deterministic pick using hash of (user.id, target_date, genre)
-                    seed_str = f"{user.id}-{target_date.isoformat()}-{genre}"
-                    hash_val = int(hashlib.md5(seed_str.encode()).hexdigest(), 16)
-                    selected_q = pool[hash_val % len(pool)]
+        if not candidates.exists():
+            candidates = DailyQuestion.objects.filter(active=True)
 
-                    new_assign = DailyPromptAssignment.objects.create(
-                        user=user,
-                        partner=partner,
-                        duo=duo,
-                        question=selected_q,
-                        genre=genre,
-                        assigned_date=target_date,
-                        status='ASSIGNED',
-                        is_carried_forward=False,
-                    )
-                    today_assignments.append(new_assign)
-                    user_today_question_ids.add(selected_q.id)
+        pool = list(candidates)
+        if pool:
+            # Deterministic selection based on user id and target date so user and partner get different questions
+            seed_str = f"{user.id}-{target_date.isoformat()}-single-prompt"
+            hash_val = int(hashlib.md5(seed_str.encode()).hexdigest(), 16)
+            selected_q = pool[hash_val % len(pool)]
 
-        # Sort assignments in standard GENRES order
-        today_assignments.sort(key=lambda a: GENRES.index(a.genre) if a.genre in GENRES else 99)
-        return today_assignments
+            new_assign = DailyPromptAssignment.objects.create(
+                user=user,
+                partner=partner,
+                duo=duo,
+                question=selected_q,
+                genre=selected_q.genre,
+                assigned_date=target_date,
+                status='ASSIGNED',
+                is_carried_forward=False,
+            )
+            return [new_assign]
+
+        return []
 
 
 class DailyQuestionListView(APIView):
@@ -382,16 +350,19 @@ class ChangeDailyQuestionView(APIView):
             assignment.replaced_at = timezone.now()
             assignment.save()
 
-            # 2. Exclude questions answered by either partner
-            partner_ids = [profile.id]
-            if partner:
-                partner_ids.append(partner.id)
-
-            answered_question_ids = set(
+            # 2. Exclude questions answered by either partner in this duo
+            duo_answered_ids = set(
                 DailyResponse.objects.filter(
-                    user_id__in=partner_ids,
+                    duo=duo,
                     status='SUBMITTED'
                 ).values_list('question_id', flat=True)
+            )
+
+            # Exclude questions ever assigned in this duo
+            duo_assigned_ids = set(
+                DailyPromptAssignment.objects.filter(
+                    duo=duo
+                ).exclude(status='REPLACED').values_list('question_id', flat=True)
             )
 
             # Exclude questions assigned to partner today
@@ -405,43 +376,28 @@ class ChangeDailyQuestionView(APIView):
                     ).exclude(status='REPLACED').values_list('question_id', flat=True)
                 )
 
-            # Exclude user's currently assigned questions today
-            user_today_assigned = set(
-                DailyPromptAssignment.objects.filter(
-                    user=profile,
-                    duo=duo,
-                    assigned_date=target_date
-                ).exclude(status='REPLACED').values_list('question_id', flat=True)
-            )
-
-            # Questions previously shown/assigned to this user
-            user_past_assigned_ids = set(
-                DailyPromptAssignment.objects.filter(
-                    user=profile,
-                    duo=duo
-                ).values_list('question_id', flat=True)
-            )
+            excluded_ids = duo_answered_ids | duo_assigned_ids | partner_assigned_ids | {assignment.question_id}
 
             # Pool of candidates
             candidates = DailyQuestion.objects.filter(
                 active=True,
                 genre=genre
             ).exclude(
-                id__in=answered_question_ids | partner_assigned_ids | user_today_assigned | {assignment.question_id}
+                id__in=excluded_ids
             )
 
-            fresh_candidates = candidates.exclude(id__in=user_past_assigned_ids)
-            pool = list(fresh_candidates) if fresh_candidates.exists() else list(candidates)
-
-            if not pool:
+            if not candidates.exists():
                 # Broader fallback
-                pool = list(
-                    DailyQuestion.objects.filter(active=True, genre=genre)
-                    .exclude(id__in=answered_question_ids | partner_assigned_ids | user_today_assigned)
+                candidates = DailyQuestion.objects.filter(active=True, genre=genre).exclude(
+                    id__in=duo_answered_ids | partner_assigned_ids | {assignment.question_id}
                 )
 
-            if not pool:
-                pool = list(DailyQuestion.objects.filter(active=True, genre=genre))
+            if not candidates.exists():
+                candidates = DailyQuestion.objects.filter(active=True).exclude(
+                    id__in=partner_assigned_ids | {assignment.question_id}
+                )
+
+            pool = list(candidates)
 
             if not pool:
                 return Response({"error": "No replacement question available."}, status=status.HTTP_400_BAD_REQUEST)
