@@ -663,9 +663,9 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                   {
                     id: 'light',
                     label: 'Light Mode',
-                    desc: 'Crisp cool slate, pure white cards & blue buttons',
+                    desc: 'Warm aesthetic beige, cream cards & blue buttons',
                     icon: Sun,
-                    previewBg: 'bg-[#F4F5F9] text-[#191C26] border-[#E8EAF0]',
+                    previewBg: 'bg-[#F5EFEB] text-[#1C1917] border-[#E3DACE]',
                   },
                   {
                     id: 'dark',

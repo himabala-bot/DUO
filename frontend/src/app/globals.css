@@ -7,18 +7,18 @@
   --font-mono: var(--font-mono), 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 
   /* ─────────────────────────────────────────────────────────────
-     LIGHT THEME (Modern Cool Slate & Vibrant Pill Accents)
+     LIGHT THEME (Warm Cozy Beige Aesthetic)
   ───────────────────────────────────────────────────────────── */
-  --bg-page: #F4F5F9;
-  --bg-card: #FFFFFF;
-  --bg-card-hover: #F8F9FC;
-  --bg-input: #EDF0F7;
-  --border-color: #E8EAF0;
-  --border-subtle: #F0F2F6;
+  --bg-page: #F5EFEB;
+  --bg-card: #FAF6F0;
+  --bg-card-hover: #F2ECE4;
+  --bg-input: #EDE6DE;
+  --border-color: #E3DACE;
+  --border-subtle: #ECE4D8;
 
-  --text-primary: #191C26;
-  --text-secondary: #7E8497;
-  --text-muted: #A0A6B8;
+  --text-primary: #1C1917;
+  --text-secondary: #78716C;
+  --text-muted: #A8A29E;
 
   --accent-indigo: #125CB9;
   --accent-indigo-hover: #0E4B99;
