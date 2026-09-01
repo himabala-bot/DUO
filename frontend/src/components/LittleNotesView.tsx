@@ -344,282 +344,340 @@ export const LittleNotesView: React.FC = () => {
         )}
 
         {/* ─────────────────────────────────────────────────────────────
-            MAIN VIEW 1: ALL MEMOS 4-CATEGORY CARDS HUB (When selectedCategory is null)
+            MAIN VIEW: ALL MEMOS 4 FILE-SHAPED FOLDER CARDS
         ───────────────────────────────────────────────────────────── */}
-        {selectedCategory === null ? (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-serif text-base sm:text-lg font-bold text-theme-primary">
-                  All Collections
-                </h3>
-                <p className="text-xs text-theme-secondary mt-0.5">
-                  Browse by category to view our collection of words, photos, voice notes, and doodles.
-                </p>
-              </div>
+        <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <h3 className="font-serif text-lg sm:text-xl font-bold text-theme-primary">
+                All Collections
+              </h3>
+              <p className="text-xs text-theme-secondary mt-0.5">
+                Organized folders for your words, voice recordings, photo keepsakes, and doodle art.
+              </p>
             </div>
+          </div>
 
-            {/* 4 Primary Category Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {CATEGORIES.map((cat) => {
-                const Icon = cat.icon;
-                const catNotes = notes.filter((n) => n.note_type === cat.id);
-                const latestInCat = catNotes[0];
-                const count = catNotes.length;
+          {/* 4 File Folder Cards (Interactive Tilting Papers on Hover) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              {
+                id: 'TEXT' as CategoryType,
+                title: 'Text notes',
+                subtitle: 'Notes & More',
+                gradient: 'from-[#3B82F6] via-[#1D4ED8] to-[#1E3A8A]',
+                icon: FileText,
+                iconColor: 'text-[#3B82F6]',
+                badgeColor: 'bg-[#3B82F6]/15 text-[#3B82F6] border-[#3B82F6]/30',
+              },
+              {
+                id: 'PHOTO' as CategoryType,
+                title: 'Photo memories',
+                subtitle: 'Pictures & More',
+                gradient: 'from-[#F43F5E] via-[#E11D48] to-[#881337]',
+                icon: Camera,
+                iconColor: 'text-[#F43F5E]',
+                badgeColor: 'bg-[#F43F5E]/15 text-[#F43F5E] border-[#F43F5E]/30',
+              },
+              {
+                id: 'VOICE' as CategoryType,
+                title: 'Voice notes',
+                subtitle: 'Audio & More',
+                gradient: 'from-[#F97316] via-[#EA580C] to-[#9A3412]',
+                icon: Mic,
+                iconColor: 'text-[#F97316]',
+                badgeColor: 'bg-[#F97316]/15 text-[#F97316] border-[#F97316]/30',
+              },
+              {
+                id: 'DRAWING' as CategoryType,
+                title: 'Doodle sketches',
+                subtitle: 'Drawings & More',
+                gradient: 'from-[#10B981] via-[#059669] to-[#064E3B]',
+                icon: PenTool,
+                iconColor: 'text-[#10B981]',
+                badgeColor: 'bg-[#10B981]/15 text-[#10B981] border-[#10B981]/30',
+              },
+            ].map((folder) => {
+              const FolderIcon = folder.icon;
+              const catNotes = notes.filter((n) => n.note_type === folder.id);
+              const latestInCat = catNotes[0];
+              const count = catNotes.length;
 
-                return (
-                  <div
-                    key={cat.id}
-                    onClick={() => setSelectedCategory(cat.id)}
-                    className="group relative block w-full h-[330px] cursor-pointer rounded-2xl border border-theme bg-theme-card p-4 text-theme-primary shadow-xs transition-all hover:border-[#125CB9] flex flex-col justify-between overflow-hidden"
-                  >
-                    {/* Card Header: Category Title & Arrow */}
-                    <div className="flex items-center justify-between shrink-0">
-                      <div className="flex items-center space-x-2">
-                        <div className={`flex h-8 w-8 items-center justify-center rounded-xl border border-theme bg-theme-input ${cat.accentColor}`}>
-                          <Icon className="h-4 w-4" />
-                        </div>
-                        <div>
-                          <h4 className="font-serif text-xs sm:text-sm font-bold text-theme-primary">
-                            {cat.title}
-                          </h4>
-                          <span className="text-[10px] font-mono text-theme-muted">
-                            {count} {count === 1 ? 'note' : 'notes'}
-                          </span>
-                        </div>
-                      </div>
+              return (
+                <div
+                  key={folder.id}
+                  onClick={() => setSelectedCategory(folder.id)}
+                  className="group relative flex flex-col justify-between w-full h-[320px] rounded-[45px] overflow-hidden cursor-pointer border border-black/10 dark:border-white/10 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 bg-[#1C1C1E] select-none"
+                  title={`Open ${folder.title}`}
+                >
+                  {/* Top Background: Rich Gradient with Tilting Papers */}
+                  <div className={`relative h-[155px] w-full bg-gradient-to-b ${folder.gradient} overflow-hidden flex items-end justify-center pb-2`}>
+                    {/* Subtle ambient lighting orb */}
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
 
-                      <div className="flex h-7 w-7 items-center justify-center rounded-full border border-theme bg-theme-input text-theme-muted group-hover:bg-[#125CB9] group-hover:text-white transition-colors">
-                        <ArrowRight className="h-3 w-3" />
-                      </div>
+                    {/* Left Sheet (Tilts Left on Hover) */}
+                    <div className="absolute bottom-1 left-[15%] w-[96px] sm:w-[110px] h-[92px] rounded-2xl bg-white/95 text-neutral-800 p-2.5 shadow-md origin-bottom transition-all duration-300 ease-out transform -rotate-[7deg] translate-y-1 group-hover:-rotate-[18deg] group-hover:-translate-y-4 group-hover:-translate-x-3">
+                      <div className="w-10 h-1.5 bg-neutral-300 rounded-full mb-2" />
+                      <div className="w-full h-1 bg-neutral-200 rounded-full mb-1" />
+                      <div className="w-4/5 h-1 bg-neutral-200 rounded-full mb-1" />
+                      <div className="w-3/5 h-1 bg-neutral-200 rounded-full" />
                     </div>
 
-                    {/* Visual Preview */}
-                    <div className="relative my-2.5 h-36 w-full shrink-0">
+                    {/* Center Sheet (Lifts Up & Scales on Hover) */}
+                    <div className="relative z-10 w-[108px] sm:w-[124px] h-[105px] rounded-2xl bg-white text-neutral-800 p-2 shadow-xl origin-bottom transition-all duration-300 ease-out transform group-hover:-translate-y-6 group-hover:scale-105 flex flex-col justify-between overflow-hidden">
                       {latestInCat ? (
                         <>
-                          {cat.id === 'DRAWING' && latestInCat.media_url ? (
-                            <div className="relative h-full w-full overflow-hidden rounded-xl border border-theme bg-theme-input p-2 flex items-center justify-center">
-                              <img
-                                src={latestInCat.media_url}
-                                alt="Latest Doodle"
-                                className="h-full w-full object-contain select-none"
-                              />
-                            </div>
-                          ) : cat.id === 'PHOTO' && latestInCat.media_url ? (
-                            <div className="relative h-full w-full overflow-hidden rounded-xl border border-theme bg-theme-input">
-                              <img
-                                src={latestInCat.media_url}
-                                alt="Latest Photo"
-                                className="h-full w-full object-cover"
-                              />
-                            </div>
-                          ) : cat.id === 'VOICE' && latestInCat.media_url ? (
-                            <div className="relative h-full w-full flex items-center justify-center">
-                              <div className="w-full rounded-xl border border-theme bg-theme-input p-3">
-                                <WaveformPlayer audioUrl={latestInCat.media_url} />
+                          {folder.id === 'PHOTO' && latestInCat.media_url ? (
+                            <img src={latestInCat.media_url} className="w-full h-full object-cover rounded-xl" alt="" />
+                          ) : folder.id === 'DRAWING' && latestInCat.media_url ? (
+                            <img src={latestInCat.media_url} className="w-full h-full object-contain rounded-xl" alt="" />
+                          ) : folder.id === 'VOICE' ? (
+                            <div className="h-full flex flex-col justify-center items-center gap-1.5 p-1">
+                              <div className="p-2 rounded-full bg-[#F97316]/10 text-[#F97316]">
+                                <Mic className="h-4 w-4" />
                               </div>
+                              <span className="text-[9px] font-mono text-neutral-600 font-semibold">Audio Memo</span>
                             </div>
                           ) : (
-                            <div className="relative h-full w-full overflow-hidden rounded-xl border border-theme bg-theme-input p-3 flex items-center">
-                              <p className="text-xs text-theme-primary whitespace-pre-wrap leading-relaxed line-clamp-4">
+                            <div className="p-1">
+                              <p className="text-[9px] font-medium text-neutral-700 leading-tight line-clamp-4">
                                 {latestInCat.content}
                               </p>
                             </div>
                           )}
                         </>
                       ) : (
-                        <div className="relative h-full w-full flex flex-col items-center justify-center rounded-xl border border-dashed border-theme bg-theme-input/50 p-4 text-center">
-                          <Icon className={`h-5 w-5 mb-1 opacity-40 ${cat.accentColor}`} />
-                          <span className="text-xs font-serif font-medium text-theme-muted">No {cat.title.toLowerCase()} yet</span>
+                        <div className="p-1 space-y-1.5 pt-1">
+                          <div className="w-12 h-1.5 bg-neutral-300 rounded-full mb-2" />
+                          <div className="w-full h-1 bg-neutral-200 rounded-full" />
+                          <div className="w-5/6 h-1 bg-neutral-200 rounded-full" />
+                          <div className="w-4/6 h-1 bg-neutral-200 rounded-full" />
                         </div>
                       )}
                     </div>
 
-                    {/* Stats & Latest Author Footer */}
-                    <div className="pt-2 border-t border-theme-subtle shrink-0">
-                      {latestInCat ? (
-                        <div className="flex items-center justify-between text-[10px] font-mono text-theme-muted">
-                          <div className="flex items-center space-x-1.5 truncate max-w-[130px]">
-                            <Avatar src={latestInCat.author.avatar_url} name={latestInCat.author.name} size="xs" />
-                            <span className="truncate">{latestInCat.is_me ? 'You' : latestInCat.author.name}</span>
-                          </div>
-                          <div className="flex items-center space-x-1">
-                            <Clock className="h-2.5 w-2.5 text-[#FB923C]" />
-                            <span>{format(new Date(latestInCat.created_at), 'MMM dd')}</span>
-                          </div>
-                        </div>
-                      ) : (
-                        <span className="text-[10px] font-mono text-theme-muted">
-                          Empty collection
-                        </span>
-                      )}
+                    {/* Right Sheet (Tilts Right on Hover) */}
+                    <div className="absolute bottom-1 right-[15%] w-[96px] sm:w-[110px] h-[92px] rounded-2xl bg-white/95 text-neutral-800 p-2.5 shadow-md origin-bottom transition-all duration-300 ease-out transform rotate-[7deg] translate-y-1 group-hover:rotate-[18deg] group-hover:-translate-y-4 group-hover:translate-x-3">
+                      <div className="w-12 h-1.5 bg-neutral-300 rounded-full mb-2" />
+                      <div className="w-full h-1 bg-neutral-200 rounded-full mb-1" />
+                      <div className="w-4/5 h-1 bg-neutral-200 rounded-full mb-1" />
+                      <div className="w-3/5 h-1 bg-neutral-200 rounded-full" />
                     </div>
                   </div>
-                );
-              })}
-            </div>
+
+                  {/* Folder Front Cutout Flap (Accurate Shape as in Reference Image) */}
+                  <div className="relative z-20 -mt-6 w-full flex-1 bg-[#1E1E22] dark:bg-[#18181B] rounded-b-[45px] p-6 pt-3 flex flex-col justify-between text-white border-t border-white/5">
+                    {/* Folder Tab Row: Title, Subtitle, and Ellipsis */}
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <h4 className="text-base font-semibold text-white tracking-tight leading-snug">
+                          {folder.title}
+                        </h4>
+                        <p className="text-xs text-neutral-400 font-normal mt-0.5">
+                          {folder.subtitle}
+                        </p>
+                      </div>
+
+                      <div className="flex h-6 w-6 items-center justify-center rounded-full text-neutral-400 group-hover:text-white transition-colors">
+                        <span className="tracking-widest font-bold text-sm">•••</span>
+                      </div>
+                    </div>
+
+                    {/* Footer: Document Icon + Total Count */}
+                    <div className="flex items-center space-x-2 text-xs font-mono text-neutral-400 pt-3 border-t border-white/5">
+                      <FileText className="h-3.5 w-3.5" />
+                      <span>{count.toLocaleString()} {count === 1 ? 'File' : 'Files'}</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
-        ) : (
-          /* ─────────────────────────────────────────────────────────────
-              MAIN VIEW 2: CATEGORY DETAIL VIEW (When a category card is clicked)
-          ───────────────────────────────────────────────────────────── */
-          <div className="space-y-4 animate-in fade-in duration-150">
+        </div>
+
+        {/* ─────────────────────────────────────────────────────────────
+            CATEGORY DETAIL POPUP MODAL (Opens over the page on click)
+        ───────────────────────────────────────────────────────────── */}
+        {selectedCategory && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 sm:p-6 backdrop-blur-md animate-in fade-in duration-200">
             {(() => {
               const currentCatConfig = CATEGORIES.find((c) => c.id === selectedCategory) || CATEGORIES[0];
               const CatIcon = currentCatConfig.icon;
               const categoryNotes = notes.filter((n) => n.note_type === selectedCategory);
+              const count = categoryNotes.length;
 
               return (
-                <>
-                  {/* Category Top Breadcrumb & Action Bar */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-theme">
-                    <div className="flex items-center space-x-2.5">
-                      <button
-                        onClick={() => setSelectedCategory(null)}
-                        className="flex items-center space-x-1.5 rounded-full border border-theme bg-theme-card px-3.5 py-1.5 text-xs font-mono text-theme-secondary hover:bg-theme-card-hover transition-colors shadow-xs"
-                      >
-                        <ArrowLeft className="h-3 w-3" />
-                        <span>All Collections</span>
-                      </button>
-
-                      <div className="flex items-center space-x-2">
-                        <CatIcon className={`h-4 w-4 ${currentCatConfig.accentColor}`} />
-                        <h3 className="font-serif text-base sm:text-lg font-bold text-theme-primary">
-                          {currentCatConfig.title}
-                        </h3>
-                        <span className="text-[11px] font-mono font-medium px-2.5 py-0.2 rounded-full border bg-theme-input border-theme text-theme-muted">
-                          {categoryNotes.length}
-                        </span>
+                <div className="w-full max-w-4xl max-h-[88vh] rounded-[45px] border border-theme bg-theme-card p-6 sm:p-8 shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 space-y-5">
+                  {/* Modal Header */}
+                  <div className="flex items-center justify-between pb-4 border-b border-theme shrink-0">
+                    <div className="flex items-center space-x-3">
+                      <div className={`flex h-10 w-10 items-center justify-center rounded-2xl border border-theme bg-theme-input ${currentCatConfig.accentColor}`}>
+                        <CatIcon className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <div className="flex items-center space-x-2">
+                          <h3 className="font-serif text-lg sm:text-xl font-bold text-theme-primary">
+                            {currentCatConfig.title}
+                          </h3>
+                          <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-mono font-medium border ${currentCatConfig.badgeBg}`}>
+                            {count} {count === 1 ? 'File' : 'Files'}
+                          </span>
+                        </div>
+                        <p className="text-xs text-theme-secondary mt-0.5">
+                          {currentCatConfig.subtitle}
+                        </p>
                       </div>
                     </div>
 
-                    <button
-                      onClick={() => openCreateForCategory(currentCatConfig.id)}
-                      className="flex items-center space-x-1.5 rounded-full bg-[#125CB9] px-4 py-1.5 text-xs font-medium text-white hover:bg-[#0E4B99] transition-colors shadow-xs self-start sm:self-auto"
-                    >
-                      <Plus className="h-3.5 w-3.5" />
-                      <span>Add {currentCatConfig.title.slice(0, -1)}</span>
-                    </button>
-                  </div>
-
-                  {/* Category Notes Grid */}
-                  {categoryNotes.length === 0 ? (
-                    <div className="rounded-2xl border border-theme bg-theme-card p-10 text-center space-y-2 shadow-xs">
-                      <CatIcon className={`h-6 w-6 mx-auto mb-1 ${currentCatConfig.accentColor}`} />
-                      <h4 className="font-serif text-base font-bold text-theme-primary">No {currentCatConfig.title.toLowerCase()} yet</h4>
-                      <p className="text-xs text-theme-secondary max-w-sm mx-auto">
-                        Share a {currentCatConfig.title.toLowerCase().slice(0, -1)} with {partner?.name || 'your partner'}.
-                      </p>
+                    <div className="flex items-center space-x-2">
                       <button
-                        onClick={() => openCreateForCategory(currentCatConfig.id)}
-                        className="mt-2 inline-flex items-center space-x-1.5 rounded-full bg-[#125CB9] px-4 py-2 text-xs font-medium text-white hover:bg-[#0E4B99] transition-colors shadow-xs"
+                        type="button"
+                        onClick={() => openCreateForCategory(selectedCategory)}
+                        className="btn-primary text-xs py-2 px-4 shadow-xs"
                       >
                         <Plus className="h-3.5 w-3.5" />
-                        <span>Create Note</span>
+                        <span>Add {currentCatConfig.title.split(' ')[0]}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setSelectedCategory(null)}
+                        className="p-2 text-theme-muted hover:text-theme-primary rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+                        title="Close popup"
+                      >
+                        <X className="h-5 w-5" />
                       </button>
                     </div>
-                  ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                      {categoryNotes.map((note) => {
-                        const formattedDate = format(new Date(note.created_at), 'MMM dd, hh:mm a');
+                  </div>
 
-                        return (
-                          <div
-                            key={note.id}
-                            onClick={() => setPreviewNote(note)}
-                            className={cn(
-                              "group relative block w-full h-[320px] cursor-pointer rounded-2xl border border-theme bg-theme-card p-4 text-theme-primary shadow-xs transition-all hover:border-[#125CB9] flex flex-col justify-between overflow-hidden",
-                              note.is_pinned ? "ring-2 ring-[#125CB9]/40" : ""
-                            )}
-                          >
-                            <div className="flex flex-col h-full justify-between">
-                              {/* Card Header: Author and Pin */}
-                              <div className="mb-2 flex items-center justify-between shrink-0">
+                  {/* Modal Scrollable Grid Content */}
+                  <div className="flex-1 overflow-y-auto pr-1">
+                    {categoryNotes.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-16 text-center space-y-3 rounded-[35px] border border-dashed border-theme bg-theme-input/40">
+                        <CatIcon className={`h-10 w-10 opacity-30 ${currentCatConfig.accentColor}`} />
+                        <div>
+                          <h4 className="font-serif text-base font-bold text-theme-primary">
+                            No {currentCatConfig.title.toLowerCase()} yet
+                          </h4>
+                          <p className="text-xs text-theme-secondary mt-1 max-w-sm mx-auto">
+                            Share a sweet message, voice whisper, memorable photo, or live doodle to fill this collection!
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => openCreateForCategory(selectedCategory)}
+                          className="btn-primary text-xs py-2 px-4"
+                        >
+                          <Plus className="h-3.5 w-3.5" />
+                          <span>Create First Note</span>
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {categoryNotes.map((note) => {
+                          const formattedDate = format(
+                            new Date(note.created_at),
+                            'MMM dd, yyyy • hh:mm a'
+                          );
+
+                          return (
+                            <div
+                              key={note.id}
+                              onClick={() => setPreviewNote(note)}
+                              className="group relative flex flex-col justify-between rounded-[32px] border border-theme bg-theme-card p-4 shadow-xs hover:shadow-md transition-all hover:border-[#125CB9] cursor-pointer"
+                            >
+                              {/* Top Bar: Author, Pin & Actions */}
+                              <div className="flex items-center justify-between pb-2 border-b border-theme-subtle">
                                 <div className="flex items-center space-x-2">
-                                  <Avatar src={note.author.avatar_url} name={note.author.name} size="xs" />
-                                  <h3 className="text-xs font-bold text-theme-primary truncate max-w-[120px]">
+                                  <Avatar
+                                    src={note.author.avatar_url}
+                                    name={note.author.name}
+                                    size="xs"
+                                  />
+                                  <span className="text-xs font-semibold text-theme-primary">
                                     {note.is_me ? 'You' : note.author.name}
-                                  </h3>
+                                  </span>
                                 </div>
 
-                                <div className="flex items-center space-x-0.5">
+                                <div className="flex items-center space-x-1" onClick={(e) => e.stopPropagation()}>
                                   <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleTogglePin(note);
-                                    }}
-                                    className={`p-1 rounded-full transition-colors ${
+                                    type="button"
+                                    onClick={() => handleTogglePin(note)}
+                                    className={`p-1.5 rounded-full transition-colors ${
                                       note.is_pinned
-                                        ? 'text-[#125CB9] bg-theme-input'
-                                        : 'text-theme-muted hover:text-theme-primary opacity-0 group-hover:opacity-100'
+                                        ? 'text-[#125CB9] bg-[#125CB9]/10'
+                                        : 'text-theme-muted hover:text-theme-primary'
                                     }`}
                                     title={note.is_pinned ? 'Unpin note' : 'Pin note'}
                                   >
-                                    <Pin className="h-3 w-3 fill-current" />
+                                    <Pin className="h-3.5 w-3.5" />
                                   </button>
 
                                   <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleDeleteNote(note);
-                                    }}
-                                    className="p-1 text-theme-muted hover:text-[#F43F5E] rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                    type="button"
+                                    onClick={() => handleDeleteNote(note)}
+                                    className="p-1.5 text-theme-muted hover:text-[#F43F5E] rounded-full transition-colors"
                                     title="Delete note"
                                   >
-                                    <Trash2 className="h-3 w-3" />
+                                    <Trash2 className="h-3.5 w-3.5" />
                                   </button>
                                 </div>
                               </div>
 
-                              {/* Visual Display */}
-                              <div className="relative mb-2 h-36 w-full shrink-0">
-                                {note.note_type === 'DRAWING' && note.media_url ? (
-                                  <div className="relative h-full w-full overflow-hidden rounded-xl border border-theme bg-theme-input p-2 flex items-center justify-center">
+                              {/* Media / Note Content */}
+                              <div className="py-3">
+                                {note.note_type === 'PHOTO' && note.media_url ? (
+                                  <div className="relative h-44 w-full overflow-hidden rounded-[20px] border border-theme bg-theme-input">
+                                    <img
+                                      src={note.media_url}
+                                      alt="Photo"
+                                      className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                    />
+                                  </div>
+                                ) : note.note_type === 'DRAWING' && note.media_url ? (
+                                  <div className="relative h-44 w-full overflow-hidden rounded-[20px] border border-theme bg-theme-input p-2 flex items-center justify-center">
                                     <img
                                       src={note.media_url}
                                       alt="Doodle"
                                       className="h-full w-full object-contain select-none"
                                     />
                                   </div>
-                                ) : note.note_type === 'PHOTO' && note.media_url ? (
-                                  <div className="relative h-full w-full overflow-hidden rounded-xl border border-theme bg-theme-input">
-                                    <img
-                                      src={note.media_url}
-                                      alt="Photo"
-                                      className="h-full w-full object-cover"
-                                    />
-                                  </div>
                                 ) : note.note_type === 'VOICE' && note.media_url ? (
-                                  <div className="relative h-full w-full flex items-center justify-center">
-                                    <div className="w-full rounded-xl border border-theme bg-theme-input p-3">
-                                      <WaveformPlayer audioUrl={note.media_url} />
-                                    </div>
+                                  <div className="w-full rounded-[20px] border border-theme bg-theme-input p-3" onClick={(e) => e.stopPropagation()}>
+                                    <WaveformPlayer audioUrl={note.media_url} />
                                   </div>
                                 ) : (
-                                  <div className="relative h-full w-full overflow-hidden rounded-xl border border-theme bg-theme-input p-3 flex items-center">
+                                  <div className="rounded-[20px] border border-theme bg-theme-input p-3 min-h-[90px] flex items-center">
                                     <p className="text-xs text-theme-primary whitespace-pre-wrap leading-relaxed line-clamp-4">
                                       {note.content}
                                     </p>
                                   </div>
                                 )}
+
+                                {note.content && (note.note_type === 'PHOTO' || note.note_type === 'DRAWING') && (
+                                  <p className="text-xs text-theme-secondary mt-2 line-clamp-2 px-1">
+                                    {note.content}
+                                  </p>
+                                )}
                               </div>
 
-                              {/* Stats Section */}
-                              <div className="flex items-center justify-between text-[10px] font-mono text-theme-muted shrink-0">
+                              {/* Footer: Timestamp */}
+                              <div className="flex items-center justify-between text-[10px] font-mono text-theme-muted pt-2 border-t border-theme-subtle">
                                 <div className="flex items-center space-x-1">
                                   <Clock className="h-2.5 w-2.5 text-[#FB923C]" />
                                   <span>{formattedDate}</span>
                                 </div>
-                                <span className="capitalize">{note.note_type.toLowerCase()}</span>
+                                {note.is_pinned && (
+                                  <span className="text-[#125CB9] font-medium">Pinned</span>
+                                )}
                               </div>
                             </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </div>
               );
             })()}
           </div>
@@ -630,10 +688,10 @@ export const LittleNotesView: React.FC = () => {
           FULL NOTE DETAIL & ZOOM PREVIEW MODAL
       ───────────────────────────────────────────────────────────── */}
       {previewNote && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-[3px]">
-          <div className="w-full max-w-md rounded-2xl border border-theme bg-theme-card p-5 shadow-2xl animate-in zoom-in-95 duration-150 space-y-3.5 max-h-[85vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-2.5 border-b border-theme">
-              <div className="flex items-center space-x-2">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 sm:p-6 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="w-full max-w-md rounded-[45px] border border-theme bg-theme-card p-6 sm:p-7 shadow-2xl animate-in zoom-in-95 duration-150 space-y-4 max-h-[85vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-theme">
+              <div className="flex items-center space-x-2.5">
                 <Avatar src={previewNote.author.avatar_url} name={previewNote.author.name} size="xs" />
                 <div>
                   <h4 className="text-xs font-bold text-theme-primary">
@@ -646,7 +704,7 @@ export const LittleNotesView: React.FC = () => {
               </div>
               <button
                 onClick={() => setPreviewNote(null)}
-                className="p-1 rounded-full text-theme-muted hover:text-theme-primary"
+                className="p-1.5 rounded-full text-theme-muted hover:text-theme-primary hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -654,7 +712,7 @@ export const LittleNotesView: React.FC = () => {
 
             {/* Media Zoom */}
             {previewNote.note_type === 'DRAWING' && previewNote.media_url && (
-              <div className="rounded-xl border border-theme bg-theme-input p-3">
+              <div className="rounded-[28px] border border-theme bg-theme-input p-3">
                 <img
                   src={previewNote.media_url}
                   alt="Doodle"
@@ -664,7 +722,7 @@ export const LittleNotesView: React.FC = () => {
             )}
 
             {previewNote.note_type === 'PHOTO' && previewNote.media_url && (
-              <div className="rounded-xl border border-theme bg-theme-input overflow-hidden">
+              <div className="rounded-[28px] border border-theme bg-theme-input overflow-hidden">
                 <img
                   src={previewNote.media_url}
                   alt="Photo"
@@ -674,13 +732,13 @@ export const LittleNotesView: React.FC = () => {
             )}
 
             {previewNote.note_type === 'VOICE' && previewNote.media_url && (
-              <div className="rounded-xl border border-theme bg-theme-input p-3">
+              <div className="rounded-[28px] border border-theme bg-theme-input p-3.5">
                 <WaveformPlayer audioUrl={previewNote.media_url} />
               </div>
             )}
 
             {previewNote.content && (
-              <div className="p-3 bg-theme-input rounded-xl border border-theme">
+              <div className="p-3.5 bg-theme-input rounded-[28px] border border-theme">
                 <p className="text-xs sm:text-sm text-theme-primary whitespace-pre-wrap leading-relaxed">
                   {previewNote.content}
                 </p>
@@ -690,7 +748,7 @@ export const LittleNotesView: React.FC = () => {
             <div className="flex justify-end pt-1">
               <button
                 onClick={() => setPreviewNote(null)}
-                className="px-4 py-1.5 rounded-full bg-[#125CB9] text-white text-xs font-medium hover:bg-[#0E4B99] transition-colors shadow-xs"
+                className="px-5 py-2 rounded-full bg-[#125CB9] text-white text-xs font-medium hover:bg-[#0E4B99] transition-colors shadow-xs"
               >
                 Close
               </button>
@@ -703,19 +761,19 @@ export const LittleNotesView: React.FC = () => {
           CREATE NOTE MODAL DIALOG
       ───────────────────────────────────────────────────────────── */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-[3px] overflow-y-auto">
-          <div className="w-full max-w-lg rounded-2xl border border-theme bg-theme-card p-5 shadow-2xl animate-in zoom-in-95 duration-150 space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 sm:p-6 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto">
+          <div className="w-full max-w-lg rounded-[45px] border border-theme bg-theme-card p-6 sm:p-8 shadow-2xl animate-in zoom-in-95 duration-150 space-y-4">
             {/* Modal Header */}
-            <div className="flex items-center justify-between pb-2.5 border-b border-theme">
-              <div className="flex items-center space-x-2">
-                <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-[#125CB9]/10 text-[#125CB9]">
-                  <Heart className="h-3.5 w-3.5 fill-current" />
+            <div className="flex items-center justify-between pb-3 border-b border-theme">
+              <div className="flex items-center space-x-2.5">
+                <span className="flex h-8 w-8 items-center justify-center rounded-2xl bg-[#125CB9]/10 text-[#125CB9]">
+                  <Heart className="h-4 w-4 fill-current" />
                 </span>
                 <h3 className="font-serif text-base font-bold text-theme-primary">Leave a Little Note</h3>
               </div>
               <button
                 onClick={() => setShowCreateModal(false)}
-                className="p-1 text-theme-muted hover:text-theme-primary rounded-full"
+                className="p-1.5 text-theme-muted hover:text-theme-primary rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
               >
                 <X className="h-4 w-4" />
               </button>

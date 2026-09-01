@@ -261,7 +261,7 @@
 
 .input-base {
   width: 100%;
-  border-radius: 1rem;
+  border-radius: 1.5rem;
   border: 1px solid var(--border-color);
   background-color: var(--bg-input);
   padding: 0.625rem 1rem;
@@ -280,8 +280,30 @@
 }
 
 .card-container {
-  border-radius: 1.25rem;
+  border-radius: 45px;
   border: 1px solid var(--border-color);
   background-color: var(--bg-card);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* 45px Corner Radius System */
+.rounded-card,
+.rounded-box,
+.rounded-3xl {
+  border-radius: 45px !important;
+}
+
+.rounded-2xl {
+  border-radius: 36px;
+}
+
+.folder-tab-clip {
+  clip-path: polygon(
+    0% 0%,
+    52% 0%,
+    60% 32px,
+    100% 32px,
+    100% 100%,
+    0% 100%
+  );
 }

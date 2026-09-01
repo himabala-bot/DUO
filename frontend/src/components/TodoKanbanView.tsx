@@ -368,7 +368,7 @@ export const TodoKanbanView: React.FC = () => {
                 onDragLeave={handleDragLeave}
                 onDrop={(e) => handleDrop(e, col.id)}
                 style={{ borderTopColor: col.borderTop }}
-                className={`h-full flex flex-col rounded-2xl border border-theme border-t-3 bg-theme-card shadow-xs overflow-hidden transition-all duration-150 ${
+                className={`h-full flex flex-col rounded-[45px] border border-theme border-t-4 bg-theme-card shadow-xs overflow-hidden transition-all duration-150 ${
                   isDropTarget ? 'border-dashed border-2 border-[#125CB9] bg-[#125CB9]/10' : ''
                 }`}
               >
@@ -706,13 +706,13 @@ export const TodoKanbanView: React.FC = () => {
 
       {/* Edit Task Modal Dialog */}
       {editingTask && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-[3px]">
-          <div className="w-full max-w-md rounded-2xl border border-theme bg-theme-card p-5 shadow-2xl animate-in zoom-in-95 duration-150 space-y-3.5">
-            <div className="flex items-center justify-between pb-2.5 border-b border-theme">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="w-full max-w-md rounded-[45px] border border-theme bg-theme-card p-6 sm:p-7 shadow-2xl animate-in zoom-in-95 duration-150 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-theme">
               <h3 className="font-serif text-base font-bold text-theme-primary">Edit Task</h3>
               <button
                 onClick={() => setEditingTask(null)}
-                className="p-1 text-theme-muted hover:text-theme-primary rounded-full"
+                className="p-1.5 text-theme-muted hover:text-theme-primary rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
               >
                 <X className="h-4 w-4" />
               </button>

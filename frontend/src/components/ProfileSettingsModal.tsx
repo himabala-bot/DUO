@@ -261,13 +261,13 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
     : null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3 sm:p-6 backdrop-blur-[4px] overflow-y-auto">
-      <div className="relative w-full max-w-2xl rounded-2xl border border-theme bg-theme-card shadow-2xl overflow-hidden flex flex-col max-h-[88vh] transition-colors">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3 sm:p-6 backdrop-blur-[4px] overflow-y-auto animate-in fade-in duration-200">
+      <div className="relative w-full max-w-2xl rounded-[45px] border border-theme bg-theme-card shadow-2xl overflow-hidden flex flex-col max-h-[88vh] transition-colors">
         {/* Modal Top Header */}
-        <div className="flex items-center justify-between border-b border-theme bg-theme-page px-5 py-3 shrink-0">
-          <div className="flex items-center space-x-2">
-            <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-[#125CB9] text-white">
-              <Heart className="h-3.5 w-3.5 fill-current" />
+        <div className="flex items-center justify-between border-b border-theme bg-theme-page px-6 py-4 shrink-0">
+          <div className="flex items-center space-x-2.5">
+            <span className="flex h-8 w-8 items-center justify-center rounded-2xl bg-[#125CB9] text-white">
+              <Heart className="h-4 w-4 fill-current" />
             </span>
             <h2 className="font-serif text-base sm:text-lg font-bold text-theme-primary">Room Settings</h2>
           </div>
