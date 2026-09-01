@@ -305,65 +305,41 @@ export const notesApi = {
   },
 };
 
-// 8. TO-DO & KANBAN LISTS APIS
-export const todosApi = {
-  getBoard: async (): Promise<{ categories: import('@/types').TodoCategory[] }> => {
+// 8. COUPLE TO-DO & KANBAN TASKS APIS
+export const tasksApi = {
+  list: async (): Promise<{ tasks: import('@/types').Task[]; count: number }> => {
     return request('/api/todos/');
   },
 
-  createCategory: async (data: {
+  create: async (data: {
     title: string;
-    emoji?: string;
-    color?: string;
-  }): Promise<import('@/types').TodoCategory> => {
+    description?: string;
+    status?: import('@/types').TaskStatus;
+  }): Promise<import('@/types').Task> => {
     return request('/api/todos/', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   },
 
-  updateCategory: async (
-    id: string,
-    data: { title?: string; emoji?: string; color?: string; order?: number }
-  ): Promise<import('@/types').TodoCategory> => {
-    return request(`/api/todos/categories/${id}/`, {
-      method: 'PATCH',
-      body: JSON.stringify(data),
-    });
-  },
-
-  deleteCategory: async (id: string): Promise<{ success: boolean; message: string }> => {
-    return request(`/api/todos/categories/${id}/`, { method: 'DELETE' });
-  },
-
-  createItem: async (data: {
-    category_id: string;
-    title: string;
-    description?: string;
-  }): Promise<import('@/types').TodoItem> => {
-    return request('/api/todos/items/', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-  },
-
-  updateItem: async (
+  update: async (
     id: string,
     data: {
-      is_completed?: boolean;
       title?: string;
       description?: string;
-      category_id?: string;
+      status?: import('@/types').TaskStatus;
       order?: number;
     }
-  ): Promise<import('@/types').TodoItem> => {
-    return request(`/api/todos/items/${id}/`, {
+  ): Promise<import('@/types').Task> => {
+    return request(`/api/todos/${id}/`, {
       method: 'PATCH',
       body: JSON.stringify(data),
     });
   },
 
-  deleteItem: async (id: string): Promise<{ success: boolean; message: string }> => {
-    return request(`/api/todos/items/${id}/`, { method: 'DELETE' });
+  delete: async (id: string): Promise<{ success: boolean; message: string }> => {
+    return request(`/api/todos/${id}/`, { method: 'DELETE' });
   },
 };
+
+export const todosApi = tasksApi;

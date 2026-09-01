@@ -137,28 +137,18 @@ export interface LittleNote {
   updated_at: string;
 }
 
-export interface TodoItem {
+export type TaskStatus = 'TODO' | 'IN_PROGRESS' | 'COMPLETED';
+
+export interface Task {
   id: string;
   duo_id: string;
-  category_id: string;
   created_by: PartnerProfile;
   title: string;
   description: string;
-  is_completed: boolean;
-  completed_at: string | null;
+  status: TaskStatus;
   order: number;
   is_me: boolean;
+  completed_at: string | null;
   created_at: string;
   updated_at: string;
-}
-
-export interface TodoCategory {
-  id: string;
-  duo_id: string;
-  title: string;
-  emoji: string;
-  color: string;
-  order: number;
-  items: TodoItem[];
-  created_at: string;
 }

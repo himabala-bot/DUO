@@ -4,67 +4,104 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
-import { todosApi } from '@/lib/api';
-import { TodoCategory, TodoItem } from '@/types';
+import { tasksApi } from '@/lib/api';
+import { Task, TaskStatus } from '@/types';
 import {
   Plus,
-  Check,
+  CheckCircle2,
+  Circle,
   Trash2,
-  MoreVertical,
+  Edit3,
   MoveRight,
+  MoveLeft,
   Sparkles,
   Heart,
   Calendar,
-  CheckCircle2,
-  Circle,
   X,
+  GripVertical,
+  ArrowRight,
   ListTodo,
 } from 'lucide-react';
+import { format } from 'date-fns';
 import { RealtimeChannel } from '@supabase/supabase-js';
 
-const PRESET_EMOJIS = ['📍', '🍜', '🎬', '🛹', '💡', '✈️', '🏖️', '🍰', '🎮', '🏠', '🎁', '✨'];
-const PRESET_COLORS = ['#AECFD0', '#FFD094', '#F9D4F8', '#DDF2B8', '#F7E9B2', '#FCC4C0', '#57B1A8'];
+interface ColumnConfig {
+  id: TaskStatus;
+  title: string;
+  emoji: string;
+  accent: string;
+  badgeBg: string;
+  borderTop: string;
+}
+
+const COLUMNS: ColumnConfig[] = [
+  {
+    id: 'TODO',
+    title: 'To Do',
+    emoji: '📝',
+    accent: 'text-[#F49625]',
+    badgeBg: 'bg-[#FFF9EE] border-[#FFD094]',
+    borderTop: '#F49625',
+  },
+  {
+    id: 'IN_PROGRESS',
+    title: 'In Progress',
+    emoji: '⚡',
+    accent: 'text-[#EA5E86]',
+    badgeBg: 'bg-[#FFF5F5] border-[#FCC4C0]',
+    borderTop: '#EA5E86',
+  },
+  {
+    id: 'COMPLETED',
+    title: 'Completed',
+    emoji: '✨',
+    accent: 'text-[#037F71]',
+    badgeBg: 'bg-[#F5FBEF] border-[#DDF2B8]',
+    borderTop: '#037F71',
+  },
+];
 
 export const TodoKanbanView: React.FC = () => {
   const { profile, partner } = useAuth();
   const { toast, confirm } = useToast();
-  const [categories, setCategories] = useState<TodoCategory[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeMobileColId, setActiveMobileColId] = useState<string | null>(null);
+  const [activeMobileCol, setActiveMobileCol] = useState<TaskStatus>('TODO');
 
-  // New Item modal / inline state
-  const [addingToCategory, setAddingToCategory] = useState<string | null>(null);
-  const [newItemTitle, setNewItemTitle] = useState('');
-  const [newItemDesc, setNewItemDesc] = useState('');
+  // Drag and Drop state
+  const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
+  const [dragOverCol, setDragOverCol] = useState<TaskStatus | null>(null);
 
-  // New Category modal
-  const [showNewCategoryModal, setShowNewCategoryModal] = useState(false);
-  const [newCatTitle, setNewCatTitle] = useState('');
-  const [newCatEmoji, setNewCatEmoji] = useState('📍');
-  const [newCatColor, setNewCatColor] = useState('#AECFD0');
+  // New task inline state
+  const [addingToCol, setAddingToCol] = useState<TaskStatus | null>(null);
+  const [newTitle, setNewTitle] = useState('');
+  const [newDescription, setNewDescription] = useState('');
+
+  // Edit task modal state
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editStatus, setEditStatus] = useState<TaskStatus>('TODO');
 
   const channelRef = useRef<RealtimeChannel | null>(null);
   const duoId = profile?.active_duo_id;
 
-  const fetchBoard = useCallback(async () => {
+  const fetchTasks = useCallback(async () => {
     try {
-      const res = await todosApi.getBoard();
-      setCategories(res.categories || []);
-      if (res.categories && res.categories.length > 0 && !activeMobileColId) {
-        setActiveMobileColId(res.categories[0].id);
-      }
+      const res = await tasksApi.list();
+      setTasks(res.tasks || []);
     } catch (err) {
-      console.warn('Failed to load To-Do board:', err);
+      console.warn('Failed to load tasks:', err);
     } finally {
       setIsLoading(false);
     }
-  }, [activeMobileColId]);
+  }, []);
 
   useEffect(() => {
-    fetchBoard();
-  }, [fetchBoard]);
+    fetchTasks();
+  }, [fetchTasks]);
 
-  // Real-time channel sync for To-Dos
+  // Real-time synchronization
   useEffect(() => {
     if (!isSupabaseConfigured() || !duoId) return;
 
@@ -72,8 +109,8 @@ export const TodoKanbanView: React.FC = () => {
       config: { broadcast: { self: false } },
     });
 
-    channel.on('broadcast', { event: 'todos_updated' }, () => {
-      fetchBoard();
+    channel.on('broadcast', { event: 'tasks_updated' }, () => {
+      fetchTasks();
     });
 
     channel.subscribe();
@@ -85,149 +122,139 @@ export const TodoKanbanView: React.FC = () => {
         channelRef.current = null;
       }
     };
-  }, [duoId, fetchBoard]);
+  }, [duoId, fetchTasks]);
 
   const broadcastUpdate = () => {
     if (channelRef.current) {
       channelRef.current.send({
         type: 'broadcast',
-        event: 'todos_updated',
+        event: 'tasks_updated',
         payload: {},
       });
     }
   };
 
-  // Add Item to Category
-  const handleAddItem = async (categoryId: string) => {
-    if (!newItemTitle.trim()) return;
+  // Add Task
+  const handleAddTask = async (status: TaskStatus) => {
+    if (!newTitle.trim()) return;
 
     try {
-      const item = await todosApi.createItem({
-        category_id: categoryId,
-        title: newItemTitle.trim(),
-        description: newItemDesc.trim(),
+      const created = await tasksApi.create({
+        title: newTitle.trim(),
+        description: newDescription.trim(),
+        status,
       });
 
-      setCategories((prev) =>
-        prev.map((c) => (c.id === categoryId ? { ...c, items: [...c.items, item] } : c))
-      );
-
-      setNewItemTitle('');
-      setNewItemDesc('');
-      setAddingToCategory(null);
-      toast.love('Item added to list ✨', 'To-Do Added');
+      setTasks((prev) => [...prev, created]);
+      setNewTitle('');
+      setNewDescription('');
+      setAddingToCol(null);
+      toast.love('Task added to list ✨', 'Task Added');
       broadcastUpdate();
     } catch (err: any) {
-      toast.error(err.message || 'Failed to add item.', 'Error');
+      toast.error(err.message || 'Failed to add task.', 'Error');
     }
   };
 
-  // Toggle Item Complete
-  const handleToggleComplete = async (item: TodoItem) => {
-    const nextStatus = !item.is_completed;
+  // Update Task Status (Drag & Drop or button move)
+  const handleMoveStatus = async (taskId: string, newStatus: TaskStatus) => {
+    const task = tasks.find((t) => t.id === taskId);
+    if (!task || task.status === newStatus) return;
 
-    setCategories((prev) =>
-      prev.map((c) =>
-        c.id === item.category_id
-          ? {
-              ...c,
-              items: c.items.map((it) =>
-                it.id === item.id ? { ...it, is_completed: nextStatus } : it
-              ),
-            }
-          : c
-      )
+    setTasks((prev) =>
+      prev.map((t) => (t.id === taskId ? { ...t, status: newStatus } : t))
     );
 
     try {
-      await todosApi.updateItem(item.id, { is_completed: nextStatus });
-      if (nextStatus) {
-        toast.love(`Checked off "${item.title}" 💕`, 'Done!');
+      await tasksApi.update(taskId, { status: newStatus });
+      if (newStatus === 'COMPLETED') {
+        toast.love(`Completed "${task.title}" 🎉`, 'Great Job!');
+      } else {
+        toast.love(`Moved to ${newStatus === 'IN_PROGRESS' ? 'In Progress' : 'To Do'}`, 'Updated');
       }
       broadcastUpdate();
     } catch (err: any) {
-      toast.error('Failed to update item.', 'Error');
-      fetchBoard();
+      toast.error('Failed to move task.', 'Error');
+      fetchTasks();
     }
   };
 
-  // Move Item to Another Category
-  const handleMoveItem = async (itemId: string, currentCatId: string, newCatId: string) => {
+  // Toggle Complete
+  const handleToggleComplete = async (task: Task) => {
+    const targetStatus: TaskStatus = task.status === 'COMPLETED' ? 'TODO' : 'COMPLETED';
+    handleMoveStatus(task.id, targetStatus);
+  };
+
+  // Save Edit Task
+  const handleSaveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingTask || !editTitle.trim()) return;
+
     try {
-      await todosApi.updateItem(itemId, { category_id: newCatId });
-      toast.love('Item moved between boards ✨', 'Moved');
-      fetchBoard();
+      const updated = await tasksApi.update(editingTask.id, {
+        title: editTitle.trim(),
+        description: editDescription.trim(),
+        status: editStatus,
+      });
+
+      setTasks((prev) => prev.map((t) => (t.id === editingTask.id ? updated : t)));
+      setEditingTask(null);
+      toast.love('Task updated ✨', 'Saved');
       broadcastUpdate();
     } catch (err: any) {
-      toast.error('Failed to move item.', 'Error');
+      toast.error(err.message || 'Failed to update task.', 'Error');
     }
   };
 
-  // Delete Item
-  const handleDeleteItem = async (itemId: string, categoryId: string) => {
+  // Delete Task
+  const handleDeleteTask = async (task: Task) => {
     const ok = await confirm({
-      title: 'Delete Item?',
-      message: 'Remove this item from your shared bucket list.',
+      title: 'Delete Task?',
+      message: `Remove "${task.title}" from our shared board?`,
       confirmText: 'Delete',
       type: 'danger',
     });
     if (!ok) return;
 
-    setCategories((prev) =>
-      prev.map((c) =>
-        c.id === categoryId ? { ...c, items: c.items.filter((it) => it.id !== itemId) } : c
-      )
-    );
+    setTasks((prev) => prev.filter((t) => t.id !== task.id));
 
     try {
-      await todosApi.deleteItem(itemId);
-      toast.love('Item removed.', 'Deleted');
+      await tasksApi.delete(task.id);
+      toast.love('Task deleted.', 'Deleted');
       broadcastUpdate();
     } catch (err: any) {
-      toast.error('Failed to delete item.', 'Error');
-      fetchBoard();
+      toast.error('Failed to delete task.', 'Error');
+      fetchTasks();
     }
   };
 
-  // Create Category
-  const handleCreateCategory = async (e: React.FormEvent) => {
+  // HTML5 Drag and Drop Handlers
+  const handleDragStart = (e: React.DragEvent, taskId: string) => {
+    e.dataTransfer.setData('text/plain', taskId);
+    e.dataTransfer.effectAllowed = 'move';
+    setDraggedTaskId(taskId);
+  };
+
+  const handleDragOver = (e: React.DragEvent, colId: TaskStatus) => {
     e.preventDefault();
-    if (!newCatTitle.trim()) return;
-
-    try {
-      const cat = await todosApi.createCategory({
-        title: newCatTitle.trim(),
-        emoji: newCatEmoji,
-        color: newCatColor,
-      });
-
-      setCategories((prev) => [...prev, cat]);
-      setNewCatTitle('');
-      setShowNewCategoryModal(false);
-      toast.love(`Created board: ${cat.emoji} ${cat.title}`, 'Board Created');
-      broadcastUpdate();
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to create board.', 'Error');
+    e.dataTransfer.dropEffect = 'move';
+    if (dragOverCol !== colId) {
+      setDragOverCol(colId);
     }
   };
 
-  // Delete Category
-  const handleDeleteCategory = async (categoryId: string, title: string) => {
-    const ok = await confirm({
-      title: `Delete "${title}"?`,
-      message: 'This will delete the board and all items inside it.',
-      confirmText: 'Delete Board',
-      type: 'danger',
-    });
-    if (!ok) return;
+  const handleDragLeave = () => {
+    setDragOverCol(null);
+  };
 
-    try {
-      await todosApi.deleteCategory(categoryId);
-      setCategories((prev) => prev.filter((c) => c.id !== categoryId));
-      toast.love('Board deleted.', 'Deleted');
-      broadcastUpdate();
-    } catch (err: any) {
-      toast.error('Failed to delete board.', 'Error');
+  const handleDrop = (e: React.DragEvent, colId: TaskStatus) => {
+    e.preventDefault();
+    const taskId = e.dataTransfer.getData('text/plain') || draggedTaskId;
+    setDragOverCol(null);
+    setDraggedTaskId(null);
+
+    if (taskId) {
+      handleMoveStatus(taskId, colId);
     }
   };
 
@@ -236,13 +263,13 @@ export const TodoKanbanView: React.FC = () => {
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="text-center space-y-2">
           <Heart className="h-6 w-6 text-[#EA5E86] animate-bounce mx-auto" />
-          <p className="text-xs font-mono text-[#A89F91]">Opening our bucket lists...</p>
+          <p className="text-xs font-mono text-[#A89F91]">Opening shared to-do board...</p>
         </div>
       </div>
     );
   }
 
-  const activeMobileCat = categories.find((c) => c.id === activeMobileColId) || categories[0];
+  const completedTotal = tasks.filter((t) => t.status === 'COMPLETED').length;
 
   return (
     <div className="w-full h-full flex flex-col p-3 sm:p-6 lg:p-8 min-h-0 overflow-hidden">
@@ -251,167 +278,210 @@ export const TodoKanbanView: React.FC = () => {
         <div>
           <div className="flex items-center space-x-2 text-xs font-mono text-[#A89F91]">
             <Sparkles className="h-3.5 w-3.5 text-[#F49625]" />
-            <span>Shared Bucket Lists & Plans</span>
+            <span>Shared Couple Tasks</span>
           </div>
           <h2 className="mt-1 font-serif text-2xl sm:text-3xl font-bold text-[#422F0E]">
-            Our Bucket List Board
+            Our To-Do Board
           </h2>
           <p className="mt-1 text-xs sm:text-sm text-[#6B5E4E]">
-            Places to explore, foods to taste, and adventures to make together.
+            Simple, shared couple tasks synced in real time between you and {partner?.name || 'your partner'}.
           </p>
         </div>
 
-        <button
-          onClick={() => setShowNewCategoryModal(true)}
-          className="flex items-center space-x-2 rounded-full bg-[#422F0E] px-5 py-2.5 text-xs sm:text-sm font-medium text-[#FAF7F2] hover:bg-[#EA5E86] transition-all shadow-sm self-start sm:self-auto shrink-0"
-        >
-          <Plus className="h-4 w-4" />
-          <span>New List</span>
-        </button>
+        {/* Top Action & Progress Pill */}
+        <div className="flex items-center gap-3 self-start sm:self-auto shrink-0">
+          <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-[#FCC4C0] bg-[#FFF5F5] text-xs font-semibold text-[#EA5E86] shadow-sm">
+            <Heart className="h-3.5 w-3.5 fill-current" />
+            <span>{completedTotal} / {tasks.length} Done</span>
+          </div>
+
+          <button
+            onClick={() => {
+              setAddingToCol('TODO');
+              setNewTitle('');
+              setNewDescription('');
+            }}
+            className="flex items-center space-x-1.5 rounded-full bg-[#422F0E] px-4 py-2 text-xs sm:text-sm font-medium text-[#FAF7F2] hover:bg-[#EA5E86] transition-all shadow-sm"
+          >
+            <Plus className="h-4 w-4" />
+            <span>Add Task</span>
+          </button>
+        </div>
       </div>
 
       {/* Mobile Column Tabs (<768px) */}
       <div className="md:hidden flex gap-2 overflow-x-auto py-3 shrink-0 scrollbar-none">
-        {categories.map((cat) => {
-          const isActive = (activeMobileCat?.id === cat.id);
-          const doneCount = cat.items.filter((i) => i.is_completed).length;
+        {COLUMNS.map((col) => {
+          const colTasks = tasks.filter((t) => t.status === col.id);
+          const isActive = activeMobileCol === col.id;
 
           return (
             <button
-              key={cat.id}
-              onClick={() => setActiveMobileColId(cat.id)}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-full border text-xs whitespace-nowrap transition-all ${
+              key={col.id}
+              onClick={() => setActiveMobileCol(col.id)}
+              className={`flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-full border text-xs font-medium transition-all ${
                 isActive
                   ? 'border-[#422F0E] bg-[#422F0E] text-[#FAF7F2] font-semibold shadow-sm'
                   : 'border-[#EFE8DC] bg-[#FFFFFF] text-[#6B5E4E] hover:bg-[#FAF7F2]'
               }`}
             >
-              <span>{cat.emoji}</span>
-              <span>{cat.title}</span>
-              <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${isActive ? 'bg-white/20 text-white' : 'bg-[#FAF7F2] text-[#A89F91]'}`}>
-                {doneCount}/{cat.items.length}
+              <span>{col.emoji}</span>
+              <span>{col.title}</span>
+              <span
+                className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono ${
+                  isActive ? 'bg-white/20 text-white' : 'bg-[#FAF7F2] text-[#A89F91]'
+                }`}
+              >
+                {colTasks.length}
               </span>
             </button>
           );
         })}
       </div>
 
-      {/* Kanban Columns Stream (Desktop side-by-side / Mobile single active column) */}
+      {/* 3-Column Kanban Grid (Desktop side-by-side / Mobile single active tab) */}
       <div className="flex-1 min-h-0 pt-4 overflow-x-auto overflow-y-hidden">
-        {/* Desktop Grid Layout */}
-        <div className="hidden md:flex gap-5 h-full items-start pb-4">
-          {categories.map((cat) => {
-            const completedCount = cat.items.filter((i) => i.is_completed).length;
+        {/* Desktop 3-Column Grid */}
+        <div className="hidden md:grid md:grid-cols-3 gap-6 h-full items-start pb-4 max-w-6xl mx-auto">
+          {COLUMNS.map((col) => {
+            const colTasks = tasks.filter((t) => t.status === col.id);
+            const isDropTarget = dragOverCol === col.id;
 
             return (
               <div
-                key={cat.id}
-                className="w-80 max-w-[320px] h-full flex flex-col rounded-3xl border border-[#EFE8DC] bg-[#FFFFFF] shadow-[0_2px_12px_rgba(66,47,14,0.03)] shrink-0 overflow-hidden"
+                key={col.id}
+                onDragOver={(e) => handleDragOver(e, col.id)}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e, col.id)}
+                style={{ borderTopColor: col.borderTop }}
+                className={`h-full flex flex-col rounded-3xl border border-[#EFE8DC] border-t-4 bg-[#FFFFFF] shadow-[0_2px_12px_rgba(66,47,14,0.03)] overflow-hidden transition-all ${
+                  isDropTarget ? 'ring-2 ring-[#EA5E86] bg-[#FFF8FA]/50 scale-[1.01]' : ''
+                }`}
               >
                 {/* Column Header */}
-                <div
-                  style={{ borderTopColor: cat.color || '#EA5E86' }}
-                  className="p-4 border-t-4 border-b border-[#EFE8DC] bg-[#FAF7F2] flex items-center justify-between shrink-0"
-                >
-                  <div className="flex items-center space-x-2 truncate">
-                    <span className="text-lg">{cat.emoji}</span>
-                    <h3 className="font-serif text-base font-bold text-[#422F0E] truncate">
-                      {cat.title}
+                <div className="p-4 border-b border-[#EFE8DC] bg-[#FAF7F2] flex items-center justify-between shrink-0">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-lg">{col.emoji}</span>
+                    <h3 className="font-serif text-base font-bold text-[#422F0E]">
+                      {col.title}
                     </h3>
                   </div>
 
-                  <div className="flex items-center space-x-1.5">
-                    <span className="text-[11px] font-mono text-[#A89F91] px-2 py-0.5 rounded-full bg-white border border-[#EFE8DC]">
-                      {completedCount}/{cat.items.length}
-                    </span>
-                    <button
-                      onClick={() => handleDeleteCategory(cat.id, cat.title)}
-                      className="p-1 text-[#A89F91] hover:text-[#EA5E86] rounded-full hover:bg-black/5"
-                      title="Delete board"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
+                  <span
+                    className={`text-[11px] font-mono font-medium px-2.5 py-0.5 rounded-full border ${col.badgeBg} ${col.accent}`}
+                  >
+                    {colTasks.length}
+                  </span>
                 </div>
 
-                {/* Items List */}
-                <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-2.5">
-                  {cat.items.length === 0 ? (
-                    <div className="p-6 text-center text-xs text-[#A89F91]">
-                      No items yet. Add something fun!
+                {/* Tasks List */}
+                <div className="flex-1 min-h-0 overflow-y-auto p-3.5 space-y-3">
+                  {colTasks.length === 0 ? (
+                    <div className="p-8 text-center text-xs text-[#A89F91] border-2 border-dashed border-[#EFE8DC] rounded-2xl">
+                      Drop tasks here or add one below ✨
                     </div>
                   ) : (
-                    cat.items.map((item) => (
+                    colTasks.map((task) => (
                       <div
-                        key={item.id}
-                        className={`group relative rounded-2xl border p-3 transition-all ${
-                          item.is_completed
-                            ? 'border-[#EFE8DC] bg-[#FAF7F2]/60 opacity-60'
-                            : 'border-[#EFE8DC] bg-[#FFFFFF] shadow-sm hover:border-[#FCC4C0]'
+                        key={task.id}
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, task.id)}
+                        className={`group relative rounded-2xl border p-3.5 transition-all cursor-grab active:cursor-grabbing ${
+                          task.status === 'COMPLETED'
+                            ? 'border-[#EFE8DC] bg-[#FAF7F2]/60 opacity-70'
+                            : 'border-[#EFE8DC] bg-[#FFFFFF] shadow-sm hover:border-[#FCC4C0] hover:shadow-md'
                         }`}
                       >
                         <div className="flex items-start gap-2.5">
-                          {/* Checkbox */}
+                          {/* Complete Toggle Checkbox */}
                           <button
                             type="button"
-                            onClick={() => handleToggleComplete(item)}
+                            onClick={() => handleToggleComplete(task)}
                             className="mt-0.5 text-[#EA5E86] hover:scale-110 transition-transform shrink-0"
+                            title={task.status === 'COMPLETED' ? 'Mark incomplete' : 'Mark completed'}
                           >
-                            {item.is_completed ? (
-                              <CheckCircle2 className="h-4 w-4 fill-[#EA5E86] text-white" />
+                            {task.status === 'COMPLETED' ? (
+                              <CheckCircle2 className="h-4 w-4 fill-[#037F71] text-white" />
                             ) : (
                               <Circle className="h-4 w-4 text-[#D4CEC2] hover:text-[#EA5E86]" />
                             )}
                           </button>
 
-                          {/* Title & Desc */}
+                          {/* Title & Description */}
                           <div className="flex-1 min-w-0">
                             <span
-                              className={`text-xs sm:text-sm font-medium leading-snug break-words ${
-                                item.is_completed ? 'line-through text-[#8C857B]' : 'text-[#422F0E]'
+                              className={`text-xs sm:text-sm font-medium leading-snug break-words block ${
+                                task.status === 'COMPLETED'
+                                  ? 'line-through text-[#8C857B]'
+                                  : 'text-[#422F0E]'
                               }`}
                             >
-                              {item.title}
+                              {task.title}
                             </span>
-                            {item.description && (
+                            {task.description && (
                               <p className="mt-1 text-[11px] text-[#A89F91] leading-relaxed break-words">
-                                {item.description}
+                                {task.description}
                               </p>
                             )}
                           </div>
 
-                          {/* Quick Actions (Move & Delete) */}
+                          {/* Action Buttons (Edit / Move / Delete) */}
                           <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center space-x-1 shrink-0">
-                            {/* Move to another category dropdown */}
-                            <select
-                              defaultValue=""
-                              onChange={(e) => {
-                                if (e.target.value) {
-                                  handleMoveItem(item.id, cat.id, e.target.value);
-                                }
+                            <button
+                              onClick={() => {
+                                setEditingTask(task);
+                                setEditTitle(task.title);
+                                setEditDescription(task.description || '');
+                                setEditStatus(task.status);
                               }}
-                              className="text-[10px] font-mono rounded-full border border-[#EFE8DC] bg-white text-[#6B5E4E] px-1.5 py-0.5 focus:outline-none"
-                              title="Move to list"
+                              className="p-1 text-[#A89F91] hover:text-[#422F0E] rounded-full hover:bg-black/5"
+                              title="Edit task"
                             >
-                              <option value="" disabled>
-                                Move...
-                              </option>
-                              {categories
-                                .filter((c) => c.id !== cat.id)
-                                .map((c) => (
-                                  <option key={c.id} value={c.id}>
-                                    {c.emoji} {c.title}
-                                  </option>
-                                ))}
-                            </select>
+                              <Edit3 className="h-3.5 w-3.5" />
+                            </button>
 
                             <button
-                              onClick={() => handleDeleteItem(item.id, cat.id)}
+                              onClick={() => handleDeleteTask(task)}
                               className="p-1 text-[#A89F91] hover:text-[#EA5E86] rounded-full hover:bg-black/5"
-                              title="Delete item"
+                              title="Delete task"
                             >
-                              <Trash2 className="h-3 w-3" />
+                              <Trash2 className="h-3.5 w-3.5" />
                             </button>
+                          </div>
+                        </div>
+
+                        {/* Drag Handle & Quick Move Links */}
+                        <div className="mt-2 pt-2 border-t border-[#F5EFE6] flex items-center justify-between text-[10px] font-mono text-[#A89F91]">
+                          <span className="flex items-center gap-1">
+                            <GripVertical className="h-3 w-3 text-[#D4CEC2]" />
+                            {task.is_me ? 'You' : task.created_by.name}
+                          </span>
+
+                          <div className="flex items-center space-x-2">
+                            {col.id !== 'TODO' && (
+                              <button
+                                onClick={() => handleMoveStatus(task.id, 'TODO')}
+                                className="hover:text-[#422F0E] hover:underline"
+                              >
+                                ← To Do
+                              </button>
+                            )}
+                            {col.id !== 'IN_PROGRESS' && (
+                              <button
+                                onClick={() => handleMoveStatus(task.id, 'IN_PROGRESS')}
+                                className="hover:text-[#EA5E86] hover:underline"
+                              >
+                                In Progress
+                              </button>
+                            )}
+                            {col.id !== 'COMPLETED' && (
+                              <button
+                                onClick={() => handleMoveStatus(task.id, 'COMPLETED')}
+                                className="hover:text-[#037F71] hover:underline"
+                              >
+                                Done →
+                              </button>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -419,40 +489,40 @@ export const TodoKanbanView: React.FC = () => {
                   )}
                 </div>
 
-                {/* Add Item Bottom Trigger */}
+                {/* Add Task Trigger at Column Bottom */}
                 <div className="p-3 border-t border-[#EFE8DC] bg-[#FAF7F2] shrink-0">
-                  {addingToCategory === cat.id ? (
+                  {addingToCol === col.id ? (
                     <div className="space-y-2">
                       <input
                         type="text"
-                        value={newItemTitle}
-                        onChange={(e) => setNewItemTitle(e.target.value)}
-                        placeholder="What's the idea? ✨"
+                        value={newTitle}
+                        onChange={(e) => setNewTitle(e.target.value)}
+                        placeholder="Task title..."
                         autoFocus
                         onKeyDown={(e) => {
-                          if (e.key === 'Enter') handleAddItem(cat.id);
-                          if (e.key === 'Escape') setAddingToCategory(null);
+                          if (e.key === 'Enter') handleAddTask(col.id);
+                          if (e.key === 'Escape') setAddingToCol(null);
                         }}
                         className="w-full rounded-full border border-[#EFE8DC] bg-white px-3.5 py-2 text-xs text-[#422F0E] focus:border-[#EA5E86] focus:outline-none"
                       />
                       <input
                         type="text"
-                        value={newItemDesc}
-                        onChange={(e) => setNewItemDesc(e.target.value)}
-                        placeholder="Add a tiny note or link (optional)"
+                        value={newDescription}
+                        onChange={(e) => setNewDescription(e.target.value)}
+                        placeholder="Optional details or link..."
                         className="w-full rounded-full border border-[#EFE8DC] bg-white px-3.5 py-1.5 text-[11px] text-[#422F0E] focus:border-[#EA5E86] focus:outline-none"
                       />
                       <div className="flex gap-2 justify-end pt-1">
                         <button
                           type="button"
-                          onClick={() => setAddingToCategory(null)}
+                          onClick={() => setAddingToCol(null)}
                           className="px-3 py-1 rounded-full text-xs text-[#6B5E4E] hover:bg-black/5"
                         >
                           Cancel
                         </button>
                         <button
                           type="button"
-                          onClick={() => handleAddItem(cat.id)}
+                          onClick={() => handleAddTask(col.id)}
                           className="px-4 py-1 rounded-full bg-[#422F0E] text-white hover:bg-[#EA5E86] text-xs font-medium"
                         >
                           Add
@@ -463,14 +533,14 @@ export const TodoKanbanView: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => {
-                        setAddingToCategory(cat.id);
-                        setNewItemTitle('');
-                        setNewItemDesc('');
+                        setAddingToCol(col.id);
+                        setNewTitle('');
+                        setNewDescription('');
                       }}
                       className="w-full flex items-center justify-center space-x-1.5 py-2 rounded-full border border-dashed border-[#D4CEC2] bg-white/60 hover:bg-white text-xs font-medium text-[#6B5E4E] hover:text-[#422F0E] transition-all"
                     >
                       <Plus className="h-3.5 w-3.5 text-[#EA5E86]" />
-                      <span>Add item</span>
+                      <span>Add to {col.title}</span>
                     </button>
                   )}
                 </div>
@@ -480,164 +550,208 @@ export const TodoKanbanView: React.FC = () => {
         </div>
 
         {/* Mobile Single Column View (<768px) */}
-        {activeMobileCat && (
-          <div className="md:hidden h-full flex flex-col rounded-3xl border border-[#EFE8DC] bg-[#FFFFFF] shadow-sm overflow-hidden">
-            <div className="p-4 border-b border-[#EFE8DC] bg-[#FAF7F2] flex items-center justify-between shrink-0">
-              <div className="flex items-center space-x-2 truncate">
-                <span className="text-xl">{activeMobileCat.emoji}</span>
-                <h3 className="font-serif text-lg font-bold text-[#422F0E] truncate">
-                  {activeMobileCat.title}
-                </h3>
-              </div>
-              <button
-                onClick={() => handleDeleteCategory(activeMobileCat.id, activeMobileCat.title)}
-                className="p-1.5 text-[#A89F91] hover:text-[#EA5E86] rounded-full"
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
-            </div>
+        <div className="md:hidden h-full flex flex-col rounded-3xl border border-[#EFE8DC] bg-[#FFFFFF] shadow-sm overflow-hidden">
+          {(() => {
+            const activeColConfig = COLUMNS.find((c) => c.id === activeMobileCol) || COLUMNS[0];
+            const colTasks = tasks.filter((t) => t.status === activeColConfig.id);
 
-            <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3">
-              {activeMobileCat.items.length === 0 ? (
-                <div className="p-8 text-center text-xs text-[#A89F91]">
-                  No items in this list yet.
+            return (
+              <>
+                <div className="p-4 border-b border-[#EFE8DC] bg-[#FAF7F2] flex items-center justify-between shrink-0">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xl">{activeColConfig.emoji}</span>
+                    <h3 className="font-serif text-lg font-bold text-[#422F0E]">
+                      {activeColConfig.title}
+                    </h3>
+                  </div>
+                  <span className={`text-xs font-mono font-semibold px-2.5 py-0.5 rounded-full border ${activeColConfig.badgeBg} ${activeColConfig.accent}`}>
+                    {colTasks.length} tasks
+                  </span>
                 </div>
-              ) : (
-                activeMobileCat.items.map((item) => (
-                  <div
-                    key={item.id}
-                    className={`rounded-2xl border p-3.5 flex items-start gap-3 ${
-                      item.is_completed
-                        ? 'border-[#EFE8DC] bg-[#FAF7F2]/60 opacity-60'
-                        : 'border-[#EFE8DC] bg-[#FFFFFF] shadow-sm'
-                    }`}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => handleToggleComplete(item)}
-                      className="mt-0.5 text-[#EA5E86] shrink-0"
-                    >
-                      {item.is_completed ? (
-                        <CheckCircle2 className="h-5 w-5 fill-[#EA5E86] text-white" />
-                      ) : (
-                        <Circle className="h-5 w-5 text-[#D4CEC2]" />
-                      )}
-                    </button>
 
-                    <div className="flex-1 min-w-0">
-                      <span
-                        className={`text-sm font-medium ${
-                          item.is_completed ? 'line-through text-[#8C857B]' : 'text-[#422F0E]'
+                <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3">
+                  {colTasks.length === 0 ? (
+                    <div className="p-8 text-center text-xs text-[#A89F91]">
+                      No tasks in {activeColConfig.title} yet.
+                    </div>
+                  ) : (
+                    colTasks.map((task) => (
+                      <div
+                        key={task.id}
+                        className={`rounded-2xl border p-3.5 flex flex-col space-y-2.5 ${
+                          task.status === 'COMPLETED'
+                            ? 'border-[#EFE8DC] bg-[#FAF7F2]/60 opacity-70'
+                            : 'border-[#EFE8DC] bg-[#FFFFFF] shadow-sm'
                         }`}
                       >
-                        {item.title}
-                      </span>
-                      {item.description && (
-                        <p className="mt-1 text-xs text-[#A89F91] leading-relaxed">
-                          {item.description}
-                        </p>
-                      )}
-                    </div>
+                        <div className="flex items-start gap-3">
+                          <button
+                            type="button"
+                            onClick={() => handleToggleComplete(task)}
+                            className="mt-0.5 text-[#EA5E86] shrink-0"
+                          >
+                            {task.status === 'COMPLETED' ? (
+                              <CheckCircle2 className="h-5 w-5 fill-[#037F71] text-white" />
+                            ) : (
+                              <Circle className="h-5 w-5 text-[#D4CEC2]" />
+                            )}
+                          </button>
 
+                          <div className="flex-1 min-w-0">
+                            <span
+                              className={`text-sm font-medium ${
+                                task.status === 'COMPLETED' ? 'line-through text-[#8C857B]' : 'text-[#422F0E]'
+                              }`}
+                            >
+                              {task.title}
+                            </span>
+                            {task.description && (
+                              <p className="mt-1 text-xs text-[#A89F91] leading-relaxed">
+                                {task.description}
+                              </p>
+                            )}
+                          </div>
+
+                          <div className="flex items-center space-x-1 shrink-0">
+                            <button
+                              onClick={() => {
+                                setEditingTask(task);
+                                setEditTitle(task.title);
+                                setEditDescription(task.description || '');
+                                setEditStatus(task.status);
+                              }}
+                              className="p-1 text-[#A89F91] hover:text-[#422F0E]"
+                            >
+                              <Edit3 className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteTask(task)}
+                              className="p-1 text-[#A89F91] hover:text-[#EA5E86]"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Move Status Buttons for Mobile */}
+                        <div className="pt-2 border-t border-[#F5EFE6] flex items-center justify-between text-[11px] font-mono">
+                          <span className="text-[#A89F91]">Move to:</span>
+                          <div className="flex gap-2">
+                            {COLUMNS.filter((c) => c.id !== task.status).map((c) => (
+                              <button
+                                key={c.id}
+                                onClick={() => handleMoveStatus(task.id, c.id)}
+                                className="px-2.5 py-1 rounded-full border border-[#EFE8DC] bg-[#FAF7F2] text-[#422F0E] hover:bg-[#F2ECE1]"
+                              >
+                                {c.emoji} {c.title}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                {/* Mobile Add Task Bottom */}
+                <div className="p-3 border-t border-[#EFE8DC] bg-[#FAF7F2] shrink-0">
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="text"
+                      value={newTitle}
+                      onChange={(e) => setNewTitle(e.target.value)}
+                      placeholder={`Add task to ${activeColConfig.title}...`}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleAddTask(activeColConfig.id);
+                      }}
+                      className="flex-1 rounded-full border border-[#EFE8DC] bg-white px-4 py-2 text-xs text-[#422F0E] focus:outline-none focus:border-[#EA5E86]"
+                    />
                     <button
-                      onClick={() => handleDeleteItem(item.id, activeMobileCat.id)}
-                      className="p-1.5 text-[#A89F91] hover:text-[#EA5E86] rounded-full shrink-0"
+                      type="button"
+                      onClick={() => handleAddTask(activeColConfig.id)}
+                      disabled={!newTitle.trim()}
+                      className="rounded-full bg-[#422F0E] p-2 text-white hover:bg-[#EA5E86] disabled:opacity-30"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Plus className="h-4 w-4" />
                     </button>
                   </div>
-                ))
-              )}
-            </div>
-
-            {/* Mobile Add Item */}
-            <div className="p-3 border-t border-[#EFE8DC] bg-[#FAF7F2] shrink-0">
-              <div className="flex items-center space-x-2">
-                <input
-                  type="text"
-                  value={newItemTitle}
-                  onChange={(e) => setNewItemTitle(e.target.value)}
-                  placeholder={`Add to ${activeMobileCat.title}...`}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleAddItem(activeMobileCat.id);
-                  }}
-                  className="flex-1 rounded-full border border-[#EFE8DC] bg-white px-4 py-2 text-xs text-[#422F0E] focus:outline-none focus:border-[#EA5E86]"
-                />
-                <button
-                  type="button"
-                  onClick={() => handleAddItem(activeMobileCat.id)}
-                  disabled={!newItemTitle.trim()}
-                  className="rounded-full bg-[#422F0E] p-2 text-white hover:bg-[#EA5E86] disabled:opacity-30"
-                >
-                  <Plus className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+                </div>
+              </>
+            );
+          })()}
+        </div>
       </div>
 
-      {/* New Category Modal Dialog */}
-      {showNewCategoryModal && (
+      {/* Edit Task Modal Dialog */}
+      {editingTask && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-[3px]">
-          <div className="w-full max-w-md rounded-3xl border border-[#EFE8DC] bg-[#FFFFFF] p-6 shadow-xl animate-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between pb-4 border-b border-[#EFE8DC]">
-              <h3 className="font-serif text-xl font-bold text-[#422F0E]">Create New Bucket List</h3>
+          <div className="w-full max-w-md rounded-3xl border border-[#EFE8DC] bg-[#FFFFFF] p-6 shadow-xl animate-in zoom-in-95 duration-200 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[#EFE8DC]">
+              <h3 className="font-serif text-xl font-bold text-[#422F0E]">Edit Task</h3>
               <button
-                onClick={() => setShowNewCategoryModal(false)}
+                onClick={() => setEditingTask(null)}
                 className="p-1.5 text-[#A89F91] hover:text-[#422F0E] rounded-full"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            <form onSubmit={handleCreateCategory} className="space-y-4 pt-4">
+            <form onSubmit={handleSaveEdit} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-[#6B5E4E] mb-1.5">List Title</label>
+                <label className="block text-xs font-medium text-[#6B5E4E] mb-1.5">Task Title</label>
                 <input
                   type="text"
-                  value={newCatTitle}
-                  onChange={(e) => setNewCatTitle(e.target.value)}
-                  placeholder="e.g. Dream Trips / Coffee Shops"
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
                   required
-                  className="w-full rounded-full border border-[#EFE8DC] bg-[#FAF7F2] px-4 py-2.5 text-xs sm:text-sm text-[#422F0E] focus:border-[#EA5E86] focus:outline-none"
+                  className="w-full rounded-full border border-[#EFE8DC] bg-[#FAF7F2] px-4 py-2 text-xs sm:text-sm text-[#422F0E] focus:border-[#EA5E86] focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-[#6B5E4E] mb-1.5">Choose Emoji Icon</label>
-                <div className="grid grid-cols-6 gap-2">
-                  {PRESET_EMOJIS.map((em) => (
+                <label className="block text-xs font-medium text-[#6B5E4E] mb-1.5">Description (optional)</label>
+                <textarea
+                  value={editDescription}
+                  onChange={(e) => setEditDescription(e.target.value)}
+                  rows={3}
+                  className="w-full rounded-2xl border border-[#EFE8DC] bg-[#FAF7F2] p-3 text-xs text-[#422F0E] focus:border-[#EA5E86] focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-[#6B5E4E] mb-1.5">Column Status</label>
+                <div className="flex gap-2">
+                  {COLUMNS.map((col) => (
                     <button
-                      key={em}
+                      key={col.id}
                       type="button"
-                      onClick={() => setNewCatEmoji(em)}
-                      className={`h-10 rounded-2xl border text-lg transition-all ${
-                        newCatEmoji === em
-                          ? 'border-[#422F0E] bg-[#FFF8FA] ring-2 ring-[#FCC4C0]'
-                          : 'border-[#EFE8DC] bg-[#FAF7F2]'
+                      onClick={() => setEditStatus(col.id)}
+                      className={`flex-1 py-2 rounded-full border text-xs font-medium transition-all ${
+                        editStatus === col.id
+                          ? 'border-[#422F0E] bg-[#422F0E] text-white font-semibold'
+                          : 'border-[#EFE8DC] bg-[#FAF7F2] text-[#6B5E4E]'
                       }`}
                     >
-                      {em}
+                      {col.emoji} {col.title}
                     </button>
                   ))}
                 </div>
               </div>
 
-              <div className="flex justify-end gap-2.5 pt-3">
+              <div className="flex justify-end gap-2.5 pt-3 border-t border-[#EFE8DC]">
                 <button
                   type="button"
-                  onClick={() => setShowNewCategoryModal(false)}
+                  onClick={() => setEditingTask(null)}
                   className="px-5 py-2 rounded-full border border-[#EFE8DC] text-xs font-medium text-[#6B5E4E]"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  disabled={!newCatTitle.trim()}
+                  disabled={!editTitle.trim()}
                   className="px-6 py-2 rounded-full bg-[#422F0E] text-white hover:bg-[#EA5E86] text-xs font-medium shadow-sm disabled:opacity-40"
                 >
-                  Create List ✨
+                  Save Changes ✨
                 </button>
               </div>
             </form>

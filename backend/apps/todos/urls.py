@@ -1,14 +1,7 @@
 from django.urls import path
-from .views import (
-    TodoBoardView,
-    TodoCategoryDetailView,
-    TodoItemCreateView,
-    TodoItemDetailView,
-)
+from .views import TaskListCreateView, TaskDetailView
 
 urlpatterns = [
-    path('', TodoBoardView.as_view(), name='todo_board'),
-    path('categories/<uuid:pk>/', TodoCategoryDetailView.as_view(), name='todo_category_detail'),
-    path('items/', TodoItemCreateView.as_view(), name='todo_item_create'),
-    path('items/<uuid:pk>/', TodoItemDetailView.as_view(), name='todo_item_detail'),
+    path('', TaskListCreateView.as_view(), name='tasks_list_create'),
+    path('<uuid:pk>/', TaskDetailView.as_view(), name='tasks_detail'),
 ]
