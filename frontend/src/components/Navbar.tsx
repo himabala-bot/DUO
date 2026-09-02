@@ -200,27 +200,8 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
                 <Settings className="h-4 w-4" />
               </button>
 
-              {/* In Demo Mode: Open Partner View & Exit Demo replace Sign Out */}
-              {isDemo ? (
-                <>
-                  <button
-                    onClick={handleOpenPartnerView}
-                    className="rounded-full p-1.5 text-[#125CB9] hover:bg-[#125CB9]/15 transition-colors"
-                    title={`Open Partner View (${partnerName})`}
-                  >
-                    <ExternalLink className="h-4 w-4" />
-                  </button>
-
-                  <button
-                    onClick={handleExitDemo}
-                    className="rounded-full p-1.5 text-theme-muted hover:text-[#F43F5E] hover:bg-[#F43F5E]/10 transition-colors"
-                    title="Exit Demo"
-                  >
-                    <LogOut className="h-4 w-4" />
-                  </button>
-                </>
-              ) : (
-                /* Logout Button for real users */
+              {/* Logout Button for real users only */}
+              {!isDemo && (
                 <button
                   onClick={logout}
                   className="rounded-full p-1.5 text-theme-muted hover:text-[#F43F5E] hover:bg-[#F43F5E]/10 transition-colors"
