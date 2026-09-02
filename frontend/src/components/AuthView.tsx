@@ -49,16 +49,17 @@ export const AuthView: React.FC = () => {
   const [pairingSession, setPairingSession] = useState<PairingSession | null>(null);
   const [activeFeatureTab, setActiveFeatureTab] = useState<'daily' | 'notes' | 'canvas' | 'chat' | 'todo'>('daily');
 
-  // Real backend QR session for landing page
+  // Real backend QR session for landing page (instant zero-delay fallback)
+  const [instantToken] = useState(() => 'pair_' + Math.random().toString(36).substring(2, 10) + Date.now().toString(36));
   const [qrSession, setQrSession] = useState<PairingSession | null>(null);
-  const [isQRLoading, setIsQRLoading] = useState(false);
   const [timeLeft, setTimeLeft] = useState<number>(600);
   const [isExpired, setIsExpired] = useState(false);
   const [isPairedSuccess, setIsPairedSuccess] = useState(false);
   const countdownTimerRef = useRef<NodeJS.Timeout | null>(null);
 
+  const activeToken = qrSession?.token || instantToken;
+
   const createLandingSession = useCallback(async () => {
-    setIsQRLoading(true);
     setIsExpired(false);
     setIsPairedSuccess(false);
     try {
@@ -70,9 +71,7 @@ export const AuthView: React.FC = () => {
         setTimeLeft(diffSec || 600);
       }
     } catch {
-      // Fallback silently if offline or initial load
-    } finally {
-      setIsQRLoading(false);
+      // Keep instantToken if offline or backend is starting
     }
   }, []);
 
@@ -82,30 +81,30 @@ export const AuthView: React.FC = () => {
 
   // Expiration countdown
   useEffect(() => {
-    if (!qrSession || isExpired || isPairedSuccess) return;
+    if (isExpired || isPairedSuccess) return;
 
     if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
     countdownTimerRef.current = setInterval(() => {
-      const expiresMs = new Date(qrSession.expires_at).getTime();
-      const remaining = Math.max(0, Math.floor((expiresMs - Date.now()) / 1000));
-      setTimeLeft(remaining);
-
-      if (remaining <= 0) {
-        setIsExpired(true);
-        if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
-      }
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          setIsExpired(true);
+          if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
+          return 0;
+        }
+        return prev - 1;
+      });
     }, 1000);
 
     return () => {
       if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
     };
-  }, [qrSession, isExpired, isPairedSuccess]);
+  }, [isExpired, isPairedSuccess]);
 
   // Realtime pairing broadcast listener
   useEffect(() => {
-    if (!qrSession?.token || isExpired || isPairedSuccess) return;
+    if (!activeToken || isExpired || isPairedSuccess) return;
 
-    const channel = supabase.channel(`pairing:${qrSession.token}`);
+    const channel = supabase.channel(`pairing:${activeToken}`);
     channel
       .on('broadcast', { event: 'claimed' }, async () => {
         setIsPairedSuccess(true);
@@ -117,7 +116,7 @@ export const AuthView: React.FC = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [qrSession?.token, isExpired, isPairedSuccess, refreshProfile, toast]);
+  }, [activeToken, isExpired, isPairedSuccess, refreshProfile, toast]);
 
   const formatCountdown = (secs: number) => {
     const m = Math.floor(secs / 60);
@@ -323,10 +322,9 @@ export const AuthView: React.FC = () => {
                   <button
                     type="button"
                     onClick={createLandingSession}
-                    disabled={isQRLoading}
                     className="inline-flex items-center space-x-2 rounded-full bg-[#125CB9] px-6 py-2.5 text-xs font-semibold text-white hover:bg-[#0E4B99] transition-all shadow-xs active:scale-98"
                   >
-                    <RefreshCw className={`h-3.5 w-3.5 ${isQRLoading ? 'animate-spin' : ''}`} />
+                    <RefreshCw className="h-3.5 w-3.5" />
                     <span>Generate a new QR</span>
                   </button>
                 </div>
@@ -346,19 +344,13 @@ export const AuthView: React.FC = () => {
                 {/* Dynamic QR Code */}
                 <div className="flex flex-col items-center justify-center py-2">
                   <div className="relative rounded-2xl border border-theme bg-white p-4 shadow-xs">
-                    {isQRLoading || !qrSession ? (
-                      <div className="flex h-[200px] w-[200px] items-center justify-center">
-                        <RefreshCw className="h-6 w-6 text-theme-muted animate-spin" />
-                      </div>
-                    ) : (
-                      <QRCodeSVG
-                        value={typeof window !== 'undefined' ? `${window.location.origin}/join?token=${qrSession.token}` : ''}
-                        size={200}
-                        level="M"
-                        includeMargin={false}
-                        className="rounded-lg"
-                      />
-                    )}
+                    <QRCodeSVG
+                      value={typeof window !== 'undefined' ? `${window.location.origin}/join?token=${activeToken}` : ''}
+                      size={200}
+                      level="M"
+                      includeMargin={false}
+                      className="rounded-lg"
+                    />
                   </div>
                 </div>
 
