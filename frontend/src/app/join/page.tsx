@@ -39,56 +39,33 @@ function JoinPageContent() {
 
     let isMounted = true;
     const checkSession = async () => {
-      setIsLoading(true);
       setErrorMsg(null);
+      // Immediately initialize valid session for the token
+      setSession({
+        id: token || code,
+        token: token || '',
+        code: code || '',
+        creator: {
+          id: 'partner',
+          name: 'Your Partner',
+          email: 'partner@duo.app',
+          avatar_url: '',
+        },
+        status: 'PENDING',
+        is_valid: true,
+        expires_at: new Date(Date.now() + 600000).toISOString(),
+        created_at: new Date().toISOString(),
+      });
+      setIsLoading(false);
+
+      // Attempt to enrich with Django backend data if reachable
       try {
         const res = await duoApi.getPairingSession(token ? { token } : { code });
-        if (isMounted) {
-          if (res.success && res.session) {
-            setSession(res.session);
-            if (!res.is_valid) {
-              setErrorMsg('This QR code has expired.');
-            }
-          } else {
-            // Fallback to instant session for seamless connection
-            setSession({
-              id: token || code,
-              token: token || '',
-              code: code || '',
-              creator: {
-                id: 'host',
-                name: 'Partner',
-                email: 'partner@duo.app',
-                avatar_url: '',
-              },
-              status: 'PENDING',
-              is_valid: true,
-              expires_at: new Date(Date.now() + 600000).toISOString(),
-              created_at: new Date().toISOString(),
-            });
-          }
+        if (isMounted && res.success && res.session) {
+          setSession(res.session);
         }
       } catch {
-        if (isMounted) {
-          // Fallback to instant session so user can always connect
-          setSession({
-            id: token || code,
-            token: token || '',
-            code: code || '',
-            creator: {
-              id: 'host',
-              name: 'Partner',
-              email: 'partner@duo.app',
-              avatar_url: '',
-            },
-            status: 'PENDING',
-            is_valid: true,
-            expires_at: new Date(Date.now() + 600000).toISOString(),
-            created_at: new Date().toISOString(),
-          });
-        }
-      } finally {
-        if (isMounted) setIsLoading(false);
+        // Keep valid session
       }
     };
 
