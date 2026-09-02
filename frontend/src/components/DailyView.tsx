@@ -494,7 +494,7 @@ export const DailyView: React.FC = () => {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-1.5 text-xs font-mono text-[#125CB9] font-semibold">
                         <Heart className="h-3.5 w-3.5 fill-current" />
-                        <span>{partner?.name}'s Reflection</span>
+                        <span>{partner?.name || 'Partner'}'s Reflection</span>
                       </div>
                       <span className="text-[11px] font-mono text-[#125CB9]/70">
                         Shared Today
@@ -504,7 +504,7 @@ export const DailyView: React.FC = () => {
                     {partnerAns.question_text && partnerAns.question_text !== q.question && (
                       <div className="pt-1">
                         <span className="text-[10px] font-mono uppercase tracking-wider text-theme-muted block">
-                          {partner?.name}'s Prompt:
+                          {partner?.name || 'Partner'}'s Prompt:
                         </span>
                         <p className="font-serif text-sm font-semibold text-theme-primary mt-0.5">
                           {partnerAns.question_text}

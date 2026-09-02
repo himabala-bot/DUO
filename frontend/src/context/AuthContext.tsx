@@ -116,6 +116,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSupabaseUser(session?.user ?? null);
       if (session) {
         syncDjangoProfile();
+      } else if (isDemoSession()) {
+        const demoUser = getDemoUser(getDemoRole());
+        setProfile(demoUser);
+        setPartner(demoUser.partner);
+        setIsLoading(false);
       } else {
         if (typeof window !== 'undefined') {
           localStorage.removeItem('duo_cached_profile');
@@ -134,8 +139,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       setSession(newSession);
       setSupabaseUser(newSession?.user ?? null);
-      if (newSession && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED')) {
+
+      if (newSession) {
         await syncDjangoProfile();
+      } else if (isDemoSession()) {
+        const demoUser = getDemoUser(getDemoRole());
+        setProfile(demoUser);
+        setPartner(demoUser.partner);
+        setIsLoading(false);
       } else if (!newSession) {
         if (typeof window !== 'undefined') {
           localStorage.removeItem('duo_cached_profile');
