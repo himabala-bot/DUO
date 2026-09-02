@@ -58,13 +58,24 @@ export const DrawingCanvas: React.FC = () => {
   const [history, setHistory] = useState<ImageData[]>([]);
   const [historyIndex, setHistoryIndex] = useState<number>(-1);
   const [isSending, setIsSending] = useState<boolean>(false);
-  const [drawings, setDrawings] = useState<Drawing[]>([]);
+  const duoId = profile?.active_duo_id;
+
+  const [drawings, setDrawings] = useState<Drawing[]>(() => {
+    if (typeof window !== 'undefined') {
+      const activeId = profile?.active_duo_id;
+      const cached = localStorage.getItem(`duo_drawings_${activeId || 'current'}`);
+      if (cached) {
+        try {
+          return JSON.parse(cached);
+        } catch {}
+      }
+    }
+    return [];
+  });
   const [activeTab, setActiveTab] = useState<'canvas' | 'gallery'>('canvas');
   const [selectedDrawing, setSelectedDrawing] = useState<Drawing | null>(null);
   const lastPos = useRef<{ x: number; y: number } | null>(null);
   const channelRef = useRef<RealtimeChannel | null>(null);
-
-  const duoId = profile?.active_duo_id;
 
   // Initialize canvas with clean white paper background
   const initCanvas = useCallback(() => {
@@ -84,11 +95,23 @@ export const DrawingCanvas: React.FC = () => {
   const fetchDrawings = useCallback(async () => {
     try {
       const res = await drawingsApi.list();
-      setDrawings(res.drawings || []);
+      const serverDrawings = res.drawings || [];
+      setDrawings(serverDrawings);
+      if (duoId && typeof window !== 'undefined') {
+        localStorage.setItem(`duo_drawings_${duoId}`, JSON.stringify(serverDrawings));
+      }
     } catch (err) {
       console.warn('Failed to load drawings:', err);
     }
-  }, []);
+  }, [duoId]);
+
+  useEffect(() => {
+    if (duoId && drawings.length > 0 && typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(`duo_drawings_${duoId}`, JSON.stringify(drawings));
+      } catch {}
+    }
+  }, [drawings, duoId]);
 
   useEffect(() => {
     initCanvas();
@@ -309,22 +332,30 @@ export const DrawingCanvas: React.FC = () => {
       }).catch(() => {});
     }
 
-    // 3. Background Storage Upload and Django persistence
+    // 3. Guaranteed instant backend persistence with dataUrl fallback
+    drawingsApi.create(dataUrl, sendCaption).then((savedDrawing) => {
+      const confirmedDrawing: Drawing = {
+        ...savedDrawing,
+        image_url: savedDrawing.image_url || dataUrl,
+        is_me: true,
+      };
+      setDrawings((prev) =>
+        prev.map((d) => (d.id === tempId ? confirmedDrawing : d))
+      );
+    }).catch((err) => {
+      console.warn('Drawing create error:', err);
+    });
+
+    // 4. Background Storage Upload
     canvas.toBlob(async (blob) => {
       if (!blob) return;
       try {
         const storagePath = await drawingsApi.uploadToSupabaseStorage(blob, duoId);
-        const savedDrawing = await drawingsApi.create(storagePath, sendCaption);
-        const confirmedDrawing: Drawing = {
-          ...savedDrawing,
-          image_url: savedDrawing.image_url || storagePath,
-          is_me: true,
-        };
-        setDrawings((prev) =>
-          prev.map((d) => (d.id === tempId ? confirmedDrawing : d))
-        );
+        if (storagePath && storagePath !== dataUrl) {
+          drawingsApi.create(storagePath, sendCaption).catch(() => {});
+        }
       } catch (err: any) {
-        console.warn('Background drawing upload error:', err);
+        console.warn('Background drawing storage upload:', err);
       }
     }, 'image/png');
   };

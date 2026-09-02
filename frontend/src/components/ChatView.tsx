@@ -40,11 +40,31 @@ const QUICK_REACTIONS = [
 export const ChatView: React.FC = () => {
   const { profile, partner } = useAuth();
   const { toast, confirm } = useToast();
-  const [messages, setMessages] = useState<Message[]>([]);
+  const duoId = profile?.active_duo_id;
+
+  const [messages, setMessages] = useState<Message[]>(() => {
+    if (typeof window !== 'undefined') {
+      const activeId = profile?.active_duo_id;
+      const cached = localStorage.getItem(`duo_chat_${activeId || 'current'}`);
+      if (cached) {
+        try {
+          return JSON.parse(cached);
+        } catch {}
+      }
+    }
+    return [];
+  });
   const [inputText, setInputText] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const activeId = profile?.active_duo_id;
+      const cached = localStorage.getItem(`duo_chat_${activeId || 'current'}`);
+      if (cached) return false;
+    }
+    return true;
+  });
   const [disappearingMode, setDisappearingMode] = useState(false);
   const [nowTick, setNowTick] = useState(Date.now());
   const [activeReactionMenu, setActiveReactionMenu] = useState<string | null>(null);
@@ -61,8 +81,6 @@ export const ChatView: React.FC = () => {
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const partnerTypingTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  const duoId = profile?.active_duo_id;
-
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -70,7 +88,11 @@ export const ChatView: React.FC = () => {
   const fetchMessages = useCallback(async () => {
     try {
       const res = await messagesApi.list();
-      setMessages(res.messages || []);
+      const serverMsgs = res.messages || [];
+      setMessages(serverMsgs);
+      if (duoId && typeof window !== 'undefined') {
+        localStorage.setItem(`duo_chat_${duoId}`, JSON.stringify(serverMsgs));
+      }
       if (res.disappearing_mode !== undefined) {
         setDisappearingMode(res.disappearing_mode);
       }
@@ -89,6 +111,14 @@ export const ChatView: React.FC = () => {
       setIsLoading(false);
     }
   }, [duoId, profile]);
+
+  useEffect(() => {
+    if (duoId && messages.length > 0 && typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(`duo_chat_${duoId}`, JSON.stringify(messages));
+      } catch {}
+    }
+  }, [messages, duoId]);
 
   useEffect(() => {
     fetchMessages();

@@ -96,8 +96,6 @@ const CATEGORIES: CategoryConfig[] = [
 export const LittleNotesView: React.FC = () => {
   const { profile, partner } = useAuth();
   const { toast, confirm } = useToast();
-  const [notes, setNotes] = useState<LittleNote[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
   // Active view: null means "All Memos Category Hub" (4 main cards), otherwise the opened category
   const [selectedCategory, setSelectedCategory] = useState<CategoryType | null>(null);
@@ -133,8 +131,32 @@ export const LittleNotesView: React.FC = () => {
     [profile?.id]
   );
 
-  // Create Note Modal State
+  const duoId = profile?.active_duo_id;
+
+  const [notes, setNotes] = useState<LittleNote[]>(() => {
+    if (typeof window !== 'undefined') {
+      const activeId = profile?.active_duo_id;
+      const cached = localStorage.getItem(`duo_notes_${activeId || 'current'}`);
+      if (cached) {
+        try {
+          return JSON.parse(cached);
+        } catch {}
+      }
+    }
+    return [];
+  });
+
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const activeId = profile?.active_duo_id;
+      const cached = localStorage.getItem(`duo_notes_${activeId || 'current'}`);
+      if (cached) return false;
+    }
+    return true;
+  });
+
+  // Create form state
   const [noteType, setNoteType] = useState<CategoryType>('TEXT');
   const [textContent, setTextContent] = useState('');
   const [mediaUrl, setMediaUrl] = useState('');
@@ -143,18 +165,29 @@ export const LittleNotesView: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const channelRef = useRef<RealtimeChannel | null>(null);
-  const duoId = profile?.active_duo_id;
 
   const fetchNotes = useCallback(async () => {
     try {
       const res = await notesApi.list();
-      setNotes(res.notes || []);
+      const serverNotes = res.notes || [];
+      setNotes(serverNotes);
+      if (duoId && typeof window !== 'undefined') {
+        localStorage.setItem(`duo_notes_${duoId}`, JSON.stringify(serverNotes));
+      }
     } catch (err) {
       console.warn('Failed to load Little Notes:', err);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [duoId]);
+
+  useEffect(() => {
+    if (duoId && notes.length > 0 && typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(`duo_notes_${duoId}`, JSON.stringify(notes));
+      } catch {}
+    }
+  }, [notes, duoId]);
 
   useEffect(() => {
     fetchNotes();

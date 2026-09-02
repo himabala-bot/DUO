@@ -31,12 +31,81 @@ import { Avatar } from './Avatar';
 export const DailyView: React.FC = () => {
   const { profile, partner } = useAuth();
   const { toast } = useToast();
-  const [questions, setQuestions] = useState<DailyQuestion[]>([]);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [questionStatuses, setQuestionStatuses] = useState<Record<string, 'DRAFT' | 'SUBMITTED' | 'NOT_STARTED'>>({});
-  const [partnerResponses, setPartnerResponses] = useState<DailyResponse[]>([]);
-  const [partnerStatus, setPartnerStatus] = useState<string>('NOT_STARTED');
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const duoId = profile?.active_duo_id;
+
+  const [questions, setQuestions] = useState<DailyQuestion[]>(() => {
+    if (typeof window !== 'undefined') {
+      const activeId = profile?.active_duo_id;
+      const cached = localStorage.getItem(`duo_daily_${activeId || 'current'}`);
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          return parsed.questions || [];
+        } catch {}
+      }
+    }
+    return [];
+  });
+  const [answers, setAnswers] = useState<Record<string, string>>(() => {
+    if (typeof window !== 'undefined') {
+      const activeId = profile?.active_duo_id;
+      const cached = localStorage.getItem(`duo_daily_${activeId || 'current'}`);
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          return parsed.answers || {};
+        } catch {}
+      }
+    }
+    return {};
+  });
+  const [questionStatuses, setQuestionStatuses] = useState<Record<string, 'DRAFT' | 'SUBMITTED' | 'NOT_STARTED'>>(() => {
+    if (typeof window !== 'undefined') {
+      const activeId = profile?.active_duo_id;
+      const cached = localStorage.getItem(`duo_daily_${activeId || 'current'}`);
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          return parsed.questionStatuses || {};
+        } catch {}
+      }
+    }
+    return {};
+  });
+  const [partnerResponses, setPartnerResponses] = useState<DailyResponse[]>(() => {
+    if (typeof window !== 'undefined') {
+      const activeId = profile?.active_duo_id;
+      const cached = localStorage.getItem(`duo_daily_${activeId || 'current'}`);
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          return parsed.partnerResponses || [];
+        } catch {}
+      }
+    }
+    return [];
+  });
+  const [partnerStatus, setPartnerStatus] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      const activeId = profile?.active_duo_id;
+      const cached = localStorage.getItem(`duo_daily_${activeId || 'current'}`);
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          return parsed.partnerStatus || 'NOT_STARTED';
+        } catch {}
+      }
+    }
+    return 'NOT_STARTED';
+  });
+  const [isLoading, setIsLoading] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      const activeId = profile?.active_duo_id;
+      const cached = localStorage.getItem(`duo_daily_${activeId || 'current'}`);
+      if (cached) return false;
+    }
+    return true;
+  });
   const [activeActions, setActiveActions] = useState<Record<string, 'saving' | 'submitting' | 'changing' | null>>({});
   const [feedbackMsg, setFeedbackMsg] = useState<{ id: string; type: 'success' | 'draft'; text: string } | null>(null);
   const [showArchiveModal, setShowArchiveModal] = useState(false);
@@ -46,7 +115,8 @@ export const DailyView: React.FC = () => {
   const fetchTodayData = useCallback(async () => {
     try {
       const data = await dailyApi.getResponses();
-      setQuestions(data.questions || []);
+      const serverQuestions = data.questions || [];
+      setQuestions(serverQuestions);
 
       const initialAnswers: Record<string, string> = {};
       const initialStatuses: Record<string, 'DRAFT' | 'SUBMITTED' | 'NOT_STARTED'> = {};
@@ -62,12 +132,22 @@ export const DailyView: React.FC = () => {
       setQuestionStatuses(initialStatuses);
       setPartnerResponses(data.partner_responses || []);
       setPartnerStatus(data.partner_status || 'NOT_STARTED');
+
+      if (duoId && typeof window !== 'undefined') {
+        localStorage.setItem(`duo_daily_${duoId}`, JSON.stringify({
+          questions: serverQuestions,
+          answers: initialAnswers,
+          questionStatuses: initialStatuses,
+          partnerResponses: data.partner_responses || [],
+          partnerStatus: data.partner_status || 'NOT_STARTED',
+        }));
+      }
     } catch (err) {
       console.warn('Failed to load daily questions:', err);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [duoId]);
 
   useEffect(() => {
     fetchTodayData();

@@ -51,8 +51,28 @@ const COLUMNS: ColumnConfig[] = [
 export const TodoKanbanView: React.FC = () => {
   const { profile, partner } = useAuth();
   const { toast, confirm } = useToast();
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const duoId = profile?.active_duo_id;
+
+  const [tasks, setTasks] = useState<Task[]>(() => {
+    if (typeof window !== 'undefined') {
+      const activeId = profile?.active_duo_id;
+      const cached = localStorage.getItem(`duo_todos_${activeId || 'current'}`);
+      if (cached) {
+        try {
+          return JSON.parse(cached);
+        } catch {}
+      }
+    }
+    return [];
+  });
+  const [isLoading, setIsLoading] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const activeId = profile?.active_duo_id;
+      const cached = localStorage.getItem(`duo_todos_${activeId || 'current'}`);
+      if (cached) return false;
+    }
+    return true;
+  });
   const [activeMobileCol, setActiveMobileCol] = useState<TaskStatus>('TODO');
 
   // Drag and Drop state
@@ -71,18 +91,29 @@ export const TodoKanbanView: React.FC = () => {
   const [editStatus, setEditStatus] = useState<TaskStatus>('TODO');
 
   const channelRef = useRef<RealtimeChannel | null>(null);
-  const duoId = profile?.active_duo_id;
 
   const fetchTasks = useCallback(async () => {
     try {
       const res = await tasksApi.list();
-      setTasks(res.tasks || []);
+      const serverTasks = res.tasks || [];
+      setTasks(serverTasks);
+      if (duoId && typeof window !== 'undefined') {
+        localStorage.setItem(`duo_todos_${duoId}`, JSON.stringify(serverTasks));
+      }
     } catch (err) {
       console.warn('Failed to load tasks:', err);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [duoId]);
+
+  useEffect(() => {
+    if (duoId && tasks.length > 0 && typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(`duo_todos_${duoId}`, JSON.stringify(tasks));
+      } catch {}
+    }
+  }, [tasks, duoId]);
 
   useEffect(() => {
     fetchTasks();
