@@ -4,6 +4,8 @@ import React, { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRealtime } from '@/context/RealtimeContext';
 import { useTheme } from '@/context/ThemeContext';
+import { useToast } from '@/context/ToastContext';
+import { isDemoSession, getDemoRole } from '@/lib/api';
 import {
   Bell,
   LogOut,
@@ -18,6 +20,8 @@ import {
   Heart,
   Sun,
   Moon,
+  ExternalLink,
+  Sparkles,
 } from 'lucide-react';
 import { ProfileSettingsModal } from './ProfileSettingsModal';
 import { NotificationPopout } from './NotificationPopout';
@@ -41,8 +45,24 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
   const { profile, partner, hasActiveDuo, logout } = useAuth();
   const { notifications, unreadCount, markNotificationAsRead, markAllNotificationsAsRead, partnerOnline } = useRealtime();
   const { resolvedTheme, toggleTheme } = useTheme();
+  const { toast } = useToast();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+
+  const isDemo = isDemoSession();
+  const demoRole = getDemoRole();
+  const partnerName = demoRole === 'user_a' ? 'Sam' : 'Alex';
+  const partnerUrl = demoRole === 'user_a' ? '/demo/partner' : '/demo';
+
+  const handleOpenPartnerView = () => {
+    window.open(partnerUrl, '_blank');
+    toast.love(`Opened ${partnerName}'s view in a new tab.`, 'Partner View');
+  };
+
+  const handleExitDemo = () => {
+    sessionStorage.removeItem('duo_is_demo');
+    window.location.href = '/';
+  };
 
   return (
     <>
@@ -180,16 +200,62 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
                 <Settings className="h-4 w-4" />
               </button>
 
-              {/* Logout Button */}
-              <button
-                onClick={logout}
-                className="rounded-full p-1.5 text-theme-muted hover:text-[#F43F5E] hover:bg-[#F43F5E]/10 transition-colors"
-                title="Sign out"
-              >
-                <LogOut className="h-4 w-4" />
-              </button>
+              {/* In Demo Mode: Open Partner View & Exit Demo replace Sign Out */}
+              {isDemo ? (
+                <>
+                  <button
+                    onClick={handleOpenPartnerView}
+                    className="rounded-full p-1.5 text-[#125CB9] hover:bg-[#125CB9]/15 transition-colors"
+                    title={`Open Partner View (${partnerName})`}
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                  </button>
+
+                  <button
+                    onClick={handleExitDemo}
+                    className="rounded-full p-1.5 text-theme-muted hover:text-[#F43F5E] hover:bg-[#F43F5E]/10 transition-colors"
+                    title="Exit Demo"
+                  >
+                    <LogOut className="h-4 w-4" />
+                  </button>
+                </>
+              ) : (
+                /* Logout Button for real users */
+                <button
+                  onClick={logout}
+                  className="rounded-full p-1.5 text-theme-muted hover:text-[#F43F5E] hover:bg-[#F43F5E]/10 transition-colors"
+                  title="Sign out"
+                >
+                  <LogOut className="h-4 w-4" />
+                </button>
+              )}
             </div>
           </div>
+
+          {/* Dedicated Demo Actions in Sidebar for Clear Visibility */}
+          {isDemo && (
+            <div className="mt-3 pt-3 border-t border-theme space-y-2">
+              <button
+                onClick={handleOpenPartnerView}
+                type="button"
+                className="w-full flex items-center justify-center space-x-1.5 rounded-xl bg-[#125CB9] px-3 py-2 text-xs font-semibold text-white hover:bg-[#0E4B99] transition-all shadow-xs active:scale-98"
+                title={`Open ${partnerName}'s view in a new tab`}
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+                <span>Open Partner View ({partnerName})</span>
+              </button>
+
+              <button
+                onClick={handleExitDemo}
+                type="button"
+                className="w-full flex items-center justify-center space-x-1.5 rounded-xl border border-theme bg-theme-card px-3 py-1.5 text-xs font-medium text-[#F43F5E] hover:bg-[#F43F5E]/10 transition-colors"
+                title="Exit Demo and return to landing page"
+              >
+                <LogOut className="h-3.5 w-3.5" />
+                <span>Exit Demo</span>
+              </button>
+            </div>
+          )}
         </div>
       </aside>
 
@@ -259,6 +325,26 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
             >
               <Settings className="h-4 w-4" />
             </button>
+
+            {/* Mobile Demo Controls */}
+            {isDemo && (
+              <>
+                <button
+                  onClick={handleOpenPartnerView}
+                  className="rounded-full p-1.5 text-[#125CB9] hover:bg-theme-card"
+                  title={`Open Partner View (${partnerName})`}
+                >
+                  <ExternalLink className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={handleExitDemo}
+                  className="rounded-full p-1.5 text-[#F43F5E] hover:bg-theme-card"
+                  title="Exit Demo"
+                >
+                  <LogOut className="h-4 w-4" />
+                </button>
+              </>
+            )}
           </div>
         </div>
       </header>
