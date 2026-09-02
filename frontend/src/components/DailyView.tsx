@@ -40,7 +40,7 @@ export const DailyView: React.FC = () => {
   const [activeActions, setActiveActions] = useState<Record<string, 'saving' | 'submitting' | 'changing' | null>>({});
   const [feedbackMsg, setFeedbackMsg] = useState<{ id: string; type: 'success' | 'draft'; text: string } | null>(null);
   const [showArchiveModal, setShowArchiveModal] = useState(false);
-  const [voiceRecorderStates, setVoiceRecorderStates] = useState<Record<string, 'idle' | 'recording' | 'preview'>>({});
+  const [recordingVoiceQId, setRecordingVoiceQId] = useState<string | null>(null);
 
   const fetchTodayData = useCallback(async () => {
     try {
@@ -390,106 +390,99 @@ export const DailyView: React.FC = () => {
                   </h3>
                 </div>
 
-                {/* Unified Chat-Style Response Composer */}
-                <div className="mt-4 pt-3 border-t border-theme-subtle">
-                  {isVoiceAns ? (
-                    <div className="rounded-2xl border border-theme bg-theme-input p-3.5 space-y-2">
+                {/* Answer Input Composer (Chat Section Style) */}
+                <div className="mt-4">
+                  {status === 'SUBMITTED' ? (
+                    <div className="rounded-2xl border border-[#00D26A]/25 bg-[#00D26A]/5 p-4 space-y-2">
+                      <span className="text-[10px] font-mono uppercase tracking-wider text-[#00D26A] font-semibold block">
+                        Your Shared Reflection:
+                      </span>
+                      {renderAnswerBody(currentAns, true)}
+                    </div>
+                  ) : isVoiceAns ? (
+                    <div className="rounded-2xl border border-theme bg-theme-input p-4 space-y-3">
                       <div className="flex items-center justify-between">
                         <span className="text-[10px] font-mono uppercase tracking-wider text-theme-muted block">
                           Your Voice Reflection:
                         </span>
-                        {status !== 'SUBMITTED' && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setAnswers((prev) => ({ ...prev, [q.id]: '' }));
-                              setVoiceRecorderStates((prev) => ({ ...prev, [q.id]: 'idle' }));
-                            }}
-                            className="text-xs text-theme-muted hover:text-[#F43F5E] transition-colors p-1"
-                            title="Discard recording and switch back to typing"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
-                        )}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAnswers((prev) => ({ ...prev, [q.id]: '' }));
+                          }}
+                          className="text-xs text-theme-muted hover:text-[#F43F5E] transition-colors p-1"
+                          title="Discard recording and type text instead"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
                       </div>
                       {renderAnswerBody(currentAns, true)}
-                    </div>
-                  ) : voiceRecorderStates[q.id] && voiceRecorderStates[q.id] !== 'idle' ? (
-                    <div className="flex items-center w-full min-h-[44px]">
-                      <VoiceRecorder
-                        onSendVoice={(url, dur) => handleVoiceAnswer(q, url, dur)}
-                        onCancel={() =>
-                          setVoiceRecorderStates((prev) => ({ ...prev, [q.id]: 'idle' }))
-                        }
-                        onStateChange={(state) =>
-                          setVoiceRecorderStates((prev) => ({ ...prev, [q.id]: state }))
-                        }
-                      />
+
+                      <div className="flex items-center justify-end gap-2 pt-2 border-t border-theme-subtle">
+                        <button
+                          type="button"
+                          onClick={() => handleSendQuestion(q)}
+                          disabled={activeActions[q.id] === 'submitting'}
+                          className="flex items-center space-x-1.5 rounded-full bg-[#125CB9] px-4 py-1.5 text-xs font-medium text-white hover:bg-[#0E4B99] disabled:opacity-40 transition-colors shadow-xs"
+                        >
+                          <Send className="h-3.5 w-3.5" />
+                          <span>{activeActions[q.id] === 'submitting' ? 'Sending...' : 'Send'}</span>
+                        </button>
+                      </div>
                     </div>
                   ) : (
-                    <div className="flex items-center space-x-2 w-full">
-                      {/* Audio Record Icon on the Left */}
-                      <VoiceRecorder
-                        onSendVoice={(url, dur) => handleVoiceAnswer(q, url, dur)}
-                        onCancel={() =>
-                          setVoiceRecorderStates((prev) => ({ ...prev, [q.id]: 'idle' }))
-                        }
-                        onStateChange={(state) =>
-                          setVoiceRecorderStates((prev) => ({ ...prev, [q.id]: state }))
-                        }
-                      />
-
-                      {/* Text Input in the Center */}
-                      <textarea
-                        value={currentAns}
-                        onChange={(e) => handleAnswerChange(q.id, e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && !e.shiftKey) {
-                            e.preventDefault();
-                            handleSendQuestion(q);
-                          }
+                    <div className="rounded-2xl border border-theme bg-theme-card p-2 sm:p-2.5 shadow-xs">
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          handleSendQuestion(q);
                         }}
-                        placeholder="Write your reflection here..."
-                        rows={1}
-                        className="flex-1 max-h-32 min-h-[40px] resize-none rounded-2xl border border-theme bg-theme-input px-4 py-2 text-xs sm:text-sm text-theme-primary placeholder-theme-muted focus:border-[#125CB9] focus:bg-theme-card focus:outline-none focus:ring-1 focus:ring-[#125CB9] transition-all leading-normal"
-                      />
-
-                      {/* Save Draft Action */}
-                      <button
-                        type="button"
-                        onClick={() => handleSaveQuestionDraft(q)}
-                        disabled={actionState === 'saving' || actionState === 'submitting'}
-                        className="p-2.5 rounded-full border border-theme bg-theme-input text-theme-muted hover:text-theme-primary hover:bg-theme-card transition-colors shrink-0"
-                        title="Save Draft (Private)"
+                        className="flex items-center space-x-2 w-full"
                       >
-                        <Bookmark className="h-4 w-4" />
-                      </button>
+                        {/* Audio icon on the left (immediately records on click) */}
+                        <VoiceRecorder
+                          onSendVoice={(url, dur) => handleVoiceAnswer(q, url, dur)}
+                        />
 
-                      {/* Send Button on the Right */}
-                      <button
-                        type="button"
-                        onClick={() => handleSendQuestion(q)}
-                        disabled={!currentAns.trim() || actionState === 'submitting'}
-                        className="flex h-10 w-10 items-center justify-center rounded-full bg-[#125CB9] text-white shadow-xs hover:bg-[#0E4B99] disabled:opacity-40 transition-all shrink-0"
-                        title="Send reflection to partner"
-                      >
-                        <Send className="h-4 w-4" />
-                      </button>
-                    </div>
-                  )}
+                        {/* Space to type message */}
+                        <textarea
+                          value={currentAns}
+                          onChange={(e) => handleAnswerChange(q.id, e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                              e.preventDefault();
+                              handleSendQuestion(q);
+                            }
+                          }}
+                          placeholder="Type your reflection here..."
+                          rows={1}
+                          className="flex-1 max-h-32 min-h-[40px] resize-none rounded-xl border border-theme bg-theme-input px-3.5 py-2 text-xs sm:text-sm text-theme-primary placeholder-theme-muted focus:border-[#125CB9] focus:bg-theme-card focus:outline-none focus:ring-1 focus:ring-[#125CB9] transition-all leading-normal"
+                        />
 
-                  {isFeedback && (
-                    <div className="mt-2 flex items-center gap-1.5 text-xs font-mono">
-                      {feedbackMsg.type === 'success' ? (
-                        <span className="text-[#00D26A] flex items-center gap-1">
-                          <CheckCircle2 className="h-3.5 w-3.5" />
-                          {feedbackMsg.text}
-                        </span>
-                      ) : (
-                        <span className="text-[#FB923C] flex items-center gap-1">
-                          <Bookmark className="h-3.5 w-3.5" />
-                          {feedbackMsg.text}
-                        </span>
+                        {/* Send icon on the right */}
+                        <button
+                          type="submit"
+                          disabled={!currentAns.trim() || activeActions[q.id] === 'submitting'}
+                          className="flex h-10 w-10 items-center justify-center rounded-full bg-[#125CB9] text-white shadow-xs hover:bg-[#0E4B99] disabled:opacity-40 disabled:hover:bg-[#125CB9] transition-all shrink-0"
+                          title="Send Reflection"
+                        >
+                          <Send className="h-4 w-4" />
+                        </button>
+                      </form>
+
+                      {/* Small Draft Helper Link */}
+                      {currentAns.trim() && (
+                        <div className="flex items-center justify-between px-2 pt-2 border-t border-theme-subtle mt-2 text-[11px] font-mono text-theme-muted">
+                          <span>Press Enter to send</span>
+                          <button
+                            type="button"
+                            onClick={() => handleSaveQuestionDraft(q)}
+                            disabled={activeActions[q.id] === 'saving'}
+                            className="hover:text-theme-primary transition-colors underline"
+                          >
+                            {activeActions[q.id] === 'saving' ? 'Saving draft...' : 'Save as private draft'}
+                          </button>
+                        </div>
                       )}
                     </div>
                   )}

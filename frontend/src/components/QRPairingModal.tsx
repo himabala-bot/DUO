@@ -27,16 +27,16 @@ export const QRPairingModal: React.FC<QRPairingModalProps> = ({
   onClose,
   onPaired,
 }) => {
-  const { refreshProfile } = useAuth();
+  const { profile, refreshProfile } = useAuth();
   const { toast } = useToast();
   const [session, setSession] = useState<PairingSession | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [isPaired, setIsPaired] = useState(false);
-  const [timeLeft, setTimeLeft] = useState<number>(600); // 10 minutes (600s)
+  const [timeLeft, setTimeLeft] = useState<number>(600); // 10 mins in seconds
   const [isExpired, setIsExpired] = useState(false);
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const createSession = useCallback(async () => {
     setIsLoading(true);
@@ -47,8 +47,8 @@ export const QRPairingModal: React.FC<QRPairingModalProps> = ({
       if (res.success && res.session) {
         setSession(res.session);
         // Calculate remaining seconds from expires_at
-        const expiresAt = new Date(res.session.expires_at).getTime();
-        const diffSec = Math.max(0, Math.floor((expiresAt - Date.now()) / 1000));
+        const expiresMs = new Date(res.session.expires_at).getTime();
+        const diffSec = Math.max(0, Math.floor((expiresMs - Date.now()) / 1000));
         setTimeLeft(diffSec || 600);
       }
     } catch (err: any) {
@@ -66,27 +66,29 @@ export const QRPairingModal: React.FC<QRPairingModalProps> = ({
       setIsPaired(false);
       setIsExpired(false);
       if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
-      if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+      if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
     }
   }, [isOpen, createSession]);
 
-  // Expiration countdown timer (updates every second)
+  // Expiration countdown timer
   useEffect(() => {
     if (!isOpen || !session || isPaired) return;
 
-    timerIntervalRef.current = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          setIsExpired(true);
-          if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
-          return 0;
-        }
-        return prev - 1;
-      });
+    if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+
+    countdownIntervalRef.current = setInterval(() => {
+      const expiresMs = new Date(session.expires_at).getTime();
+      const remaining = Math.max(0, Math.floor((expiresMs - Date.now()) / 1000));
+      setTimeLeft(remaining);
+
+      if (remaining <= 0) {
+        setIsExpired(true);
+        if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+      }
     }, 1000);
 
     return () => {
-      if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+      if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
     };
   }, [isOpen, session, isPaired]);
 
@@ -100,11 +102,11 @@ export const QRPairingModal: React.FC<QRPairingModalProps> = ({
       .on('broadcast', { event: 'claimed' }, async () => {
         setIsPaired(true);
         await refreshProfile();
-        toast.love("You're paired! Welcome to Duo.", 'Connected');
+        toast.love('Phone connected! Entering Duo...', 'Connected');
         setTimeout(() => {
           onPaired?.();
           onClose();
-        }, 1200);
+        }, 1500);
       })
       .subscribe();
 
@@ -115,16 +117,14 @@ export const QRPairingModal: React.FC<QRPairingModalProps> = ({
         if (checkRes.has_active_duo && checkRes.partner) {
           setIsPaired(true);
           await refreshProfile();
-          toast.love("You're paired! Welcome to Duo.", 'Connected');
+          toast.love('Phone connected! Entering Duo...', 'Connected');
           if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
           setTimeout(() => {
             onPaired?.();
             onClose();
-          }, 1200);
+          }, 1500);
         }
-      } catch {
-        // Ignore background polling errors
-      }
+      } catch {}
     }, 2500);
 
     return () => {
@@ -145,11 +145,15 @@ export const QRPairingModal: React.FC<QRPairingModalProps> = ({
     if (session?.token) {
       try {
         await duoApi.cancelPairingSession(session.token);
-      } catch {
-        // Ignore cancellation error
-      }
+      } catch {}
     }
     onClose();
+  };
+
+  const formatCountdown = (secs: number) => {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
   };
 
   if (!isOpen) return null;
@@ -158,96 +162,93 @@ export const QRPairingModal: React.FC<QRPairingModalProps> = ({
     ? `${window.location.origin}/join?token=${session.token}`
     : '';
 
-  const formatCountdown = (secs: number) => {
-    const m = Math.floor(secs / 60);
-    const s = Math.floor(secs % 60);
-    return `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
-  };
-
   return (
     <div
       onClick={handleCancel}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-[460px] overflow-hidden rounded-3xl border border-theme bg-theme-card p-6 sm:p-8 shadow-xl text-center select-none animate-in zoom-in-95 duration-150"
+        className="relative w-full max-w-[460px] overflow-hidden rounded-[32px] border border-theme bg-theme-card p-6 sm:p-8 shadow-2xl text-center select-none animate-in zoom-in-95 duration-200"
       >
         {/* Close Button */}
         <button
           onClick={handleCancel}
-          className="absolute top-4 right-4 rounded-full p-2 text-theme-muted hover:text-theme-primary hover:bg-theme-input transition-colors"
+          className="absolute top-5 right-5 rounded-full p-1.5 text-theme-muted hover:text-theme-primary hover:bg-theme-input transition-colors"
           title="Close"
         >
           <X className="h-4 w-4" />
         </button>
 
         {isPaired ? (
-          /* Success Screen */
-          <div className="py-8 space-y-4 animate-in zoom-in-95 duration-200">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#00D26A]/10 text-[#00D26A] mx-auto ring-8 ring-[#00D26A]/10 shadow-sm">
-              <CheckCircle2 className="h-8 w-8" />
+          /* Success Screen: Phone connected */
+          <div className="py-10 space-y-4 animate-in zoom-in-95 duration-300">
+            <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-[#00D26A]/10 text-[#00D26A] mx-auto ring-8 ring-[#00D26A]/10 shadow-lg">
+              <CheckCircle2 className="h-9 w-9" />
             </div>
 
             <div>
               <h3 className="font-serif text-2xl font-bold text-theme-primary">
                 Phone connected
               </h3>
-              <p className="text-xs text-theme-secondary mt-1">
+              <p className="text-xs text-theme-secondary mt-1.5">
                 Entering your shared Duo room...
               </p>
             </div>
           </div>
         ) : isExpired ? (
           /* Expired State */
-          <div className="py-6 space-y-4 text-center animate-in fade-in duration-200">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-neutral-500/10 text-neutral-400 mx-auto">
+          <div className="py-8 space-y-5 animate-in fade-in duration-200">
+            <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-[#FB923C]/10 text-[#FB923C] mx-auto">
               <AlertCircle className="h-7 w-7" />
             </div>
+
             <div>
               <h3 className="font-serif text-xl font-bold text-theme-primary">
-                QR expired
+                QR code has expired
               </h3>
               <p className="text-xs text-theme-secondary mt-1">
-                This pairing session has expired for security.
+                For your security, pairing sessions expire after 10 minutes.
               </p>
             </div>
-            <div className="pt-2 flex flex-col sm:flex-row gap-2 justify-center">
+
+            <div className="pt-2 flex flex-col items-center gap-2.5">
               <button
                 type="button"
                 onClick={createSession}
-                className="inline-flex items-center justify-center space-x-2 rounded-full bg-[#125CB9] px-6 py-2.5 text-xs font-semibold text-white hover:bg-[#0E4B99] transition-colors shadow-xs"
+                disabled={isLoading}
+                className="flex items-center space-x-2 rounded-full bg-[#125CB9] px-6 py-2.5 text-xs font-semibold text-white hover:bg-[#0E4B99] transition-all shadow-xs active:scale-98"
               >
-                <RefreshCw className="h-3.5 w-3.5" />
+                <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} />
                 <span>Generate a new QR</span>
               </button>
               <button
                 type="button"
                 onClick={handleCancel}
-                className="rounded-full border border-theme bg-theme-input px-5 py-2.5 text-xs font-medium text-theme-secondary hover:text-theme-primary transition-colors"
+                className="text-xs text-theme-muted hover:text-theme-primary transition-colors py-1"
               >
                 Cancel
               </button>
             </div>
           </div>
         ) : (
-          /* Native Product Pairing Dialog */
+          /* Native QR Pairing Screen */
           <div className="space-y-4">
-            {/* Heading & Subtitle */}
-            <div className="space-y-1">
-              <h2 className="font-serif text-2xl font-bold text-theme-primary">
+            {/* Header */}
+            <div>
+              <h3 className="font-serif text-2xl font-bold text-theme-primary">
                 Connect another device
-              </h2>
-              <p className="text-xs sm:text-sm text-theme-secondary max-w-sm mx-auto leading-relaxed">
+              </h3>
+              <p className="text-xs text-theme-secondary mt-1 max-w-xs mx-auto leading-relaxed">
                 Scan this QR code with your phone to join this Duo.
               </p>
             </div>
 
-            {/* Centered QR Code Box */}
-            <div className="flex flex-col items-center justify-center py-2">
-              <div className="relative rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-white p-4 shadow-sm">
+            {/* Dynamic QR Code */}
+            <div className="flex flex-col items-center justify-center py-1">
+              <div className="relative rounded-2xl border border-theme bg-white p-4 shadow-xs">
                 {isLoading || !session ? (
-                  <div className="flex h-56 w-56 sm:h-60 sm:w-60 items-center justify-center">
+                  <div className="flex h-[220px] w-[220px] items-center justify-center">
                     <RefreshCw className="h-6 w-6 text-theme-muted animate-spin" />
                   </div>
                 ) : (
@@ -262,26 +263,29 @@ export const QRPairingModal: React.FC<QRPairingModalProps> = ({
               </div>
             </div>
 
-            {/* Fallback 6-Character Code */}
+            {/* 6-Character Fallback Code */}
             {session?.code && (
-              <div className="flex flex-col items-center space-y-1">
-                <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-xl bg-theme-input border border-theme">
-                  <span className="font-mono text-base sm:text-lg font-bold tracking-widest text-theme-primary">
-                    {session.code}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={handleCopyCode}
-                    className="p-1 text-theme-muted hover:text-theme-primary transition-colors"
-                    title="Copy code"
-                  >
-                    {copied ? (
-                      <Check className="h-3.5 w-3.5 text-[#00D26A]" />
-                    ) : (
-                      <Copy className="h-3.5 w-3.5" />
-                    )}
-                  </button>
+              <div className="space-y-1">
+                <div className="font-mono text-xl sm:text-2xl font-bold tracking-widest text-theme-primary">
+                  {session.code}
                 </div>
+                <button
+                  type="button"
+                  onClick={handleCopyCode}
+                  className="inline-flex items-center space-x-1 text-xs font-mono text-theme-muted hover:text-theme-primary transition-colors"
+                >
+                  {copied ? (
+                    <>
+                      <Check className="h-3 w-3 text-[#00D26A]" />
+                      <span className="text-[#00D26A]">Copied</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-3 w-3" />
+                      <span>Copy code</span>
+                    </>
+                  )}
+                </button>
               </div>
             )}
 
@@ -290,18 +294,21 @@ export const QRPairingModal: React.FC<QRPairingModalProps> = ({
               <span>Expires in {formatCountdown(timeLeft)}</span>
             </div>
 
-            {/* Waiting State Indicator */}
-            <div className="flex items-center justify-center space-x-2 text-xs text-theme-secondary font-mono pt-1">
-              <span className="h-2 w-2 rounded-full bg-[#00D26A] animate-pulse" />
+            {/* Waiting State */}
+            <div className="flex items-center justify-center space-x-2 py-1 text-xs font-mono text-theme-secondary">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00D26A] opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#00D26A]" />
+              </span>
               <span>Waiting for your phone to connect...</span>
             </div>
 
-            {/* Cancel Action */}
+            {/* Cancel Button */}
             <div className="pt-2 border-t border-theme-subtle">
               <button
                 type="button"
                 onClick={handleCancel}
-                className="text-xs font-medium text-theme-secondary hover:text-theme-primary transition-colors py-1 px-3"
+                className="w-full rounded-full border border-theme bg-theme-input py-2 text-xs font-medium text-theme-secondary hover:text-theme-primary hover:bg-theme-card transition-colors"
               >
                 Cancel
               </button>
