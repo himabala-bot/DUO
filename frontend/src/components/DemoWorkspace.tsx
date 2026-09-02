@@ -28,25 +28,14 @@ export const DemoWorkspace: React.FC<DemoWorkspaceProps> = ({ role }) => {
     if (typeof window === 'undefined') return;
     sessionStorage.setItem('duo_is_demo', 'true');
 
-    // Subscribe to cross-tab window custom events and Supabase channel
-    const handleLocalSync = () => {
+    const handleReset = () => {
       setSyncKey((prev) => prev + 1);
     };
 
-    window.addEventListener('duo_demo_event', handleLocalSync);
-    window.addEventListener('duo_demo_reset', handleLocalSync);
-
-    const channel = supabase.channel('duo_demo_session_channel');
-    channel
-      .on('broadcast', { event: 'demo_sync' }, () => {
-        setSyncKey((prev) => prev + 1);
-      })
-      .subscribe();
+    window.addEventListener('duo_demo_reset', handleReset);
 
     return () => {
-      window.removeEventListener('duo_demo_event', handleLocalSync);
-      window.removeEventListener('duo_demo_reset', handleLocalSync);
-      supabase.removeChannel(channel);
+      window.removeEventListener('duo_demo_reset', handleReset);
     };
   }, []);
 

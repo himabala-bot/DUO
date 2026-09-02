@@ -225,7 +225,7 @@ export const duoApi = {
 export const messagesApi = {
   list: async (): Promise<{ messages: Message[]; disappearing_mode?: boolean; count: number }> => {
     if (isDemoSession()) {
-      const res = demoStore.getMessages();
+      const res = demoStore.getMessages(getDemoRole());
       return { messages: res.messages, disappearing_mode: res.disappearing_mode, count: res.messages.length };
     }
     return request('/api/messages/');
@@ -274,7 +274,7 @@ export const messagesApi = {
 
   toggleDisappearingMode: async (enabled?: boolean): Promise<{ success: boolean; disappearing_mode: boolean }> => {
     if (isDemoSession()) {
-      const state = demoStore.getMessages();
+      const state = demoStore.getMessages(getDemoRole());
       const nextVal = enabled !== undefined ? enabled : !state.disappearing_mode;
       demoStore.setDisappearingMode(nextVal);
       return { success: true, disappearing_mode: nextVal };
@@ -296,10 +296,22 @@ export const messagesApi = {
 // 4. DRAWING SYSTEM APIS
 export const drawingsApi = {
   list: async (): Promise<{ drawings: Drawing[]; count: number }> => {
+    if (isDemoSession()) {
+      const drawings = demoStore.getDrawings(getDemoRole());
+      return { drawings, count: drawings.length };
+    }
     return request('/api/drawings/');
   },
 
   uploadToSupabaseStorage: async (blob: Blob, duoId: string): Promise<string> => {
+    if (isDemoSession()) {
+      // In demo mode, convert blob directly to object URL / data URL for fast visual demo
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(blob);
+      });
+    }
     const filename = `${duoId}/${Date.now()}_${Math.random().toString(36).substring(2, 9)}.png`;
     const { data, error } = await supabase.storage.from('drawings').upload(filename, blob, {
       contentType: 'image/png',
@@ -330,6 +342,9 @@ export const drawingsApi = {
   },
 
   create: async (storagePath: string, caption: string = ''): Promise<Drawing> => {
+    if (isDemoSession()) {
+      return demoStore.createDrawing(storagePath, caption, getDemoRole());
+    }
     return request('/api/drawings/', {
       method: 'POST',
       body: JSON.stringify({ storage_path: storagePath, caption }),
@@ -504,7 +519,7 @@ export const tasksApi = {
     }
   ): Promise<import('@/types').Task> => {
     if (isDemoSession()) {
-      return demoStore.updateTask(id, data) as any;
+      return demoStore.updateTask(id, data, getDemoRole()) as any;
     }
     return request(`/api/todos/${id}/`, {
       method: 'PATCH',

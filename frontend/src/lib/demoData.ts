@@ -6,6 +6,7 @@ import {
   DailyResponse,
   Task,
   LittleNote,
+  Drawing,
   NotificationItem,
 } from '@/types';
 
@@ -57,7 +58,7 @@ export const getInitialDemoMessages = (): Message[] => {
     {
       id: 'demo-msg-1',
       duo_id: 'demo-duo-session',
-      sender: DEMO_PARTNER_B,
+      sender: DEMO_PARTNER_B, // Sam
       receiver: DEMO_PARTNER_A,
       content: 'Good morning! Did you remember to water the kitchen herbs before leaving?',
       is_me: false,
@@ -68,7 +69,7 @@ export const getInitialDemoMessages = (): Message[] => {
     {
       id: 'demo-msg-2',
       duo_id: 'demo-duo-session',
-      sender: DEMO_PARTNER_A,
+      sender: DEMO_PARTNER_A, // Alex
       receiver: DEMO_PARTNER_B,
       content: 'Yes, all watered. I also picked up the fresh espresso beans on my way in.',
       is_me: true,
@@ -79,7 +80,7 @@ export const getInitialDemoMessages = (): Message[] => {
     {
       id: 'demo-msg-3',
       duo_id: 'demo-duo-session',
-      sender: DEMO_PARTNER_B,
+      sender: DEMO_PARTNER_B, // Sam
       receiver: DEMO_PARTNER_A,
       content: 'Wonderful. I added the train schedule for our weekend trip to the To-Do board. Take a look when you get a chance.',
       is_me: false,
@@ -89,7 +90,7 @@ export const getInitialDemoMessages = (): Message[] => {
     {
       id: 'demo-msg-4',
       duo_id: 'demo-duo-session',
-      sender: DEMO_PARTNER_A,
+      sender: DEMO_PARTNER_A, // Alex
       receiver: DEMO_PARTNER_B,
       content: 'Just saw it! Checking seats on the 10:15 AM departure right now.',
       is_me: true,
@@ -99,7 +100,7 @@ export const getInitialDemoMessages = (): Message[] => {
     {
       id: 'demo-msg-5',
       duo_id: 'demo-duo-session',
-      sender: DEMO_PARTNER_B,
+      sender: DEMO_PARTNER_B, // Sam
       receiver: DEMO_PARTNER_A,
       content: 'Perfect. Also, do not forget to answer today\'s daily prompt—I already submitted my reflection.',
       is_me: false,
@@ -147,7 +148,7 @@ export const getInitialDemoTasks = (): Task[] => [
   {
     id: 'demo-task-1',
     duo_id: 'demo-duo-session',
-    created_by: DEMO_PARTNER_A,
+    created_by: DEMO_PARTNER_A, // Alex
     title: 'Book weekend train tickets to coastal cottage',
     description: 'Looking for morning departures with quiet car seats.',
     status: 'TODO',
@@ -160,7 +161,7 @@ export const getInitialDemoTasks = (): Task[] => [
   {
     id: 'demo-task-2',
     duo_id: 'demo-duo-session',
-    created_by: DEMO_PARTNER_B,
+    created_by: DEMO_PARTNER_B, // Sam
     title: 'Pick up vintage film prints from local photo lab',
     description: 'Order #4892 from our anniversary walk.',
     status: 'TODO',
@@ -173,7 +174,7 @@ export const getInitialDemoTasks = (): Task[] => [
   {
     id: 'demo-task-3',
     duo_id: 'demo-duo-session',
-    created_by: DEMO_PARTNER_A,
+    created_by: DEMO_PARTNER_A, // Alex
     title: 'Pack warm wool sweaters and rain jackets',
     description: 'Weather forecast shows coastal mist in the evenings.',
     status: 'IN_PROGRESS',
@@ -186,7 +187,7 @@ export const getInitialDemoTasks = (): Task[] => [
   {
     id: 'demo-task-4',
     duo_id: 'demo-duo-session',
-    created_by: DEMO_PARTNER_B,
+    created_by: DEMO_PARTNER_B, // Sam
     title: 'Reserve table at the old harbor bistro',
     description: 'Friday evening dinner at 7:30 PM.',
     status: 'COMPLETED',
@@ -202,7 +203,7 @@ export const getInitialDemoNotes = (): LittleNote[] => [
   {
     id: 'demo-note-1',
     duo_id: 'demo-duo-session',
-    author: DEMO_PARTNER_B,
+    author: DEMO_PARTNER_B, // Sam
     note_type: 'TEXT',
     content: 'Take a deep breath and take your time today. Proud of everything you are building.',
     media_url: '',
@@ -215,7 +216,7 @@ export const getInitialDemoNotes = (): LittleNote[] => [
   {
     id: 'demo-note-2',
     duo_id: 'demo-duo-session',
-    author: DEMO_PARTNER_A,
+    author: DEMO_PARTNER_A, // Alex
     note_type: 'TEXT',
     content: 'Left fresh pour-over coffee on the counter for you. Have a lovely morning.',
     media_url: '',
@@ -224,6 +225,20 @@ export const getInitialDemoNotes = (): LittleNote[] => [
     is_me: true,
     created_at: new Date(Date.now() - 86400000).toISOString(),
     updated_at: new Date().toISOString(),
+  },
+];
+
+export const getInitialDemoDrawings = (): Drawing[] => [
+  {
+    id: 'demo-drawing-1',
+    duo_id: 'demo-duo-session',
+    sender: DEMO_PARTNER_A, // Alex
+    receiver: DEMO_PARTNER_B,
+    storage_path: 'demo/drawing1.png',
+    image_url: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300"><rect width="100%" height="100%" fill="%2318181b"/><path d="M150 150 Q 200 80, 250 150 T 350 150" stroke="%23FB923C" stroke-width="4" fill="none"/></svg>',
+    caption: 'Little heartbeat squiggle for you',
+    is_me: true,
+    created_at: new Date(Date.now() - 86400000 * 1.5).toISOString(),
   },
 ];
 
@@ -257,5 +272,15 @@ export const getInitialDemoNotifications = (): NotificationItem[] => [
     reference_id: 'demo-note-1',
     is_read: true,
     created_at: new Date(Date.now() - 86400000).toISOString(),
+  },
+  {
+    id: 'demo-notif-4',
+    recipient_id: 'demo-user-b',
+    type: 'MESSAGE',
+    title: 'New Message',
+    body: 'Alex replied in Whisper Chat.',
+    reference_id: 'demo-msg-4',
+    is_read: true,
+    created_at: new Date(Date.now() - 3600000 * 1.1).toISOString(),
   },
 ];

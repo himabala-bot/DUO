@@ -8,6 +8,7 @@ import {
   getInitialDemoDailyResponses,
   getInitialDemoTasks,
   getInitialDemoNotes,
+  getInitialDemoDrawings,
   getInitialDemoNotifications,
 } from './demoData';
 import {
@@ -18,12 +19,13 @@ import {
   DailyResponse,
   Task,
   LittleNote,
+  Drawing,
   NotificationItem,
 } from '@/types';
 import { supabase } from './supabase';
 
-const DEMO_STORAGE_KEY = 'duo_demo_store_v1';
-const DEMO_CHANNEL_NAME = 'duo_demo_session_channel';
+const DEMO_STORAGE_KEY = 'duo_demo_store_v2';
+const DUO_ID = 'demo-duo-session';
 
 interface DemoStoreState {
   messages: Message[];
@@ -32,6 +34,7 @@ interface DemoStoreState {
   responses: Record<string, DailyResponse>; // key: `${question_id}_${user_id}`
   tasks: Task[];
   notes: LittleNote[];
+  drawings: Drawing[];
   notifications: NotificationItem[];
 }
 
@@ -43,6 +46,7 @@ function getInitialStore(): DemoStoreState {
     responses: getInitialDemoDailyResponses(),
     tasks: getInitialDemoTasks(),
     notes: getInitialDemoNotes(),
+    drawings: getInitialDemoDrawings(),
     notifications: getInitialDemoNotifications(),
   };
 }
@@ -70,7 +74,7 @@ function loadState(): DemoStoreState {
   }
 
   memoryState = getInitialStore();
-  saveState(memoryState);
+  saveState(memoryState, false);
   return memoryState;
 }
 
@@ -86,15 +90,9 @@ function saveState(state: DemoStoreState, broadcast = true) {
     broadcastChannel.postMessage({ type: 'DEMO_STATE_UPDATED', payload: state });
   }
 
-  // Also broadcast on Supabase channel if available
-  try {
-    const channel = supabase.channel(DEMO_CHANNEL_NAME);
-    channel.send({
-      type: 'broadcast',
-      event: 'demo_sync',
-      payload: { timestamp: Date.now() },
-    }).catch(() => {});
-  } catch {}
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('duo_demo_event', { detail: state }));
+  }
 }
 
 // Listen for cross-tab updates via BroadcastChannel
@@ -109,7 +107,7 @@ if (broadcastChannel) {
   };
 }
 
-// Helper to determine current demo user based on URL or session
+// Helper to determine current demo user based on role
 export function getDemoUser(role: 'user_a' | 'user_b' = 'user_a'): UserProfile {
   return role === 'user_b' ? DEMO_USER_B : DEMO_USER_A;
 }
@@ -128,8 +126,8 @@ export const demoStore = {
     return fresh;
   },
 
-  // Messages API
-  getMessages(userRole: 'user_a' | 'user_b' = 'user_a'): { messages: Message[]; disappearing_mode: boolean } {
+  // 1. MESSAGES API
+  getMessages(userRole: 'user_a' | 'user_b'): { messages: Message[]; disappearing_mode: boolean } {
     const state = loadState();
     const myId = userRole === 'user_b' ? DEMO_USER_B.id : DEMO_USER_A.id;
     const localized = state.messages.map((m) => ({
@@ -161,7 +159,7 @@ export const demoStore = {
 
     const newMsg: Message = {
       id: `demo-msg-${Date.now()}`,
-      duo_id: 'demo-duo-session',
+      duo_id: DUO_ID,
       sender,
       receiver,
       content,
@@ -181,9 +179,9 @@ export const demoStore = {
 
     saveState(nextState);
 
-    // Supabase broadcast for chat
+    // Broadcast to Supabase Realtime channel that ChatView listens to: `chat:demo-duo-session`
     try {
-      const channel = supabase.channel(`duo_chat:demo-duo-session`);
+      const channel = supabase.channel(`chat:${DUO_ID}`);
       channel.send({
         type: 'broadcast',
         event: 'new_message',
@@ -209,12 +207,22 @@ export const demoStore = {
 
     if (changed) {
       saveState({ ...state, messages: updatedMessages });
+
+      try {
+        const channel = supabase.channel(`chat:${DUO_ID}`);
+        channel.send({
+          type: 'broadcast',
+          event: 'messages_read',
+          payload: { duo_id: DUO_ID, reader_id: readerId },
+        }).catch(() => {});
+      } catch {}
     }
   },
 
   toggleReaction(messageId: string, userRole: 'user_a' | 'user_b', reaction: string) {
     const state = loadState();
     const userId = userRole === 'user_b' ? DEMO_USER_B.id : DEMO_USER_A.id;
+    let targetReactions: Record<string, string> = {};
 
     const updated = state.messages.map((m) => {
       if (m.id !== messageId) return m;
@@ -225,18 +233,37 @@ export const demoStore = {
       } else {
         reactions[userId] = reaction;
       }
+      targetReactions = reactions;
       return { ...m, reactions };
     });
 
     saveState({ ...state, messages: updated });
+
+    try {
+      const channel = supabase.channel(`chat:${DUO_ID}`);
+      channel.send({
+        type: 'broadcast',
+        event: 'message_reacted',
+        payload: { message_id: messageId, reactions: targetReactions },
+      }).catch(() => {});
+    } catch {}
   },
 
   setDisappearingMode(enabled: boolean) {
     const state = loadState();
     saveState({ ...state, disappearing_mode: enabled });
+
+    try {
+      const channel = supabase.channel(`chat:${DUO_ID}`);
+      channel.send({
+        type: 'broadcast',
+        event: 'disappearing_mode_changed',
+        payload: { enabled },
+      }).catch(() => {});
+    } catch {}
   },
 
-  // Daily Questions API
+  // 2. DAILY QUESTIONS API
   getDailyData(userRole: 'user_a' | 'user_b') {
     const state = loadState();
     const myId = userRole === 'user_b' ? DEMO_USER_B.id : DEMO_USER_A.id;
@@ -300,11 +327,20 @@ export const demoStore = {
       },
     });
 
+    try {
+      const channel = supabase.channel(`duo:${DUO_ID}`);
+      channel.send({
+        type: 'broadcast',
+        event: 'daily_response',
+        payload: { user_id: myId },
+      }).catch(() => {});
+    } catch {}
+
     return newResponse;
   },
 
-  // Tasks (Kanban) API
-  getTasks(userRole: 'user_a' | 'user_b' = 'user_a'): Task[] {
+  // 3. TASKS (KANBAN) API
+  getTasks(userRole: 'user_a' | 'user_b'): Task[] {
     const state = loadState();
     const myId = userRole === 'user_b' ? DEMO_USER_B.id : DEMO_USER_A.id;
     return state.tasks.map((t) => ({
@@ -313,13 +349,13 @@ export const demoStore = {
     }));
   },
 
-  createTask(title: string, description: string = '', status: string = 'TODO', userRole: 'user_a' | 'user_b' = 'user_a'): Task {
+  createTask(title: string, description: string = '', status: string = 'TODO', userRole: 'user_a' | 'user_b'): Task {
     const state = loadState();
     const creator = userRole === 'user_b' ? DEMO_PARTNER_B : DEMO_PARTNER_A;
 
     const newTask: Task = {
       id: `demo-task-${Date.now()}`,
-      duo_id: 'demo-duo-session',
+      duo_id: DUO_ID,
       created_by: creator,
       title,
       description,
@@ -336,10 +372,19 @@ export const demoStore = {
       tasks: [...state.tasks, newTask],
     });
 
+    try {
+      const channel = supabase.channel(`todos:${DUO_ID}`);
+      channel.send({
+        type: 'broadcast',
+        event: 'tasks_updated',
+        payload: { task: newTask },
+      }).catch(() => {});
+    } catch {}
+
     return newTask;
   },
 
-  updateTask(taskId: string, patch: Partial<Task>): Task | null {
+  updateTask(taskId: string, patch: Partial<Task>, userRole: 'user_a' | 'user_b'): Task | null {
     const state = loadState();
     let updatedTask: Task | null = null;
 
@@ -358,6 +403,15 @@ export const demoStore = {
 
     if (updatedTask) {
       saveState({ ...state, tasks: updatedTasks });
+
+      try {
+        const channel = supabase.channel(`todos:${DUO_ID}`);
+        channel.send({
+          type: 'broadcast',
+          event: 'tasks_updated',
+          payload: { task: updatedTask },
+        }).catch(() => {});
+      } catch {}
     }
 
     return updatedTask;
@@ -369,10 +423,19 @@ export const demoStore = {
       ...state,
       tasks: state.tasks.filter((t) => t.id !== taskId),
     });
+
+    try {
+      const channel = supabase.channel(`todos:${DUO_ID}`);
+      channel.send({
+        type: 'broadcast',
+        event: 'tasks_updated',
+        payload: { deleted_id: taskId },
+      }).catch(() => {});
+    } catch {}
   },
 
-  // Notes API
-  getNotes(userRole: 'user_a' | 'user_b' = 'user_a'): LittleNote[] {
+  // 4. NOTES API
+  getNotes(userRole: 'user_a' | 'user_b'): LittleNote[] {
     const state = loadState();
     const myId = userRole === 'user_b' ? DEMO_USER_B.id : DEMO_USER_A.id;
     return state.notes.map((n) => ({
@@ -381,13 +444,13 @@ export const demoStore = {
     }));
   },
 
-  createNote(data: { note_type: 'TEXT' | 'PHOTO' | 'VOICE' | 'DRAWING'; content?: string; media_url?: string; color?: string; is_pinned?: boolean }, userRole: 'user_a' | 'user_b' = 'user_a'): LittleNote {
+  createNote(data: { note_type: 'TEXT' | 'PHOTO' | 'VOICE' | 'DRAWING'; content?: string; media_url?: string; color?: string; is_pinned?: boolean }, userRole: 'user_a' | 'user_b'): LittleNote {
     const state = loadState();
     const author = userRole === 'user_b' ? DEMO_PARTNER_B : DEMO_PARTNER_A;
 
     const newNote: LittleNote = {
       id: `demo-note-${Date.now()}`,
-      duo_id: 'demo-duo-session',
+      duo_id: DUO_ID,
       author,
       note_type: data.note_type,
       content: data.content || '',
@@ -404,10 +467,112 @@ export const demoStore = {
       notes: [newNote, ...state.notes],
     });
 
+    try {
+      const channel = supabase.channel(`notes:${DUO_ID}`);
+      channel.send({
+        type: 'broadcast',
+        event: 'notes_updated',
+        payload: { note: newNote },
+      }).catch(() => {});
+    } catch {}
+
     return newNote;
   },
 
-  // Notifications API
+  updateNote(noteId: string, patch: Partial<LittleNote>): LittleNote | null {
+    const state = loadState();
+    let updatedNote: LittleNote | null = null;
+
+    const updatedNotes = state.notes.map((n) => {
+      if (n.id === noteId) {
+        updatedNote = {
+          ...n,
+          ...patch,
+          updated_at: new Date().toISOString(),
+        };
+        return updatedNote;
+      }
+      return n;
+    });
+
+    if (updatedNote) {
+      saveState({ ...state, notes: updatedNotes });
+
+      try {
+        const channel = supabase.channel(`notes:${DUO_ID}`);
+        channel.send({
+          type: 'broadcast',
+          event: 'notes_updated',
+          payload: { note: updatedNote },
+        }).catch(() => {});
+      } catch {}
+    }
+
+    return updatedNote;
+  },
+
+  deleteNote(noteId: string) {
+    const state = loadState();
+    saveState({
+      ...state,
+      notes: state.notes.filter((n) => n.id !== noteId),
+    });
+
+    try {
+      const channel = supabase.channel(`notes:${DUO_ID}`);
+      channel.send({
+        type: 'broadcast',
+        event: 'notes_updated',
+        payload: { deleted_id: noteId },
+      }).catch(() => {});
+    } catch {}
+  },
+
+  // 5. DRAWINGS API
+  getDrawings(userRole: 'user_a' | 'user_b'): Drawing[] {
+    const state = loadState();
+    const myId = userRole === 'user_b' ? DEMO_USER_B.id : DEMO_USER_A.id;
+    return state.drawings.map((d) => ({
+      ...d,
+      is_me: d.sender.id === myId,
+    }));
+  },
+
+  createDrawing(storagePath: string, caption: string = '', userRole: 'user_a' | 'user_b'): Drawing {
+    const state = loadState();
+    const sender = userRole === 'user_b' ? DEMO_PARTNER_B : DEMO_PARTNER_A;
+    const receiver = userRole === 'user_b' ? DEMO_PARTNER_A : DEMO_PARTNER_B;
+
+    const newDrawing: Drawing = {
+      id: `demo-draw-${Date.now()}`,
+      duo_id: DUO_ID,
+      sender,
+      receiver,
+      storage_path: storagePath,
+      image_url: storagePath.startsWith('data:') ? storagePath : 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300"><rect width="100%" height="100%" fill="%2318181b"/><circle cx="200" cy="150" r="50" fill="%23125CB9"/></svg>',
+      caption,
+      is_me: true,
+      created_at: new Date().toISOString(),
+    };
+
+    saveState({
+      ...state,
+      drawings: [newDrawing, ...state.drawings],
+    });
+
+    try {
+      const channel = supabase.channel(`drawings_studio:${DUO_ID}`);
+      channel.send({
+        type: 'broadcast',
+        event: 'new_drawing',
+        payload: newDrawing,
+      }).catch(() => {});
+    } catch {}
+
+    return newDrawing;
+  },
+
+  // 6. NOTIFICATIONS API
   getNotifications(userRole: 'user_a' | 'user_b'): { notifications: NotificationItem[]; unread_count: number } {
     const state = loadState();
     const userId = userRole === 'user_b' ? DEMO_USER_B.id : DEMO_USER_A.id;
