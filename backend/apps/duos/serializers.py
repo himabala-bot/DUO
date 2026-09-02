@@ -48,13 +48,13 @@ class ConnectionRequestSerializer(serializers.ModelSerializer):
 
 
 class ConnectByCodeSerializer(serializers.Serializer):
-    code = serializers.CharField(max_length=50, required=True, trim_whitespace=True)
+    code = serializers.CharField(max_length=100, required=True, trim_whitespace=True)
 
     def validate_code(self, value):
-        code = value.strip().upper()
-        if not code.startswith('DUO-') and len(code) == 6:
-            code = f"DUO-{code}"
-        return code
+        cleaned = value.strip()
+        if not cleaned:
+            raise serializers.ValidationError("Please enter a valid DUO secret key or pairing code.")
+        return cleaned
 
 
 class PairingSessionPublicSerializer(serializers.ModelSerializer):

@@ -111,7 +111,7 @@ export const duoApi = {
     return request('/api/duo/regenerate-code/', { method: 'POST' });
   },
 
-  connect: async (code: string): Promise<{ success: boolean; message: string; request?: ConnectionRequest; duo_id?: string }> => {
+  connect: async (code: string): Promise<{ success: boolean; message: string; request?: ConnectionRequest; duo_id?: string; partner?: PartnerProfile }> => {
     return request('/api/duo/connect/', {
       method: 'POST',
       body: JSON.stringify({ code }),

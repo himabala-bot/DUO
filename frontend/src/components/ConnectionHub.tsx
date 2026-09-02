@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
 import { duoApi } from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 import { ConnectionRequest } from '@/types';
 import {
   KeyRound,
@@ -79,11 +80,21 @@ export const ConnectionHub: React.FC = () => {
 
     try {
       const res = await duoApi.connect(partnerCode.trim());
-      toast.love(res.message || 'Pairing invite sent', 'Invite Sent');
-      setMessage({ type: 'success', text: res.message || 'Pairing invite sent' });
+      toast.love(res.message || 'Connected successfully!', 'Connected');
+      setMessage({ type: 'success', text: res.message || 'Connected successfully!' });
       setPartnerCode('');
-      await fetchRequests();
+
+      if (res.partner?.id) {
+        const partnerChan = supabase.channel(`user:${res.partner.id}`);
+        partnerChan.send({
+          type: 'broadcast',
+          event: 'duo_connected',
+          payload: { duo_id: res.duo_id },
+        }).catch(() => {});
+      }
+
       await refreshProfile();
+      await fetchRequests();
     } catch (err: any) {
       toast.error(err.message || 'Failed to pair keys.', 'Pairing Error');
       setMessage({ type: 'error', text: err.message || 'Failed to pair keys.' });

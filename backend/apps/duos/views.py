@@ -74,7 +74,7 @@ class RegenerateDuoCodeView(APIView):
 
 class ConnectByCodeView(APIView):
     """
-    POST /api/duo/connect/ - Send a connection request using partner's DUO code.
+    POST /api/duo/connect/ - Connect directly or send pairing request using partner's DUO code.
     """
     permission_classes = [permissions.IsAuthenticated, HasProfile]
 
@@ -83,7 +83,7 @@ class ConnectByCodeView(APIView):
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        code = serializer.validated_data['code']
+        raw_code = serializer.validated_data['code'].strip()
         current_profile = request.user.profile
 
         # 1. Check if user already has an active DUO
@@ -93,18 +93,44 @@ class ConnectByCodeView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # 2. Find target partner profile
-        target_profile = Profile.objects.filter(duo_code=code).first()
+        # Clean code for flexible multi-variant matching (handles 'DUO-7K4P2M', '7k4p2m', 'duo 7k4p2m', etc.)
+        clean_code = (
+            raw_code.upper()
+            .replace('DUO', '')
+            .replace('-', '')
+            .replace('#', '')
+            .replace(':', '')
+            .replace(' ', '')
+            .strip()
+        )
+
+        # 2. Find target partner profile across multiple matching patterns
+        target_profile = (
+            Profile.objects.filter(duo_code__iexact=raw_code).first() or
+            (Profile.objects.filter(duo_code__iexact=f"DUO-{clean_code}").first() if clean_code else None) or
+            (Profile.objects.filter(duo_code__iexact=clean_code).first() if clean_code else None) or
+            (Profile.objects.filter(duo_code__icontains=clean_code).first() if len(clean_code) >= 4 else None)
+        )
+
+        # Also search in temporary PairingSession codes
+        if not target_profile and clean_code:
+            session = PairingSession.objects.filter(
+                models.Q(code__iexact=clean_code) | models.Q(code__iexact=raw_code),
+                status='PENDING'
+            ).select_related('creator').first()
+            if session and session.creator:
+                target_profile = session.creator
+
         if not target_profile:
             return Response(
-                {"error": f"No DUO code matching '{code}' was found. Please check and try again."},
+                {"error": f"No DUO code matching '{raw_code}' was found. Please check and try again."},
                 status=status.HTTP_404_NOT_FOUND
             )
 
         # 3. Check for self-connection
         if target_profile.id == current_profile.id:
             return Response(
-                {"error": "You cannot connect with your own DUO code."},
+                {"error": "You cannot connect with your own DUO code. Please enter your partner's code."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -115,59 +141,51 @@ class ConnectByCodeView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # 5. Check if a pending request already exists in either direction
-        existing_request = ConnectionRequest.objects.filter(
+        # 5. Clean up any previous pending connection requests
+        ConnectionRequest.objects.filter(
             (models.Q(sender=current_profile, receiver=target_profile) |
-             models.Q(sender=target_profile, receiver=current_profile)),
-            status='PENDING'
-        ).first()
+             models.Q(sender=target_profile, receiver=current_profile))
+        ).exclude(status='PENDING').delete()
 
-        if existing_request:
-            if existing_request.sender_id == current_profile.id:
-                return Response(
-                    {"error": "You have already sent a pending connection request to this user."},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            else:
-                # If the other user already sent a request, auto-accept it!
-                try:
-                    new_duo = existing_request.accept()
-                    create_notification(
-                        recipient=target_profile,
-                        n_type='CONNECTION_ACCEPTED',
-                        title='DUO Connected!',
-                        body=f"{current_profile.name} connected back with you! Your shared space is ready.",
-                        reference_id=str(new_duo.id)
-                    )
-                    return Response({
-                        "success": True,
-                        "message": f"Connection completed! You and {target_profile.name} are now in a DUO.",
-                        "duo_id": str(new_duo.id)
-                    }, status=status.HTTP_200_OK)
-                except Exception as e:
-                    return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        # 6. Direct Instant Pairing: Create active DUO immediately
+        try:
+            new_duo = Duo.objects.create(status='ACTIVE')
+            DuoMember.objects.create(duo=new_duo, user=current_profile, role='MEMBER')
+            DuoMember.objects.create(duo=new_duo, user=target_profile, role='MEMBER')
 
-        # 6. Create the connection request
-        req = ConnectionRequest.objects.create(
-            sender=current_profile,
-            receiver=target_profile,
-            status='PENDING'
-        )
+            # Clean up pending requests
+            ConnectionRequest.objects.filter(
+                (models.Q(sender=current_profile, receiver=target_profile) |
+                 models.Q(sender=target_profile, receiver=current_profile)),
+                status='PENDING'
+            ).update(status='ACCEPTED')
 
-        # Create notification for target partner
-        create_notification(
-            recipient=target_profile,
-            n_type='CONNECTION_REQUEST',
-            title='New DUO Connection Request',
-            body=f"{current_profile.name} wants to join your DUO.",
-            reference_id=str(req.id)
-        )
+            # Send instant notification to target partner
+            create_notification(
+                recipient=target_profile,
+                n_type='CONNECTION_ACCEPTED',
+                title='DUO Connected!',
+                body=f"{current_profile.name} linked with your secret key! Your private space is ready.",
+                reference_id=str(new_duo.id)
+            )
 
-        return Response({
-            "success": True,
-            "message": f"Connection request sent to {target_profile.name}.",
-            "request": ConnectionRequestSerializer(req, context={'request': request}).data
-        }, status=status.HTTP_201_CREATED)
+            partner_data = {
+                "id": str(target_profile.id),
+                "name": target_profile.name,
+                "email": target_profile.email,
+                "avatar_url": target_profile.avatar_url,
+            }
+
+            return Response({
+                "success": True,
+                "message": f"Connected successfully with {target_profile.name}! Welcome to your private space.",
+                "duo_id": str(new_duo.id),
+                "partner": partner_data
+            }, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            logger.exception(f"Error connecting DUO via code: {e}")
+            return Response({"error": f"Failed to connect: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ConnectionRequestListView(APIView):

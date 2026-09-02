@@ -187,6 +187,14 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       .on('broadcast', { event: 'notes_updated' }, handleIncomingNote)
       .on('broadcast', { event: 'daily_response' }, handleIncomingDaily)
       .on('broadcast', { event: 'tasks_updated' }, handleIncomingTask)
+      .on('broadcast', { event: 'duo_connected' }, () => {
+        fetchNotifications();
+        refreshProfile();
+      })
+      .on('broadcast', { event: 'connection_request' }, () => {
+        fetchNotifications();
+        refreshProfile();
+      })
       .on(
         'postgres_changes',
         {
