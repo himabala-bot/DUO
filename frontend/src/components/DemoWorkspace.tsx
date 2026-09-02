@@ -1,12 +1,14 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { DemoBanner } from './DemoBanner';
 import { Navbar } from './Navbar';
 import { DailyView } from './DailyView';
 import { ChatView } from './ChatView';
 import { DrawingCanvas } from './DrawingCanvas';
 import { LittleNotesView } from './LittleNotesView';
 import { TodoKanbanView } from './TodoKanbanView';
+import { supabase } from '@/lib/supabase';
 
 interface DemoWorkspaceProps {
   role: 'user_a' | 'user_b';
@@ -50,8 +52,11 @@ export const DemoWorkspace: React.FC<DemoWorkspaceProps> = ({ role }) => {
 
   return (
     <div className="min-h-screen bg-theme-page text-theme-primary flex flex-col selection:bg-[#125CB9] selection:text-white">
+      {/* Subtle Demo Mode Top Bar */}
+      <DemoBanner currentRole={role} />
+
       {/* Main Workspace with Real App Navigation & Components */}
-      <div className="flex-1 flex flex-col lg:flex-row h-screen overflow-hidden">
+      <div className="flex-1 flex flex-col lg:flex-row h-[calc(100vh-41px)] overflow-hidden">
         <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
 
         <main className="flex-1 min-h-0 flex flex-col overflow-y-auto pb-20 sm:pb-6 lg:pb-0" key={syncKey}>

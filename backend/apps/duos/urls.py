@@ -8,6 +8,10 @@ from .views import (
     DeclineConnectionRequestView,
     CancelConnectionRequestView,
     LeaveDuoView,
+    CreatePairingSessionView,
+    GetPairingSessionView,
+    ClaimPairingSessionView,
+    CancelPairingSessionView,
 )
 
 urlpatterns = [
@@ -19,4 +23,8 @@ urlpatterns = [
     path('requests/<uuid:pk>/decline/', DeclineConnectionRequestView.as_view(), name='duo-request-decline'),
     path('requests/<uuid:pk>/cancel/', CancelConnectionRequestView.as_view(), name='duo-request-cancel'),
     path('leave/', LeaveDuoView.as_view(), name='duo-leave'),
+    path('pairing/create/', CreatePairingSessionView.as_view(), name='duo-pairing-create'),
+    path('pairing/', GetPairingSessionView.as_view(), name='duo-pairing-get'),
+    path('pairing/claim/', ClaimPairingSessionView.as_view(), name='duo-pairing-claim'),
+    path('pairing/cancel/', CancelPairingSessionView.as_view(), name='duo-pairing-cancel'),
 ]

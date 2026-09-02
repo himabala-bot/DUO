@@ -41,6 +41,7 @@ export const DailyView: React.FC = () => {
   const [feedbackMsg, setFeedbackMsg] = useState<{ id: string; type: 'success' | 'draft'; text: string } | null>(null);
   const [showArchiveModal, setShowArchiveModal] = useState(false);
   const [recordingVoiceQId, setRecordingVoiceQId] = useState<string | null>(null);
+  const [voiceRecorderStates, setVoiceRecorderStates] = useState<Record<string, 'idle' | 'recording' | 'preview'>>({});
 
   const fetchTodayData = useCallback(async () => {
     try {
@@ -431,44 +432,64 @@ export const DailyView: React.FC = () => {
                       </div>
                     </div>
                   ) : (
-                    <div className="rounded-2xl border border-theme bg-theme-card p-2 sm:p-2.5 shadow-xs">
-                      <form
-                        onSubmit={(e) => {
-                          e.preventDefault();
-                          handleSendQuestion(q);
-                        }}
-                        className="flex items-center space-x-2 w-full"
-                      >
-                        {/* Audio icon on the left (immediately records on click) */}
-                        <VoiceRecorder
-                          onSendVoice={(url, dur) => handleVoiceAnswer(q, url, dur)}
-                        />
-
-                        {/* Space to type message */}
-                        <textarea
-                          value={currentAns}
-                          onChange={(e) => handleAnswerChange(q.id, e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' && !e.shiftKey) {
-                              e.preventDefault();
-                              handleSendQuestion(q);
+                    <div className="rounded-2xl border border-theme bg-theme-card p-2.5 sm:p-3 shadow-xs">
+                      {(voiceRecorderStates[q.id] && voiceRecorderStates[q.id] !== 'idle') ? (
+                        <div className="flex items-center w-full min-h-[40px]">
+                          <VoiceRecorder
+                            onSendVoice={(url, dur) => {
+                              handleVoiceAnswer(q, url, dur);
+                              setVoiceRecorderStates((prev) => ({ ...prev, [q.id]: 'idle' }));
+                            }}
+                            onStateChange={(state) =>
+                              setVoiceRecorderStates((prev) => ({ ...prev, [q.id]: state }))
                             }
+                          />
+                        </div>
+                      ) : (
+                        <form
+                          onSubmit={(e) => {
+                            e.preventDefault();
+                            handleSendQuestion(q);
                           }}
-                          placeholder="Type your reflection here..."
-                          rows={1}
-                          className="flex-1 max-h-32 min-h-[40px] resize-none rounded-xl border border-theme bg-theme-input px-3.5 py-2 text-xs sm:text-sm text-theme-primary placeholder-theme-muted focus:border-[#125CB9] focus:bg-theme-card focus:outline-none focus:ring-1 focus:ring-[#125CB9] transition-all leading-normal"
-                        />
-
-                        {/* Send icon on the right */}
-                        <button
-                          type="submit"
-                          disabled={!currentAns.trim() || activeActions[q.id] === 'submitting'}
-                          className="flex h-10 w-10 items-center justify-center rounded-full bg-[#125CB9] text-white shadow-xs hover:bg-[#0E4B99] disabled:opacity-40 disabled:hover:bg-[#125CB9] transition-all shrink-0"
-                          title="Send Reflection"
+                          className="flex items-center space-x-2 w-full"
                         >
-                          <Send className="h-4 w-4" />
-                        </button>
-                      </form>
+                          {/* Audio icon on the left (immediately records on click) */}
+                          <VoiceRecorder
+                            onSendVoice={(url, dur) => {
+                              handleVoiceAnswer(q, url, dur);
+                              setVoiceRecorderStates((prev) => ({ ...prev, [q.id]: 'idle' }));
+                            }}
+                            onStateChange={(state) =>
+                              setVoiceRecorderStates((prev) => ({ ...prev, [q.id]: state }))
+                            }
+                          />
+
+                          {/* Space to type message */}
+                          <textarea
+                            value={currentAns}
+                            onChange={(e) => handleAnswerChange(q.id, e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && !e.shiftKey) {
+                                e.preventDefault();
+                                handleSendQuestion(q);
+                              }
+                            }}
+                            placeholder="Type your reflection here..."
+                            rows={1}
+                            className="flex-1 max-h-32 min-h-[40px] resize-none rounded-2xl border border-theme bg-theme-input px-4 py-2 text-xs sm:text-sm text-theme-primary placeholder-theme-muted focus:border-[#125CB9] focus:bg-theme-card focus:outline-none focus:ring-1 focus:ring-[#125CB9] transition-all leading-normal"
+                          />
+
+                          {/* Send icon on the right */}
+                          <button
+                            type="submit"
+                            disabled={!currentAns.trim() || activeActions[q.id] === 'submitting'}
+                            className="flex h-10 w-10 items-center justify-center rounded-full bg-[#125CB9] text-white shadow-xs hover:bg-[#0E4B99] disabled:opacity-40 disabled:hover:bg-[#125CB9] transition-all shrink-0"
+                            title="Send Reflection"
+                          >
+                            <Send className="h-4 w-4" />
+                          </button>
+                        </form>
+                      )}
 
                       {/* Small Draft Helper Link */}
                       {currentAns.trim() && (
