@@ -138,8 +138,11 @@ export const duoApi = {
     return request('/api/duo/leave/', { method: 'POST' });
   },
 
-  createPairingSession: async (): Promise<{ success: boolean; session: PairingSession }> => {
-    return request('/api/duo/pairing/create/', { method: 'POST' });
+  createPairingSession: async (params?: { force_new?: boolean }): Promise<{ success: boolean; session: PairingSession }> => {
+    return request('/api/duo/pairing/create/', {
+      method: 'POST',
+      body: params ? JSON.stringify(params) : undefined,
+    });
   },
 
   getPairingSession: async (params: { token?: string; code?: string }): Promise<{

@@ -312,17 +312,32 @@ class CreatePairingSessionView(APIView):
     """
     POST /api/duo/pairing/create/ - Generates a short-lived QR pairing session.
     """
-    permission_classes = [permissions.IsAuthenticated, HasProfile]
+    permission_classes = [permissions.AllowAny]
 
     def post(self, request):
-        profile = request.user.profile
-
-        # Validate that user is not already in an active DUO
-        if profile.active_duo is not None:
-            return Response(
-                {"error": "You already belong to an active DUO relationship."},
-                status=status.HTTP_400_BAD_REQUEST
+        import uuid
+        if request.user.is_authenticated and hasattr(request.user, 'profile'):
+            profile = request.user.profile
+            if profile.active_duo is not None:
+                return Response(
+                    {"error": "You already belong to an active DUO relationship."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            # Landing page host profile for instant QR scanning
+            profile, _ = Profile.objects.get_or_create(
+                email='host@duo.app',
+                defaults={
+                    'auth_user_id': uuid.uuid4(),
+                    'name': 'Duo Host',
+                    'avatar_url': 'https://api.dicebear.com/7.x/bottts/svg?seed=duo',
+                }
             )
+            # Ensure host doesn't have an active duo blocking demo pairing
+            if profile.active_duo is not None:
+                duo = profile.active_duo
+                duo.status = 'ARCHIVED'
+                duo.save(update_fields=['status', 'updated_at'])
 
         force_new = bool(request.data.get('force_new', False)) if isinstance(request.data, dict) else False
         session = PairingSession.create_session(creator=profile, force_new=force_new)
