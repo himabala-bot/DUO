@@ -40,12 +40,16 @@ const QUICK_REACTIONS = [
 export const ChatView: React.FC = () => {
   const { profile, partner } = useAuth();
   const { toast, confirm } = useToast();
+  const toastRef = useRef(toast);
+  toastRef.current = toast;
+
   const duoId = profile?.active_duo_id;
 
+  // 1. Instant 0ms cache hydration on refresh or opening
   const [messages, setMessages] = useState<Message[]>(() => {
     if (typeof window !== 'undefined') {
       const activeId = profile?.active_duo_id;
-      const cached = localStorage.getItem(`duo_chat_${activeId || 'current'}`);
+      const cached = (activeId && localStorage.getItem(`duo_chat_${activeId}`)) || localStorage.getItem('duo_chat_last');
       if (cached) {
         try {
           return JSON.parse(cached);
@@ -54,13 +58,14 @@ export const ChatView: React.FC = () => {
     }
     return [];
   });
+
   const [inputText, setInputText] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
   const [isLoading, setIsLoading] = useState(() => {
     if (typeof window !== 'undefined') {
       const activeId = profile?.active_duo_id;
-      const cached = localStorage.getItem(`duo_chat_${activeId || 'current'}`);
+      const cached = (activeId && localStorage.getItem(`duo_chat_${activeId}`)) || localStorage.getItem('duo_chat_last');
       if (cached) return false;
     }
     return true;
@@ -80,19 +85,27 @@ export const ChatView: React.FC = () => {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const partnerTypingTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const lastTypingSentRef = useRef<number>(0);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
+    messagesEndRef.current?.scrollIntoView({ behavior });
   };
+
+  const persistMessages = useCallback((msgs: Message[]) => {
+    if (typeof window !== 'undefined') {
+      try {
+        if (duoId) localStorage.setItem(`duo_chat_${duoId}`, JSON.stringify(msgs));
+        localStorage.setItem('duo_chat_last', JSON.stringify(msgs));
+      } catch {}
+    }
+  }, [duoId]);
 
   const fetchMessages = useCallback(async () => {
     try {
       const res = await messagesApi.list();
       const serverMsgs = res.messages || [];
       setMessages(serverMsgs);
-      if (duoId && typeof window !== 'undefined') {
-        localStorage.setItem(`duo_chat_${duoId}`, JSON.stringify(serverMsgs));
-      }
+      persistMessages(serverMsgs);
       if (res.disappearing_mode !== undefined) {
         setDisappearingMode(res.disappearing_mode);
       }
@@ -110,22 +123,16 @@ export const ChatView: React.FC = () => {
       console.warn('Failed to load messages:', err);
       setIsLoading(false);
     }
-  }, [duoId, profile]);
+  }, [duoId, profile, persistMessages]);
 
   useEffect(() => {
-    if (duoId && messages.length > 0 && typeof window !== 'undefined') {
-      try {
-        localStorage.setItem(`duo_chat_${duoId}`, JSON.stringify(messages));
-      } catch {}
+    if (duoId) {
+      fetchMessages();
     }
-  }, [messages, duoId]);
+  }, [duoId, fetchMessages]);
 
   useEffect(() => {
-    fetchMessages();
-  }, [fetchMessages]);
-
-  useEffect(() => {
-    scrollToBottom();
+    scrollToBottom(messages.length < 5 ? 'auto' : 'smooth');
   }, [messages.length, isPartnerTyping]);
 
   // Live timer tick for disappearing message countdowns
@@ -148,7 +155,11 @@ export const ChatView: React.FC = () => {
 
     if (expiredMsgs.length > 0) {
       const expiredIds = expiredMsgs.map((m) => m.id);
-      setMessages((prev) => prev.filter((m) => !expiredIds.includes(m.id)));
+      setMessages((prev) => {
+        const next = prev.filter((m) => !expiredIds.includes(m.id));
+        persistMessages(next);
+        return next;
+      });
 
       messagesApi.expireMessages(expiredIds).then(() => {
         if (channelRef.current) {
@@ -160,9 +171,9 @@ export const ChatView: React.FC = () => {
         }
       }).catch(() => {});
     }
-  }, [nowTick, messages]);
+  }, [nowTick, messages, persistMessages]);
 
-  // Set up Supabase Realtime channel for instant two-way chat & typing indicators
+  // Set up Supabase Realtime channel for instant two-way chat (STABLE, NO CHURN)
   useEffect(() => {
     if (!isSupabaseConfigured() || !duoId || !profile) return;
 
@@ -175,8 +186,8 @@ export const ChatView: React.FC = () => {
       config: { broadcast: { self: false } },
     });
 
-    // 1. Listen for new messages
-    channel.on('broadcast', { event: 'new_message' }, async (payload) => {
+    // 1. Listen for new incoming messages at 0ms latency
+    channel.on('broadcast', { event: 'new_message' }, (payload) => {
       const incoming = payload.payload as Message;
       if (!incoming || !incoming.id) return;
 
@@ -188,21 +199,20 @@ export const ChatView: React.FC = () => {
 
       setMessages((prev) => {
         if (prev.some((m) => m.id === formattedMsg.id)) return prev;
-        return [...prev, formattedMsg];
+        const next = [...prev, formattedMsg];
+        persistMessages(next);
+        return next;
       });
 
       if (!isMe) {
         setIsPartnerTyping(false);
-        try {
-          await messagesApi.markRead();
+        messagesApi.markRead().then(() => {
           channel.send({
             type: 'broadcast',
             event: 'messages_read',
             payload: { duo_id: duoId, reader_id: profile.id },
-          });
-        } catch (err) {
-          console.warn('Failed to mark read:', err);
-        }
+          }).catch(() => {});
+        }).catch(() => {});
       }
     });
 
@@ -210,9 +220,11 @@ export const ChatView: React.FC = () => {
     channel.on('broadcast', { event: 'message_confirmed' }, (payload) => {
       const { temp_id, message } = payload.payload || {};
       if (temp_id && message) {
-        setMessages((prev) =>
-          prev.map((m) => (m.id === temp_id ? { ...message, is_me: false } : m))
-        );
+        setMessages((prev) => {
+          const next = prev.map((m) => (m.id === temp_id ? { ...message, is_me: false } : m));
+          persistMessages(next);
+          return next;
+        });
       }
     });
 
@@ -224,9 +236,11 @@ export const ChatView: React.FC = () => {
       };
       if (!message_id) return;
 
-      setMessages((prev) =>
-        prev.map((m) => (m.id === message_id ? { ...m, reactions } : m))
-      );
+      setMessages((prev) => {
+        const next = prev.map((m) => (m.id === message_id ? { ...m, reactions } : m));
+        persistMessages(next);
+        return next;
+      });
     });
 
     // 3. Listen for unsend / delete in real time
@@ -234,20 +248,25 @@ export const ChatView: React.FC = () => {
       const { message_id } = payload.payload as { message_id: string };
       if (!message_id) return;
 
-      setMessages((prev) => prev.filter((m) => m.id !== message_id));
+      setMessages((prev) => {
+        const next = prev.filter((m) => m.id !== message_id);
+        persistMessages(next);
+        return next;
+      });
     });
 
     // 4. Listen for chat cleared in real time
     channel.on('broadcast', { event: 'messages_cleared' }, () => {
       setMessages([]);
+      persistMessages([]);
     });
 
-    // 5. Listen for read receipts in real time (and trigger disappearing countdowns)
+    // 5. Listen for read receipts in real time
     channel.on('broadcast', { event: 'messages_read' }, () => {
       const now = new Date().toISOString();
       const defaultExpiry = new Date(Date.now() + 10000).toISOString();
-      setMessages((prev) =>
-        prev.map((m) => {
+      setMessages((prev) => {
+        const next = prev.map((m) => {
           const updatedReadAt = m.is_me && !m.read_at ? now : m.read_at;
           const updatedExpiresAt = m.is_disappearing && !m.expires_at ? defaultExpiry : m.expires_at;
           return {
@@ -255,15 +274,17 @@ export const ChatView: React.FC = () => {
             read_at: updatedReadAt,
             expires_at: updatedExpiresAt,
           };
-        })
-      );
+        });
+        persistMessages(next);
+        return next;
+      });
     });
 
     // 6. Listen for Disappearing Mode changed
     channel.on('broadcast', { event: 'disappearing_mode_changed' }, (payload) => {
       const { disappearing_mode } = payload.payload as { disappearing_mode: boolean };
       setDisappearingMode(disappearing_mode);
-      toast.info(disappearing_mode ? 'Disappearing Mode is on' : 'Disappearing Mode is off', 'Disappearing Mode');
+      toastRef.current.info(disappearing_mode ? 'Disappearing Mode is on' : 'Disappearing Mode is off', 'Disappearing Mode');
     });
 
     // 7. Listen for partner typing indicator
@@ -276,7 +297,7 @@ export const ChatView: React.FC = () => {
         if (partnerTypingTimerRef.current) clearTimeout(partnerTypingTimerRef.current);
         partnerTypingTimerRef.current = setTimeout(() => {
           setIsPartnerTyping(false);
-        }, 3500);
+        }, 3000);
       } else {
         setIsPartnerTyping(false);
       }
@@ -293,16 +314,20 @@ export const ChatView: React.FC = () => {
       if (partnerTypingTimerRef.current) clearTimeout(partnerTypingTimerRef.current);
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     };
-  }, [duoId, profile?.id, toast]);
+  }, [duoId, profile?.id, persistMessages]);
 
-  // Send typing broadcast
+  // Send typing broadcast (throttled to avoid spamming WebSocket)
   const sendTypingStatus = (isTyping: boolean) => {
     if (!channelRef.current || !profile) return;
+    const now = Date.now();
+    if (isTyping && now - lastTypingSentRef.current < 1500) return;
+    lastTypingSentRef.current = now;
+
     channelRef.current.send({
       type: 'broadcast',
       event: 'user_typing',
       payload: { is_typing: isTyping, user_id: profile.id },
-    });
+    }).catch(() => {});
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -355,25 +380,20 @@ export const ChatView: React.FC = () => {
       isOptimistic: true,
     };
 
-    // 1. Instant local render
-    setMessages((prev) => [...prev, optimisticMsg]);
+    // 1. Instant local render & storage persistence
+    setMessages((prev) => {
+      const next = [...prev, optimisticMsg];
+      persistMessages(next);
+      return next;
+    });
 
-    // 2. Instant 0ms broadcast to partner (Realtime speed)
+    // 2. Instant 0ms broadcast to partner
     if (channelRef.current) {
       channelRef.current.send({
         type: 'broadcast',
         event: 'new_message',
         payload: optimisticMsg,
       });
-    }
-
-    if (partner?.id) {
-      const partnerNotifChannel = supabase.channel(`user:${partner.id}`);
-      partnerNotifChannel.send({
-        type: 'broadcast',
-        event: 'new_message',
-        payload: optimisticMsg,
-      }).catch(() => {});
     }
 
     // 3. Persist to Django backend in background
@@ -384,9 +404,11 @@ export const ChatView: React.FC = () => {
         isOptimistic: false,
       };
 
-      setMessages((prev) =>
-        prev.map((m) => (m.id === tempId ? formattedConfirmed : m))
-      );
+      setMessages((prev) => {
+        const next = prev.map((m) => (m.id === tempId ? formattedConfirmed : m));
+        persistMessages(next);
+        return next;
+      });
 
       if (channelRef.current) {
         channelRef.current.send({
@@ -397,8 +419,12 @@ export const ChatView: React.FC = () => {
       }
     }).catch((err) => {
       console.error('Failed to send message:', err);
-      setMessages((prev) => prev.filter((m) => m.id !== tempId));
-      toast.error('Message failed to send. Please check your connection.', 'Send Error');
+      setMessages((prev) => {
+        const next = prev.filter((m) => m.id !== tempId);
+        persistMessages(next);
+        return next;
+      });
+      toastRef.current.error('Message failed to send. Please check your connection.', 'Send Error');
     });
   };
 
@@ -406,7 +432,7 @@ export const ChatView: React.FC = () => {
   const handleToggleDisappearingMode = async () => {
     const nextMode = !disappearingMode;
     setDisappearingMode(nextMode);
-    toast.info(nextMode ? 'Disappearing Mode is on' : 'Disappearing Mode is off', 'Disappearing Mode');
+    toastRef.current.info(nextMode ? 'Disappearing Mode is on' : 'Disappearing Mode is off', 'Disappearing Mode');
 
     if (channelRef.current) {
       channelRef.current.send({
@@ -444,8 +470,12 @@ export const ChatView: React.FC = () => {
       isOptimistic: true,
     };
 
-    // 1. Instant local render
-    setMessages((prev) => [...prev, optimisticMsg]);
+    // 1. Instant local render & storage persistence
+    setMessages((prev) => {
+      const next = [...prev, optimisticMsg];
+      persistMessages(next);
+      return next;
+    });
 
     // 2. Instant 0ms broadcast to partner
     if (channelRef.current) {
@@ -456,22 +486,19 @@ export const ChatView: React.FC = () => {
       });
     }
 
-    if (partner?.id) {
-      const partnerNotifChannel = supabase.channel(`user:${partner.id}`);
-      partnerNotifChannel.send({
-        type: 'broadcast',
-        event: 'new_message',
-        payload: optimisticMsg,
-      }).catch(() => {});
-    }
-
-    toast.love('Voice note sent', 'Voice Note');
-
     // 3. Persist to backend in background
     messagesApi.send(voicePayload).then((confirmedMsg) => {
-      setMessages((prev) =>
-        prev.map((m) => (m.id === tempId ? { ...confirmedMsg, is_me: true, isOptimistic: false } : m))
-      );
+      const formattedConfirmed: Message = {
+        ...confirmedMsg,
+        is_me: true,
+        isOptimistic: false,
+      };
+
+      setMessages((prev) => {
+        const next = prev.map((m) => (m.id === tempId ? formattedConfirmed : m));
+        persistMessages(next);
+        return next;
+      });
 
       if (channelRef.current) {
         channelRef.current.send({
@@ -482,8 +509,12 @@ export const ChatView: React.FC = () => {
       }
     }).catch((err) => {
       console.error('Failed to send voice note:', err);
-      setMessages((prev) => prev.filter((m) => m.id !== tempId));
-      toast.error('Failed to send voice note.', 'Error');
+      setMessages((prev) => {
+        const next = prev.filter((m) => m.id !== tempId);
+        persistMessages(next);
+        return next;
+      });
+      toastRef.current.error('Voice note failed to send.', 'Send Error');
     });
   };
 
