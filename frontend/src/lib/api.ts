@@ -1,5 +1,4 @@
 import { supabase } from './supabase';
-import { demoStore, getDemoUser } from './demoStore';
 import {
   UserProfile,
   PartnerProfile,
@@ -15,22 +14,6 @@ import {
 } from '@/types';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
-
-export function isDemoSession(): boolean {
-  if (typeof window === 'undefined') return false;
-  return (
-    window.location.pathname.startsWith('/demo') ||
-    sessionStorage.getItem('duo_is_demo') === 'true'
-  );
-}
-
-export function getDemoRole(): 'user_a' | 'user_b' {
-  if (typeof window === 'undefined') return 'user_a';
-  if (window.location.pathname.includes('/demo/partner') || window.location.search.includes('user=b')) {
-    return 'user_b';
-  }
-  return 'user_a';
-}
 
 class ApiError extends Error {
   status: number;
@@ -82,18 +65,12 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 // 1. AUTHENTICATION & PROFILE APIS
 export const authApi = {
   sync: async (): Promise<{ success: boolean; profile: UserProfile }> => {
-    if (isDemoSession()) {
-      return { success: true, profile: getDemoUser(getDemoRole()) };
-    }
     return request<{ success: boolean; profile: UserProfile }>('/api/auth/sync/', {
       method: 'POST',
     });
   },
 
   getProfile: async (): Promise<UserProfile> => {
-    if (isDemoSession()) {
-      return getDemoUser(getDemoRole());
-    }
     return request<UserProfile>('/api/auth/profile/');
   },
 
@@ -127,29 +104,10 @@ export const duoApi = {
     duo: Duo | null;
     partner: { id: string; name: string; email: string; avatar_url: string } | null;
   }> => {
-    if (isDemoSession()) {
-      const user = getDemoUser(getDemoRole());
-      return {
-        has_active_duo: true,
-        duo_code: user.duo_code,
-        my_profile: user,
-        duo: {
-          id: 'demo-duo-session',
-          status: 'ACTIVE',
-          created_at: user.created_at,
-          members: [],
-          partner: user.partner,
-        },
-        partner: user.partner,
-      };
-    }
     return request('/api/duo/');
   },
 
   regenerateCode: async (): Promise<{ success: boolean; duo_code: string }> => {
-    if (isDemoSession()) {
-      return { success: true, duo_code: getDemoRole() === 'user_b' ? 'DUO-SAM02' : 'DUO-ALEX01' };
-    }
     return request('/api/duo/regenerate-code/', { method: 'POST' });
   },
 
@@ -161,9 +119,6 @@ export const duoApi = {
   },
 
   getRequests: async (): Promise<{ incoming: ConnectionRequest[]; outgoing: ConnectionRequest[] }> => {
-    if (isDemoSession()) {
-      return { incoming: [], outgoing: [] };
-    }
     return request('/api/duo/requests/');
   },
 
@@ -224,17 +179,10 @@ export const duoApi = {
 // 3. MESSAGING APIS
 export const messagesApi = {
   list: async (): Promise<{ messages: Message[]; disappearing_mode?: boolean; count: number }> => {
-    if (isDemoSession()) {
-      const res = demoStore.getMessages(getDemoRole());
-      return { messages: res.messages, disappearing_mode: res.disappearing_mode, count: res.messages.length };
-    }
     return request('/api/messages/');
   },
 
   send: async (content: string, replyToId?: string | null): Promise<Message> => {
-    if (isDemoSession()) {
-      return demoStore.sendMessage(getDemoRole(), content, 'TEXT', replyToId || undefined);
-    }
     return request('/api/messages/', {
       method: 'POST',
       body: JSON.stringify({ content, reply_to_id: replyToId || null }),
@@ -242,10 +190,6 @@ export const messagesApi = {
   },
 
   react: async (id: string, emoji: string): Promise<{ success: boolean; message_id: string; reactions: Record<string, string> }> => {
-    if (isDemoSession()) {
-      demoStore.toggleReaction(id, getDemoRole(), emoji);
-      return { success: true, message_id: id, reactions: {} };
-    }
     return request(`/api/messages/${id}/react/`, {
       method: 'POST',
       body: JSON.stringify({ emoji }),
@@ -265,20 +209,10 @@ export const messagesApi = {
   },
 
   markRead: async (): Promise<{ success: boolean; marked_count?: number; disappearing_started?: number }> => {
-    if (isDemoSession()) {
-      demoStore.markMessagesRead(getDemoRole());
-      return { success: true };
-    }
     return request('/api/messages/mark-read/', { method: 'POST' });
   },
 
   toggleDisappearingMode: async (enabled?: boolean): Promise<{ success: boolean; disappearing_mode: boolean }> => {
-    if (isDemoSession()) {
-      const state = demoStore.getMessages(getDemoRole());
-      const nextVal = enabled !== undefined ? enabled : !state.disappearing_mode;
-      demoStore.setDisappearingMode(nextVal);
-      return { success: true, disappearing_mode: nextVal };
-    }
     return request('/api/messages/disappearing-mode/', {
       method: 'POST',
       body: JSON.stringify(enabled !== undefined ? { enabled } : {}),
@@ -296,22 +230,10 @@ export const messagesApi = {
 // 4. DRAWING SYSTEM APIS
 export const drawingsApi = {
   list: async (): Promise<{ drawings: Drawing[]; count: number }> => {
-    if (isDemoSession()) {
-      const drawings = demoStore.getDrawings(getDemoRole());
-      return { drawings, count: drawings.length };
-    }
     return request('/api/drawings/');
   },
 
   uploadToSupabaseStorage: async (blob: Blob, duoId: string): Promise<string> => {
-    if (isDemoSession()) {
-      // In demo mode, convert blob directly to object URL / data URL for fast visual demo
-      return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.readAsDataURL(blob);
-      });
-    }
     const filename = `${duoId}/${Date.now()}_${Math.random().toString(36).substring(2, 9)}.png`;
     const { data, error } = await supabase.storage.from('drawings').upload(filename, blob, {
       contentType: 'image/png',
@@ -342,9 +264,6 @@ export const drawingsApi = {
   },
 
   create: async (storagePath: string, caption: string = ''): Promise<Drawing> => {
-    if (isDemoSession()) {
-      return demoStore.createDrawing(storagePath, caption, getDemoRole());
-    }
     return request('/api/drawings/', {
       method: 'POST',
       body: JSON.stringify({ storage_path: storagePath, caption }),
@@ -370,17 +289,6 @@ export const dailyApi = {
     my_responses: DailyResponse[];
     partner_responses: DailyResponse[];
   }> => {
-    if (isDemoSession()) {
-      const res = demoStore.getDailyData(getDemoRole());
-      return {
-        date: new Date().toISOString().split('T')[0],
-        questions: res.questions,
-        my_status: (res.my_responses[0]?.status as any) || 'NOT_STARTED',
-        partner_status: (res.partner_status as any) || 'NOT_STARTED',
-        my_responses: res.my_responses,
-        partner_responses: res.partner_responses,
-      };
-    }
     const query = date ? `?date=${date}` : '';
     return request(`/api/daily/responses/${query}`);
   },
@@ -390,19 +298,6 @@ export const dailyApi = {
     action: 'SAVE_DRAFT' | 'SUBMIT' = 'SUBMIT',
     date?: string
   ): Promise<{ success: boolean; status: string; date: string; message: string; responses: DailyResponse[] }> => {
-    if (isDemoSession()) {
-      const saved: DailyResponse[] = [];
-      responses.forEach((r) => {
-        saved.push(demoStore.submitDailyResponse(getDemoRole(), r.question_id, r.answer));
-      });
-      return {
-        success: true,
-        status: action === 'SAVE_DRAFT' ? 'DRAFT' : 'SUBMITTED',
-        date: new Date().toISOString().split('T')[0],
-        message: 'Reflection saved successfully',
-        responses: saved,
-      };
-    }
     return request('/api/daily/responses/', {
       method: 'POST',
       body: JSON.stringify({ responses, action, date }),
@@ -425,17 +320,10 @@ export const dailyApi = {
 // 6. NOTIFICATIONS APIS
 export const notificationsApi = {
   list: async (): Promise<{ unread_count: number; notifications: NotificationItem[] }> => {
-    if (isDemoSession()) {
-      return demoStore.getNotifications(getDemoRole());
-    }
     return request('/api/notifications/');
   },
 
   markRead: async (id: string): Promise<{ success: boolean; notification: NotificationItem }> => {
-    if (isDemoSession()) {
-      demoStore.markNotificationRead(id);
-      return { success: true, notification: null as any };
-    }
     return request(`/api/notifications/${id}/read/`, { method: 'POST' });
   },
 
@@ -447,10 +335,6 @@ export const notificationsApi = {
 // 7. LITTLE NOTES APIS
 export const notesApi = {
   list: async (): Promise<{ notes: import('@/types').LittleNote[]; count: number }> => {
-    if (isDemoSession()) {
-      const notes = demoStore.getNotes(getDemoRole());
-      return { notes, count: notes.length };
-    }
     return request('/api/notes/');
   },
 
@@ -461,9 +345,6 @@ export const notesApi = {
     color?: string;
     is_pinned?: boolean;
   }): Promise<import('@/types').LittleNote> => {
-    if (isDemoSession()) {
-      return demoStore.createNote(data, getDemoRole());
-    }
     return request('/api/notes/', {
       method: 'POST',
       body: JSON.stringify(data),
@@ -488,10 +369,6 @@ export const notesApi = {
 // 8. COUPLE TO-DO & KANBAN TASKS APIS
 export const tasksApi = {
   list: async (): Promise<{ tasks: import('@/types').Task[]; count: number }> => {
-    if (isDemoSession()) {
-      const list = demoStore.getTasks(getDemoRole());
-      return { tasks: list, count: list.length };
-    }
     return request('/api/todos/');
   },
 
@@ -500,9 +377,6 @@ export const tasksApi = {
     description?: string;
     status?: import('@/types').TaskStatus;
   }): Promise<import('@/types').Task> => {
-    if (isDemoSession()) {
-      return demoStore.createTask(data.title, data.description || '', data.status || 'TODO', getDemoRole());
-    }
     return request('/api/todos/', {
       method: 'POST',
       body: JSON.stringify(data),
@@ -518,9 +392,6 @@ export const tasksApi = {
       order?: number;
     }
   ): Promise<import('@/types').Task> => {
-    if (isDemoSession()) {
-      return demoStore.updateTask(id, data, getDemoRole()) as any;
-    }
     return request(`/api/todos/${id}/`, {
       method: 'PATCH',
       body: JSON.stringify(data),
@@ -528,10 +399,6 @@ export const tasksApi = {
   },
 
   delete: async (id: string): Promise<{ success: boolean; message: string }> => {
-    if (isDemoSession()) {
-      demoStore.deleteTask(id);
-      return { success: true, message: 'Task deleted' };
-    }
     return request(`/api/todos/${id}/`, { method: 'DELETE' });
   },
 };

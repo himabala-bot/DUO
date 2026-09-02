@@ -3,8 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
-import { authApi, isDemoSession, getDemoRole } from '@/lib/api';
-import { getDemoUser } from '@/lib/demoStore';
+import { authApi } from '@/lib/api';
 import { UserProfile, PartnerProfile } from '@/types';
 
 interface AuthContextType {
@@ -31,9 +30,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Instant local cache hydration for zero-delay page refresh
   const [profile, setProfile] = useState<UserProfile | null>(() => {
     if (typeof window !== 'undefined') {
-      if (isDemoSession()) {
-        return getDemoUser(getDemoRole());
-      }
       try {
         const cached = localStorage.getItem('duo_cached_profile');
         if (cached) return JSON.parse(cached);
@@ -44,9 +40,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const [partner, setPartner] = useState<PartnerProfile | null>(() => {
     if (typeof window !== 'undefined') {
-      if (isDemoSession()) {
-        return getDemoUser(getDemoRole()).partner || null;
-      }
       try {
         const cached = localStorage.getItem('duo_cached_profile');
         if (cached) {
@@ -58,10 +51,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return null;
   });
 
-  // If cached profile or demo exists, start with isLoading = false for instant snappy screen rendering
+  // If cached profile exists, start with isLoading = false for instant snappy screen rendering
   const [isLoading, setIsLoading] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
-      if (isDemoSession()) return false;
       const cached = localStorage.getItem('duo_cached_profile');
       if (cached) return false;
     }
@@ -116,11 +108,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSupabaseUser(session?.user ?? null);
       if (session) {
         syncDjangoProfile();
-      } else if (isDemoSession()) {
-        const demoUser = getDemoUser(getDemoRole());
-        setProfile(demoUser);
-        setPartner(demoUser.partner);
-        setIsLoading(false);
       } else {
         if (typeof window !== 'undefined') {
           localStorage.removeItem('duo_cached_profile');
@@ -142,12 +129,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (newSession) {
         await syncDjangoProfile();
-      } else if (isDemoSession()) {
-        const demoUser = getDemoUser(getDemoRole());
-        setProfile(demoUser);
-        setPartner(demoUser.partner);
-        setIsLoading(false);
-      } else if (!newSession) {
+      } else {
         if (typeof window !== 'undefined') {
           localStorage.removeItem('duo_cached_profile');
         }
@@ -164,36 +146,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loginWithEmail = async (email: string, pass: string) => {
     setIsLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password: pass,
-    });
-    if (error) {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password: pass,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      setSession(data.session);
+      setSupabaseUser(data.user);
+      await syncDjangoProfile();
+    } finally {
       setIsLoading(false);
-      throw error;
     }
-    await syncDjangoProfile();
   };
 
   const registerWithEmail = async (email: string, pass: string, name: string) => {
     setIsLoading(true);
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password: pass,
-      options: {
-        data: {
-          name: name.trim(),
-          full_name: name.trim(),
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password: pass,
+        options: {
+          data: { full_name: name, name },
         },
-      },
-    });
-    if (error) {
-      setIsLoading(false);
-      throw error;
-    }
-    if (data.session) {
-      await syncDjangoProfile();
-    } else {
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      setSession(data.session);
+      setSupabaseUser(data.user);
+      if (data.session) {
+        await syncDjangoProfile();
+      }
+    } finally {
       setIsLoading(false);
     }
   };
@@ -235,7 +226,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const hasActiveDuo = Boolean(isDemoSession() || (profile?.has_active_duo && profile?.active_duo_id));
+  const hasActiveDuo = Boolean(profile?.has_active_duo && profile?.active_duo_id);
 
   return (
     <AuthContext.Provider

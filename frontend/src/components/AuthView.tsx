@@ -75,13 +75,6 @@ export const AuthView: React.FC = () => {
           </div>
 
           <div className="flex items-center space-x-3">
-            <a
-              href="/demo"
-              className="inline-flex items-center space-x-1.5 rounded-full border border-[#125CB9]/40 bg-[#125CB9]/10 px-3.5 py-1.5 text-xs font-semibold text-[#125CB9] hover:bg-[#125CB9]/20 transition-all shadow-xs"
-            >
-              <span>Try Demo</span>
-            </a>
-
             <button
               onClick={toggleTheme}
               className="flex h-8 w-8 items-center justify-center rounded-full border border-theme bg-theme-card text-theme-secondary hover:text-theme-primary transition-colors shadow-xs"
@@ -102,7 +95,7 @@ export const AuthView: React.FC = () => {
 
       <main className="flex-1">
         {/* Hero Narrative Section */}
-        <section className="mx-auto max-w-4xl px-6 sm:px-8 pt-12 pb-8 sm:pt-20 sm:pb-12 text-center">
+        <section className="mx-auto max-w-4xl px-6 sm:px-8 pt-12 pb-10 sm:pt-20 sm:pb-16 text-center">
           <div className="inline-flex items-center space-x-2 rounded-full px-3.5 py-1 text-xs font-mono font-medium text-[#125CB9] bg-[#125CB9]/10 border border-[#125CB9]/25 mb-4">
             <Heart className="h-3.5 w-3.5 fill-current" />
             <span>Strictly Two People &bull; Zero Noise</span>
@@ -116,53 +109,14 @@ export const AuthView: React.FC = () => {
             No public algorithms, no followers, no third wheels. Duo is a dedicated digital sanctuary for couples and best friends to answer daily love prompts, draw in real-time, leave voice notes in tactile file folders, and stay deeply connected.
           </p>
 
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <a
-              href="/demo"
-              className="rounded-full bg-[#125CB9] px-8 py-3.5 text-sm font-semibold text-white hover:bg-[#0E4B99] transition-all shadow-md active:scale-98 flex items-center space-x-2"
-            >
-              <span>Try DUO (Live Demo)</span>
-              <ArrowRight className="h-4 w-4" />
-            </a>
-
+          <div className="mt-8 flex items-center justify-center">
             <a
               href="#auth-section"
-              className="rounded-full border border-theme bg-theme-input px-6 py-3.5 text-sm font-medium text-theme-primary hover:bg-theme-card transition-colors shadow-xs"
+              className="rounded-full bg-[#125CB9] px-8 py-3.5 text-sm font-semibold text-white hover:bg-[#0E4B99] transition-all shadow-md active:scale-98 flex items-center space-x-2"
             >
               <span>Enter Your Room</span>
+              <ArrowRight className="h-4 w-4" />
             </a>
-          </div>
-
-          {/* Reviewer / Visitor Interactive Demo Guide */}
-          <div className="mt-10 mx-auto max-w-2xl rounded-3xl border border-theme bg-theme-card/70 p-5 sm:p-6 text-left shadow-sm backdrop-blur-xs">
-            <div className="flex items-center space-x-2 mb-3">
-              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#125CB9]">
-                Reviewer &amp; Portfolio Demo Guide
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-              <div className="rounded-2xl border border-theme bg-theme-input/40 p-3 space-y-1">
-                <span className="font-mono text-[10px] font-bold text-[#125CB9] block">1. CLICK "TRY DUO"</span>
-                <p className="text-theme-secondary leading-relaxed text-[11px]">
-                  Instantly enters a pre-populated room as <strong>Alex</strong> with sample reflections, chats, and tasks. Zero signup required.
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-theme bg-theme-input/40 p-3 space-y-1">
-                <span className="font-mono text-[10px] font-bold text-[#125CB9] block">2. OPEN PARTNER VIEW</span>
-                <p className="text-theme-secondary leading-relaxed text-[11px]">
-                  Click "Open Partner View" in the top bar to open <strong>Sam</strong>'s view in a second browser tab.
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-theme bg-theme-input/40 p-3 space-y-1">
-                <span className="font-mono text-[10px] font-bold text-[#125CB9] block">3. TEST REALTIME SYNC</span>
-                <p className="text-theme-secondary leading-relaxed text-[11px]">
-                  Send a message, draw a doodle, or drag a Kanban task in Tab 1—see it update live in Tab 2!
-                </p>
-              </div>
-            </div>
           </div>
         </section>
 
