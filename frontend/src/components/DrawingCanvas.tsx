@@ -222,34 +222,38 @@ export const DrawingCanvas: React.FC = () => {
     initCanvas();
   };
 
+  const canvasRectRef = useRef<DOMRect | null>(null);
+
   const getCanvasCoords = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
     if (!canvas) return { x: 0, y: 0 };
-    const rect = canvas.getBoundingClientRect();
+    const rect = canvasRectRef.current || canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
 
-    if ('touches' in e) {
+    if ('touches' in e && e.touches.length > 0) {
       const touch = e.touches[0];
       return {
         x: (touch.clientX - rect.left) * scaleX,
         y: (touch.clientY - rect.top) * scaleY,
       };
-    } else {
+    } else if ('clientX' in e) {
       return {
         x: (e.clientX - rect.left) * scaleX,
         y: (e.clientY - rect.top) * scaleY,
       };
     }
+    return { x: 0, y: 0 };
   };
 
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    canvasRectRef.current = canvas.getBoundingClientRect();
     setIsDrawing(true);
     const coords = getCanvasCoords(e);
     lastPos.current = coords;
 
-    const canvas = canvasRef.current;
-    if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
@@ -284,6 +288,7 @@ export const DrawingCanvas: React.FC = () => {
     if (isDrawing) {
       setIsDrawing(false);
       lastPos.current = null;
+      canvasRectRef.current = null;
       saveHistoryState();
     }
   };
@@ -292,6 +297,7 @@ export const DrawingCanvas: React.FC = () => {
     const canvas = canvasRef.current;
     if (!canvas || !duoId) return;
 
+    // 1. Capture snapshot BEFORE resetting canvas
     const dataUrl = canvas.toDataURL('image/png');
     const sendCaption = caption.trim();
     const tempId = `temp-drawing-${Date.now()}`;
@@ -308,13 +314,23 @@ export const DrawingCanvas: React.FC = () => {
       created_at: new Date().toISOString(),
     };
 
-    // 1. Instant local display & canvas reset
-    setDrawings((prev) => [optimisticDrawing, ...prev]);
+    // 2. Add to local gallery & persist
+    setDrawings((prev) => {
+      const next = [optimisticDrawing, ...prev.filter((d) => d.id !== tempId)];
+      if (typeof window !== 'undefined' && duoId) {
+        try {
+          localStorage.setItem(`duo_drawings_${duoId}`, JSON.stringify(next));
+        } catch {}
+      }
+      return next;
+    });
+
+    // 3. Clear canvas now that snapshot is captured
     setCaption('');
     initCanvas();
     toast.drawing(`Doodle sent to ${partner?.name || 'partner'}!`, 'Shared');
 
-    // 2. Instant 0ms broadcast to partner
+    // 4. Instant 0ms broadcast to partner
     if (channelRef.current) {
       channelRef.current.send({
         type: 'broadcast',
@@ -332,32 +348,26 @@ export const DrawingCanvas: React.FC = () => {
       }).catch(() => {});
     }
 
-    // 3. Guaranteed instant backend persistence with dataUrl fallback
+    // 5. Guaranteed backend persistence with full dataUrl
     drawingsApi.create(dataUrl, sendCaption).then((savedDrawing) => {
       const confirmedDrawing: Drawing = {
         ...savedDrawing,
         image_url: savedDrawing.image_url || dataUrl,
+        storage_path: dataUrl,
         is_me: true,
       };
-      setDrawings((prev) =>
-        prev.map((d) => (d.id === tempId ? confirmedDrawing : d))
-      );
+      setDrawings((prev) => {
+        const next = prev.map((d) => (d.id === tempId ? confirmedDrawing : d));
+        if (typeof window !== 'undefined' && duoId) {
+          try {
+            localStorage.setItem(`duo_drawings_${duoId}`, JSON.stringify(next));
+          } catch {}
+        }
+        return next;
+      });
     }).catch((err) => {
       console.warn('Drawing create error:', err);
     });
-
-    // 4. Background Storage Upload
-    canvas.toBlob(async (blob) => {
-      if (!blob) return;
-      try {
-        const storagePath = await drawingsApi.uploadToSupabaseStorage(blob, duoId);
-        if (storagePath && storagePath !== dataUrl) {
-          drawingsApi.create(storagePath, sendCaption).catch(() => {});
-        }
-      } catch (err: any) {
-        console.warn('Background drawing storage upload:', err);
-      }
-    }, 'image/png');
   };
 
   const handleDownloadDrawing = async (drawing: Drawing) => {
