@@ -1,42 +1,28 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { QRCodeSVG } from 'qrcode.react';
+import React, { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
-import { useToast } from '@/context/ToastContext';
-import { duoApi } from '@/lib/api';
-import { PairingSession } from '@/types';
-import { supabase } from '@/lib/supabase';
-import { Avatar } from './Avatar';
 import {
   PenTool,
   BookOpen,
   ArrowRight,
-  ShieldCheck,
   Mail,
   User as UserIcon,
   Lock,
   Heart,
-  Sparkles,
-  CheckCircle2,
   FolderOpen,
   ListTodo,
   MessageCircle,
-  Volume2,
-  Flame,
   Check,
+  CheckCircle2,
   Sun,
   Moon,
-  QrCode,
-  RefreshCw,
-  AlertCircle,
 } from 'lucide-react';
 
 export const AuthView: React.FC = () => {
-  const { loginWithEmail, registerWithEmail, loginWithGoogle, refreshProfile } = useAuth();
+  const { loginWithEmail, registerWithEmail, loginWithGoogle } = useAuth();
   const { resolvedTheme, toggleTheme } = useTheme();
-  const { toast } = useToast();
   const [isLogin, setIsLogin] = useState<boolean>(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -44,120 +30,7 @@ export const AuthView: React.FC = () => {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccessRegistration, setIsSuccessRegistration] = useState(false);
-
-  // QR Pairing session state on landing page
-  const [pairingSession, setPairingSession] = useState<PairingSession | null>(null);
   const [activeFeatureTab, setActiveFeatureTab] = useState<'daily' | 'notes' | 'canvas' | 'chat' | 'todo'>('daily');
-
-  // Real backend QR session for landing page (instant zero-delay fallback)
-  const [mounted, setMounted] = useState(false);
-  const [instantToken, setInstantToken] = useState('pair_init');
-  const [qrSession, setQrSession] = useState<PairingSession | null>(null);
-  const [timeLeft, setTimeLeft] = useState<number>(300); // 5 minutes in seconds
-  const [isExpired, setIsExpired] = useState(false);
-  const [isConnectingPartner, setIsConnectingPartner] = useState(false);
-  const [isPairedSuccess, setIsPairedSuccess] = useState(false);
-  const countdownTimerRef = useRef<NodeJS.Timeout | null>(null);
-
-  useEffect(() => {
-    setMounted(true);
-    setInstantToken('pair_' + Math.random().toString(36).substring(2, 10) + Date.now().toString(36));
-  }, []);
-
-  const activeToken = qrSession?.token || instantToken;
-
-  const createLandingSession = useCallback(async () => {
-    setIsExpired(false);
-    setIsConnectingPartner(false);
-    setIsPairedSuccess(false);
-    setTimeLeft(300);
-    try {
-      const res = await duoApi.createPairingSession({ force_new: true });
-      if (res.success && res.session) {
-        setQrSession(res.session);
-        const expiresMs = new Date(res.session.expires_at).getTime();
-        const diffSec = Math.max(0, Math.floor((expiresMs - Date.now()) / 1000));
-        setTimeLeft(Math.min(diffSec, 300) || 300);
-      }
-    } catch {
-      // Keep instantToken if offline or backend is starting
-    }
-  }, []);
-
-  useEffect(() => {
-    createLandingSession();
-  }, [createLandingSession]);
-
-  // Expiration countdown (5 minutes)
-  useEffect(() => {
-    if (isExpired || isPairedSuccess) return;
-
-    if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
-    countdownTimerRef.current = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          setIsExpired(true);
-          if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => {
-      if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
-    };
-  }, [isExpired, isPairedSuccess]);
-
-  // Realtime pairing broadcast listener
-  useEffect(() => {
-    if (!activeToken || isExpired || isPairedSuccess) return;
-
-    const channel = supabase.channel(`pairing:${activeToken}`);
-    channel
-      .on('broadcast', { event: 'claimed' }, async () => {
-        setIsConnectingPartner(true);
-        toast.love('Partner connected! Connecting you with your partner...', 'Device Linked');
-        
-        // Auto sign-in or auto-refresh if already authenticated
-        setTimeout(async () => {
-          setIsConnectingPartner(false);
-          setIsPairedSuccess(true);
-          await refreshProfile();
-        }, 1200);
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [activeToken, isExpired, isPairedSuccess, refreshProfile, toast]);
-
-  const formatCountdown = (secs: number) => {
-    const m = Math.floor(secs / 60);
-    const s = secs % 60;
-    return `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
-  };
-
-  // Check if landing page was opened via QR scan (?pair=...)
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get('pair') || localStorage.getItem('pending_pair_token');
-
-    if (token) {
-      localStorage.setItem('pending_pair_token', token);
-      duoApi.getPairingSession({ token })
-        .then((res) => {
-          if (res.success && res.session) {
-            setPairingSession(res.session);
-          }
-        })
-        .catch(() => {
-          // Token might be expired or invalid
-        });
-    }
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -192,7 +65,6 @@ export const AuthView: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-theme-page text-theme-primary flex flex-col justify-between selection:bg-[#125CB9] selection:text-white transition-colors duration-200">
-      {/* Top Bar */}
       <header className="border-b border-theme bg-theme-page/95 backdrop-blur-md sticky top-0 z-30">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-6 sm:px-8">
           <div className="flex items-center space-x-2">
@@ -203,29 +75,17 @@ export const AuthView: React.FC = () => {
           </div>
 
           <div className="flex items-center space-x-3">
-            <a
-              href="#features"
-              className="hidden sm:inline-block text-xs font-medium text-theme-secondary hover:text-theme-primary transition-colors"
-            >
-              Explore Features
-            </a>
-
-            {/* Quick Theme Toggle Button */}
             <button
               onClick={toggleTheme}
               className="flex h-8 w-8 items-center justify-center rounded-full border border-theme bg-theme-card text-theme-secondary hover:text-theme-primary transition-colors shadow-xs"
               title={`Switch to ${resolvedTheme === 'dark' ? 'Light' : 'Dark'} Mode`}
             >
-              {resolvedTheme === 'dark' ? (
-                <Sun className="h-4 w-4 text-[#FB923C]" />
-              ) : (
-                <Moon className="h-4 w-4 text-[#125CB9]" />
-              )}
+              {resolvedTheme === 'dark' ? <Sun className="h-4 w-4 text-[#FB923C]" /> : <Moon className="h-4 w-4 text-[#125CB9]" />}
             </button>
 
             <a
               href="#auth-section"
-              className="rounded-full bg-[#125CB9] px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#0E4B99] transition-colors shadow-xs"
+              className="rounded-full bg-[#125CB9] px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#0E4B99] transition-all shadow-xs"
             >
               Sign In &rarr;
             </a>
@@ -233,45 +93,8 @@ export const AuthView: React.FC = () => {
         </div>
       </header>
 
-      {/* Main Landing Page Content */}
-      <main className="flex-1 pb-16">
-        {/* QR Pairing Scanned Banner (If opened via phone camera scan) */}
-        {pairingSession && (
-          <div className="mx-auto max-w-4xl px-4 sm:px-8 pt-6">
-            <div className="rounded-3xl border border-[#125CB9]/40 bg-[#125CB9]/10 p-5 sm:p-6 shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4 animate-in slide-in-from-top-4 duration-300">
-              <div className="flex items-center space-x-4 text-center sm:text-left">
-                <Avatar
-                  src={pairingSession.creator.avatar_url}
-                  name={pairingSession.creator.name}
-                  size="lg"
-                />
-                <div>
-                  <div className="inline-flex items-center space-x-1.5 text-xs font-mono font-bold text-[#125CB9]">
-                    <Sparkles className="h-3.5 w-3.5" />
-                    <span>QR PAIRING INVITE ACTIVE</span>
-                  </div>
-                  <h3 className="font-serif text-lg sm:text-xl font-bold text-theme-primary mt-0.5">
-                    {pairingSession.creator.name} invited you to Duo
-                  </h3>
-                  <p className="text-xs text-theme-secondary">
-                    Sign in below with Google to instantly link your devices into the same shared room.
-                  </p>
-                </div>
-              </div>
-
-              <a
-                href="#auth-section"
-                className="rounded-full bg-[#125CB9] px-6 py-2.5 text-xs font-semibold text-white hover:bg-[#0E4B99] transition-all shadow-md shrink-0 flex items-center space-x-1.5"
-              >
-                <span>Accept & Sign In</span>
-                <ArrowRight className="h-3.5 w-3.5" />
-              </a>
-            </div>
-          </div>
-        )}
-
-        {/* Hero Narrative Section */}
-        <section className="mx-auto max-w-4xl px-6 sm:px-8 pt-10 pb-8 sm:pt-16 sm:pb-12 text-center">
+      <main className="flex-1">
+        <section className="mx-auto max-w-4xl px-6 sm:px-8 pt-12 pb-10 sm:pt-20 sm:pb-16 text-center">
           <div className="inline-flex items-center space-x-2 rounded-full px-3.5 py-1 text-xs font-mono font-medium text-[#125CB9] bg-[#125CB9]/10 border border-[#125CB9]/25 mb-4">
             <Heart className="h-3.5 w-3.5 fill-current" />
             <span>Strictly Two People &bull; Zero Noise</span>
@@ -285,158 +108,17 @@ export const AuthView: React.FC = () => {
             No public algorithms, no followers, no third wheels. Duo is a dedicated digital sanctuary for couples and best friends to answer daily love prompts, draw in real-time, leave voice notes in tactile file folders, and stay deeply connected.
           </p>
 
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+          <div className="mt-8 flex items-center justify-center">
             <a
               href="#auth-section"
-              className="rounded-full bg-[#125CB9] px-7 py-3 text-sm font-semibold text-white hover:bg-[#0E4B99] transition-all shadow-md active:scale-98 flex items-center space-x-2"
+              className="rounded-full bg-[#125CB9] px-8 py-3.5 text-sm font-semibold text-white hover:bg-[#0E4B99] transition-all shadow-md active:scale-98 flex items-center space-x-2"
             >
               <span>Enter Your Room</span>
               <ArrowRight className="h-4 w-4" />
             </a>
-            <a
-              href="#qr-pairing-card"
-              className="rounded-full border border-theme bg-theme-input px-5 py-3 text-sm font-medium text-theme-primary hover:bg-theme-card transition-colors flex items-center space-x-2"
-            >
-              <QrCode className="h-4 w-4 text-[#125CB9]" />
-              <span>Pair Second Device (QR)</span>
-            </a>
           </div>
         </section>
 
-        {/* Native QR Device Pairing Card (No code under QR) */}
-        <section id="qr-pairing-card" className="mx-auto max-w-4xl px-4 sm:px-8 py-6">
-          <div className="mx-auto max-w-[480px] rounded-[32px] border border-theme bg-theme-card p-6 sm:p-8 shadow-xl text-center select-none animate-in zoom-in-95 duration-200">
-            {isPairedSuccess ? (
-              <div className="py-8 space-y-4 animate-in zoom-in-95 duration-300">
-                <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-[#00D26A]/10 text-[#00D26A] mx-auto ring-8 ring-[#00D26A]/10 shadow-lg">
-                  <CheckCircle2 className="h-9 w-9" />
-                </div>
-                <div>
-                  <h3 className="font-serif text-2xl font-bold text-theme-primary">
-                    Partner paired successfully!
-                  </h3>
-                  <p className="text-xs text-theme-secondary mt-1">
-                    Entering your shared Duo room...
-                  </p>
-                </div>
-              </div>
-            ) : isConnectingPartner ? (
-              <div className="py-8 space-y-4 animate-in zoom-in-95 duration-300">
-                <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-[#125CB9]/10 text-[#125CB9] mx-auto ring-8 ring-[#125CB9]/10 shadow-lg">
-                  <RefreshCw className="h-8 w-8 animate-spin" />
-                </div>
-                <div>
-                  <h3 className="font-serif text-2xl font-bold text-theme-primary">
-                    Connecting you with your partner...
-                  </h3>
-                  <p className="text-xs text-theme-secondary mt-1">
-                    Device detected. Linking your shared space...
-                  </p>
-                </div>
-              </div>
-            ) : isExpired ? (
-              <div className="py-8 space-y-5">
-                <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-[#FB923C]/10 text-[#FB923C] mx-auto">
-                  <AlertCircle className="h-7 w-7" />
-                </div>
-                <div>
-                  <h3 className="font-serif text-xl font-bold text-theme-primary">
-                    QR code has expired
-                  </h3>
-                  <p className="text-xs text-theme-secondary mt-1">
-                    For your security, pairing sessions expire after 5 minutes.
-                  </p>
-                </div>
-                <div className="pt-2">
-                  <button
-                    type="button"
-                    onClick={createLandingSession}
-                    className="inline-flex items-center space-x-2 rounded-full bg-[#125CB9] px-6 py-2.5 text-xs font-semibold text-white hover:bg-[#0E4B99] transition-all shadow-xs active:scale-98"
-                  >
-                    <RefreshCw className="h-3.5 w-3.5" />
-                    <span>Generate a new QR</span>
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {/* Header */}
-                <div>
-                  <div className="inline-flex items-center space-x-1.5 rounded-full px-3 py-1 text-[11px] font-mono font-medium text-[#125CB9] bg-[#125CB9]/10 border border-[#125CB9]/25 mb-2">
-                    <QrCode className="h-3.5 w-3.5" />
-                    <span>Instant Two-Screen Test &bull; 5 Min Validity</span>
-                  </div>
-                  <h3 className="font-serif text-2xl font-bold text-theme-primary">
-                    Connect another device
-                  </h3>
-                  <p className="text-xs text-theme-secondary mt-1 max-w-xs mx-auto leading-relaxed">
-                    Scan this QR code with your phone to test Duo in real-time across two screens.
-                  </p>
-                </div>
-
-                {/* Dynamic QR Code */}
-                <div className="flex flex-col items-center justify-center py-2">
-                  <div className="relative rounded-2xl border border-theme bg-white p-4 shadow-xs">
-                    {mounted ? (
-                      <QRCodeSVG
-                        value={`${window.location.origin}/join?token=${activeToken}`}
-                        size={200}
-                        level="M"
-                        includeMargin={false}
-                        className="rounded-lg"
-                      />
-                    ) : (
-                      <div className="h-[200px] w-[200px] rounded-lg bg-theme-input/20 animate-pulse" />
-                    )}
-                  </div>
-                </div>
-
-                {/* Expiration Countdown */}
-                <div className="text-xs font-mono text-theme-muted">
-                  <span>Expires in {formatCountdown(timeLeft)}</span>
-                </div>
-
-                {/* Live Waiting Status */}
-                <div className="flex items-center justify-center space-x-2 py-1 text-xs font-mono text-theme-secondary">
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00D26A] opacity-75" />
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-[#00D26A]" />
-                  </span>
-                  <span>Waiting for your phone to connect...</span>
-                </div>
-              </div>
-            )}
-
-            {/* How Duo Pairing Works: Reviewers vs Real Couples */}
-            <div className="mt-6 pt-5 border-t border-theme-subtle text-left space-y-3">
-              <div className="rounded-2xl border border-theme bg-theme-input/40 p-3.5 space-y-1">
-                <div className="flex items-center space-x-2 text-[#125CB9]">
-                  <QrCode className="h-3.5 w-3.5 shrink-0" />
-                  <span className="text-[11px] font-bold uppercase tracking-wider font-mono">
-                    Trying Duo by yourself?
-                  </span>
-                </div>
-                <p className="text-[11px] text-theme-secondary leading-relaxed">
-                  Scan this QR code with your phone, then log in with Google or Email on both devices to immediately try out real-time drawing, whisper chat, and daily prompts across two screens.
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-theme bg-theme-input/40 p-3.5 space-y-1">
-                <div className="flex items-center space-x-2 text-[#125CB9]">
-                  <Heart className="h-3.5 w-3.5 shrink-0 fill-current" />
-                  <span className="text-[11px] font-bold uppercase tracking-wider font-mono">
-                    Connecting with your partner?
-                  </span>
-                </div>
-                <p className="text-[11px] text-theme-secondary leading-relaxed">
-                  Both partners simply log in with their own Google or Email account. Each person receives a permanent unique Secret Duo Key (e.g. <span className="font-mono font-bold text-theme-primary">DUO-7K4P2M</span>) in their room to pair with each other from anywhere in the world.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Deep Dive: The Entire Duo Universe (Interactive Feature Tabs) */}
         <section id="features" className="mx-auto max-w-4xl px-6 sm:px-8 py-8">
           <div className="border-t border-theme pt-8">
             <div className="text-center space-y-2 mb-8">
@@ -451,7 +133,6 @@ export const AuthView: React.FC = () => {
               </p>
             </div>
 
-            {/* Interactive Feature Category Pills (Icons without emojis) */}
             <div className="flex flex-wrap items-center justify-center gap-2 mb-6">
               {[
                 { id: 'daily', label: 'Daily Prompts', icon: BookOpen },
@@ -466,10 +147,10 @@ export const AuthView: React.FC = () => {
                   <button
                     key={tab.id}
                     onClick={() => setActiveFeatureTab(tab.id as any)}
-                    className={`flex items-center space-x-1.5 rounded-full px-4 py-2 text-xs font-medium transition-all ${
+                    className={`flex items-center space-x-2 rounded-full px-4 py-2 text-xs font-medium transition-all ${
                       isActive
-                        ? 'bg-[#125CB9] text-white shadow-md font-semibold scale-105'
-                        : 'border border-theme bg-theme-card text-theme-secondary hover:text-theme-primary hover:bg-theme-input'
+                        ? 'bg-[#125CB9] text-white shadow-xs scale-102'
+                        : 'bg-theme-card border border-theme text-theme-secondary hover:text-theme-primary hover:border-[#125CB9]/40'
                     }`}
                   >
                     <Icon className="h-3.5 w-3.5" />
@@ -697,9 +378,7 @@ export const AuthView: React.FC = () => {
                 {isLogin ? 'Welcome back to Duo' : 'Start your shared room'}
               </h2>
               <p className="mt-1 text-xs text-theme-secondary">
-                {pairingSession
-                  ? `Sign in to connect with ${pairingSession.creator.name}`
-                  : isLogin
+                {isLogin
                   ? 'Enter your private space'
                   : 'Begin your shared memories together'}
               </p>

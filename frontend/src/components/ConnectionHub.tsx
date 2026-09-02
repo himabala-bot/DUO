@@ -5,10 +5,8 @@ import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
 import { duoApi } from '@/lib/api';
 import { ConnectionRequest } from '@/types';
-import { QRPairingModal } from './QRPairingModal';
 import {
   KeyRound,
-  QrCode,
   Copy,
   Check,
   RefreshCw,
@@ -17,7 +15,6 @@ import {
   AlertCircle,
   CheckCircle2,
   Sparkles,
-  Smartphone,
 } from 'lucide-react';
 
 export const ConnectionHub: React.FC = () => {
@@ -29,7 +26,6 @@ export const ConnectionHub: React.FC = () => {
   const [outgoingRequests, setOutgoingRequests] = useState<ConnectionRequest[]>([]);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showQRModal, setShowQRModal] = useState(false);
 
   const fetchRequests = useCallback(async () => {
     try {
@@ -179,15 +175,6 @@ export const ConnectionHub: React.FC = () => {
 
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => setShowQRModal(true)}
-                  className="flex items-center space-x-1.5 rounded-full border border-theme bg-theme-input px-3.5 py-1.5 text-xs text-theme-primary hover:bg-theme-card transition-colors shrink-0 shadow-xs"
-                  title="Generate QR code to pair another device"
-                >
-                  <QrCode className="h-3.5 w-3.5 text-[#125CB9]" />
-                  <span>Pair device (QR)</span>
-                </button>
-
-                <button
                   onClick={handleLeaveDuo}
                   className="rounded-full border border-theme bg-theme-input px-4 py-1.5 text-xs text-theme-secondary hover:border-[#F43F5E] hover:text-[#F43F5E] transition-colors shrink-0"
                 >
@@ -197,27 +184,14 @@ export const ConnectionHub: React.FC = () => {
             </div>
           </div>
         ) : (
-          /* Unpaired Hero Card: QR Pairing Fast-Track */
-          <div className="rounded-3xl border border-theme bg-theme-card p-6 sm:p-8 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6">
-            <div className="text-center sm:text-left space-y-1.5 max-w-md">
-              <h2 className="font-serif text-2xl sm:text-3xl font-bold text-theme-primary">
-                Connect another device
-              </h2>
-              <p className="text-xs sm:text-sm text-theme-secondary leading-relaxed">
-                Open Duo on your phone or connect with your partner by generating a QR code.
-              </p>
-            </div>
-
-            <div className="shrink-0 flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-              <button
-                type="button"
-                onClick={() => setShowQRModal(true)}
-                className="flex items-center justify-center space-x-2 rounded-full bg-[#125CB9] px-6 py-3 text-xs sm:text-sm font-semibold text-white hover:bg-[#0E4B99] transition-all shadow-md active:scale-98"
-              >
-                <QrCode className="h-4 w-4" />
-                <span>Create a Duo (Show QR)</span>
-              </button>
-            </div>
+          /* Unpaired Hero Card */
+          <div className="rounded-3xl border border-theme bg-theme-card p-6 sm:p-8 shadow-xs space-y-1.5">
+            <h2 className="font-serif text-2xl sm:text-3xl font-bold text-theme-primary">
+              Link Your Private Space
+            </h2>
+            <p className="text-xs sm:text-sm text-theme-secondary leading-relaxed max-w-xl">
+              Share your secret key with your partner or enter theirs below to establish your private room.
+            </p>
           </div>
         )}
 
@@ -384,13 +358,6 @@ export const ConnectionHub: React.FC = () => {
           </div>
         </div>
       </div>
-
-      {/* QR Pairing Modal */}
-      <QRPairingModal
-        isOpen={showQRModal}
-        onClose={() => setShowQRModal(false)}
-        onPaired={() => refreshProfile()}
-      />
     </div>
   );
 };

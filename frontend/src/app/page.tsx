@@ -1,11 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Navbar } from '@/components/Navbar';
 import { AuthView } from '@/components/AuthView';
 import { ConnectionHub } from '@/components/ConnectionHub';
-import { JoinDuoPrompt } from '@/components/JoinDuoPrompt';
 import { ChatView } from '@/components/ChatView';
 import { DrawingCanvas } from '@/components/DrawingCanvas';
 import { DailyView } from '@/components/DailyView';
@@ -13,7 +12,7 @@ import { LittleNotesView } from '@/components/LittleNotesView';
 import { TodoKanbanView } from '@/components/TodoKanbanView';
 
 export default function Home() {
-  const { profile, hasActiveDuo, isLoading, supabaseUser, refreshProfile } = useAuth();
+  const { profile, hasActiveDuo, isLoading, supabaseUser } = useAuth();
   // Persist active tab across page refreshes
   const [activeTab, setActiveTabState] = useState<string>(() => {
     if (typeof window !== 'undefined') {
@@ -31,28 +30,6 @@ export default function Home() {
       localStorage.setItem('duo_active_tab', tab);
     }
   };
-
-  const [pendingPairToken, setPendingPairToken] = useState<string | null>(null);
-
-  // Detect ?pair=<token> parameter from QR code scan
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const tokenFromUrl = urlParams.get('pair');
-
-    if (tokenFromUrl) {
-      localStorage.setItem('pending_pair_token', tokenFromUrl);
-      setPendingPairToken(tokenFromUrl);
-      // Clean query parameter from URL without reloading
-      window.history.replaceState({}, document.title, window.location.pathname);
-    } else {
-      const storedToken = localStorage.getItem('pending_pair_token');
-      if (storedToken) {
-        setPendingPairToken(storedToken);
-      }
-    }
-  }, []);
 
   if (isLoading) {
     return (
@@ -78,22 +55,6 @@ export default function Home() {
         <main className="flex-1 min-h-0 pb-20 lg:pb-0 flex flex-col justify-center overflow-y-auto">
           <ConnectionHub />
         </main>
-
-        {/* Second Device QR Pairing Claim Prompt */}
-        {pendingPairToken && (
-          <JoinDuoPrompt
-            token={pendingPairToken}
-            onJoined={async () => {
-              setPendingPairToken(null);
-              localStorage.removeItem('pending_pair_token');
-              await refreshProfile();
-            }}
-            onDismiss={() => {
-              setPendingPairToken(null);
-              localStorage.removeItem('pending_pair_token');
-            }}
-          />
-        )}
       </div>
     );
   }
