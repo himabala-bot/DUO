@@ -40,7 +40,7 @@ export const DailyView: React.FC = () => {
   const [activeActions, setActiveActions] = useState<Record<string, 'saving' | 'submitting' | 'changing' | null>>({});
   const [feedbackMsg, setFeedbackMsg] = useState<{ id: string; type: 'success' | 'draft'; text: string } | null>(null);
   const [showArchiveModal, setShowArchiveModal] = useState(false);
-  const [recordingVoiceQId, setRecordingVoiceQId] = useState<string | null>(null);
+  const [voiceRecorderStates, setVoiceRecorderStates] = useState<Record<string, 'idle' | 'recording' | 'preview'>>({});
 
   const fetchTodayData = useCallback(async () => {
     try {
@@ -390,10 +390,10 @@ export const DailyView: React.FC = () => {
                   </h3>
                 </div>
 
-                {/* Answer Input or Voice Recorder / Player */}
-                <div className="mt-3.5">
+                {/* Unified Chat-Style Response Composer */}
+                <div className="mt-4 pt-3 border-t border-theme-subtle">
                   {isVoiceAns ? (
-                    <div className="rounded-2xl border border-theme bg-theme-input p-4 space-y-2">
+                    <div className="rounded-2xl border border-theme bg-theme-input p-3.5 space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="text-[10px] font-mono uppercase tracking-wider text-theme-muted block">
                           Your Voice Reflection:
@@ -403,10 +403,10 @@ export const DailyView: React.FC = () => {
                             type="button"
                             onClick={() => {
                               setAnswers((prev) => ({ ...prev, [q.id]: '' }));
-                              setRecordingVoiceQId(null);
+                              setVoiceRecorderStates((prev) => ({ ...prev, [q.id]: 'idle' }));
                             }}
                             className="text-xs text-theme-muted hover:text-[#F43F5E] transition-colors p-1"
-                            title="Discard recording and switch back to text"
+                            title="Discard recording and switch back to typing"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>
@@ -414,101 +414,85 @@ export const DailyView: React.FC = () => {
                       </div>
                       {renderAnswerBody(currentAns, true)}
                     </div>
-                  ) : recordingVoiceQId === q.id ? (
-                    <div className="rounded-2xl border border-[#125CB9]/40 bg-[#125CB9]/5 p-4 space-y-3 animate-in fade-in duration-200">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-mono uppercase tracking-wider text-[#125CB9] font-semibold">
-                          Recording Voice Reflection:
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => setRecordingVoiceQId(null)}
-                          className="text-xs text-theme-muted hover:text-theme-primary transition-colors"
-                        >
-                          Cancel
-                        </button>
-                      </div>
+                  ) : voiceRecorderStates[q.id] && voiceRecorderStates[q.id] !== 'idle' ? (
+                    <div className="flex items-center w-full min-h-[44px]">
                       <VoiceRecorder
-                        showSendButton={false}
-                        onAudioReady={(url, dur) => {
-                          const voicePayload = `[voice:${JSON.stringify({ url, duration: dur })}]`;
-                          setAnswers((prev) => ({ ...prev, [q.id]: voicePayload }));
-                          setRecordingVoiceQId(null);
-                        }}
-                        onCancel={() => setRecordingVoiceQId(null)}
-                        onSendVoice={(url, dur) => {
-                          const voicePayload = `[voice:${JSON.stringify({ url, duration: dur })}]`;
-                          setAnswers((prev) => ({ ...prev, [q.id]: voicePayload }));
-                          setRecordingVoiceQId(null);
-                        }}
+                        onSendVoice={(url, dur) => handleVoiceAnswer(q, url, dur)}
+                        onCancel={() =>
+                          setVoiceRecorderStates((prev) => ({ ...prev, [q.id]: 'idle' }))
+                        }
+                        onStateChange={(state) =>
+                          setVoiceRecorderStates((prev) => ({ ...prev, [q.id]: state }))
+                        }
                       />
                     </div>
                   ) : (
-                    <textarea
-                      value={currentAns}
-                      onChange={(e) => handleAnswerChange(q.id, e.target.value)}
-                      placeholder="Write your reflection here..."
-                      rows={3}
-                      className="w-full rounded-2xl border border-theme bg-theme-input p-3.5 text-xs sm:text-sm text-theme-primary placeholder-theme-muted focus:border-[#125CB9] focus:bg-theme-card focus:outline-none focus:ring-1 focus:ring-[#125CB9] leading-relaxed transition-colors"
-                    />
-                  )}
-                </div>
+                    <div className="flex items-center space-x-2 w-full">
+                      {/* Audio Record Icon on the Left */}
+                      <VoiceRecorder
+                        onSendVoice={(url, dur) => handleVoiceAnswer(q, url, dur)}
+                        onCancel={() =>
+                          setVoiceRecorderStates((prev) => ({ ...prev, [q.id]: 'idle' }))
+                        }
+                        onStateChange={(state) =>
+                          setVoiceRecorderStates((prev) => ({ ...prev, [q.id]: state }))
+                        }
+                      />
 
-                {/* Action Toolbar */}
-                <div className="mt-3.5 flex flex-wrap items-center justify-between gap-2.5 pt-3 border-t border-theme-subtle">
-                  <div className="flex items-center space-x-2">
-                    {/* Voice Note Option */}
-                    {!isVoiceAns && status !== 'SUBMITTED' && recordingVoiceQId !== q.id && (
+                      {/* Text Input in the Center */}
+                      <textarea
+                        value={currentAns}
+                        onChange={(e) => handleAnswerChange(q.id, e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            handleSendQuestion(q);
+                          }
+                        }}
+                        placeholder="Write your reflection here..."
+                        rows={1}
+                        className="flex-1 max-h-32 min-h-[40px] resize-none rounded-2xl border border-theme bg-theme-input px-4 py-2 text-xs sm:text-sm text-theme-primary placeholder-theme-muted focus:border-[#125CB9] focus:bg-theme-card focus:outline-none focus:ring-1 focus:ring-[#125CB9] transition-all leading-normal"
+                      />
+
+                      {/* Save Draft Action */}
                       <button
                         type="button"
-                        onClick={() => setRecordingVoiceQId(q.id)}
-                        className="flex items-center space-x-1.5 rounded-full border border-theme bg-theme-input px-3.5 py-1.5 text-xs font-medium text-theme-secondary hover:bg-theme-card hover:text-theme-primary hover:border-[#125CB9]/40 transition-colors shadow-xs"
-                        title="Record audio reflection"
+                        onClick={() => handleSaveQuestionDraft(q)}
+                        disabled={actionState === 'saving' || actionState === 'submitting'}
+                        className="p-2.5 rounded-full border border-theme bg-theme-input text-theme-muted hover:text-theme-primary hover:bg-theme-card transition-colors shrink-0"
+                        title="Save Draft (Private)"
                       >
-                        <Mic className="h-3.5 w-3.5 text-[#125CB9]" />
-                        <span>Voice Note</span>
+                        <Bookmark className="h-4 w-4" />
                       </button>
-                    )}
 
-                    {isFeedback && (
-                      <span
-                        className={`text-xs font-mono flex items-center gap-1 ${
-                          feedbackMsg.type === 'success' ? 'text-[#00D26A]' : 'text-[#FB923C]'
-                        }`}
+                      {/* Send Button on the Right */}
+                      <button
+                        type="button"
+                        onClick={() => handleSendQuestion(q)}
+                        disabled={!currentAns.trim() || actionState === 'submitting'}
+                        className="flex h-10 w-10 items-center justify-center rounded-full bg-[#125CB9] text-white shadow-xs hover:bg-[#0E4B99] disabled:opacity-40 transition-all shrink-0"
+                        title="Send reflection to partner"
                       >
-                        {feedbackMsg.type === 'success' ? (
+                        <Send className="h-4 w-4" />
+                      </button>
+                    </div>
+                  )}
+
+                  {isFeedback && (
+                    <div className="mt-2 flex items-center gap-1.5 text-xs font-mono">
+                      {feedbackMsg.type === 'success' ? (
+                        <span className="text-[#00D26A] flex items-center gap-1">
                           <CheckCircle2 className="h-3.5 w-3.5" />
-                        ) : (
+                          {feedbackMsg.text}
+                        </span>
+                      ) : (
+                        <span className="text-[#FB923C] flex items-center gap-1">
                           <Bookmark className="h-3.5 w-3.5" />
-                        )}
-                        {feedbackMsg.text}
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-2 ml-auto">
-                    <button
-                      type="button"
-                      onClick={() => handleSaveQuestionDraft(q)}
-                      disabled={actionState === 'saving' || actionState === 'submitting' || actionState === 'changing'}
-                      title="Save Draft (Private)"
-                      className="flex items-center space-x-1.5 rounded-full border border-theme bg-theme-input px-3.5 py-1.5 text-xs font-medium text-theme-secondary hover:bg-theme-card hover:text-theme-primary disabled:opacity-40 transition-colors"
-                    >
-                      <Bookmark className="h-3 w-3" />
-                      <span>{actionState === 'saving' ? 'Saving...' : 'Draft'}</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleSendQuestion(q)}
-                      disabled={actionState === 'submitting' || actionState === 'saving' || actionState === 'changing'}
-                      title="Send answer to partner"
-                      className="flex items-center space-x-1.5 rounded-full bg-[#125CB9] px-4 py-1.5 text-xs font-medium text-white hover:bg-[#0E4B99] disabled:opacity-40 transition-colors shadow-xs"
-                    >
-                      <Send className="h-3 w-3" />
-                      <span>{actionState === 'submitting' ? 'Sending...' : status === 'SUBMITTED' ? 'Update & Share' : 'Send'}</span>
-                    </button>
-                  </div>
+                          {feedbackMsg.text}
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* Partner's Submitted Response & Unique Question */}

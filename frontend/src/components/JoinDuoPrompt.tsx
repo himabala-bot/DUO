@@ -8,11 +8,8 @@ import { PairingSession } from '@/types';
 import { supabase } from '@/lib/supabase';
 import { Avatar } from './Avatar';
 import {
-  Heart,
   CheckCircle2,
   AlertCircle,
-  Sparkles,
-  ArrowRight,
   RefreshCw,
   X,
 } from 'lucide-react';
@@ -33,6 +30,7 @@ export const JoinDuoPrompt: React.FC<JoinDuoPromptProps> = ({
   const [session, setSession] = useState<PairingSession | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isExpired, setIsExpired] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
@@ -40,19 +38,21 @@ export const JoinDuoPrompt: React.FC<JoinDuoPromptProps> = ({
     const loadSession = async () => {
       setIsLoading(true);
       setErrorMsg(null);
+      setIsExpired(false);
       try {
         const res = await duoApi.getPairingSession({ token });
         if (isMounted) {
           if (res.success && res.session) {
             setSession(res.session);
             if (!res.is_valid) {
-              setErrorMsg('This pairing session has expired or was already claimed.');
+              setIsExpired(true);
             }
           }
         }
       } catch (err: any) {
         if (isMounted) {
-          setErrorMsg(err.message || 'Could not find pairing session. It may have expired.');
+          setIsExpired(true);
+          setErrorMsg(err.message || 'This QR code has expired or was already used.');
         }
       } finally {
         if (isMounted) setIsLoading(false);
@@ -83,7 +83,7 @@ export const JoinDuoPrompt: React.FC<JoinDuoPromptProps> = ({
           payload: { partner_name: profile?.name || 'Partner' },
         });
 
-        toast.love(`Connected with ${session?.creator.name || 'partner'}!`, 'Room Linked');
+        toast.love(`Connected with ${session?.creator.name || 'partner'}!`, 'Connected');
         await refreshProfile();
         onJoined();
       }
@@ -96,11 +96,11 @@ export const JoinDuoPrompt: React.FC<JoinDuoPromptProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-md overflow-hidden rounded-[32px] border border-theme bg-theme-card p-6 sm:p-8 shadow-2xl text-center select-none animate-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
+      <div className="relative w-full max-w-[440px] overflow-hidden rounded-3xl border border-theme bg-theme-card p-6 sm:p-8 shadow-xl text-center select-none animate-in zoom-in-95 duration-150">
         <button
           onClick={onDismiss}
-          className="absolute top-5 right-5 rounded-full p-1.5 text-theme-muted hover:text-theme-primary hover:bg-theme-input transition-colors"
+          className="absolute top-4 right-4 rounded-full p-2 text-theme-muted hover:text-theme-primary hover:bg-theme-input transition-colors"
           title="Dismiss"
         >
           <X className="h-4 w-4" />
@@ -108,77 +108,76 @@ export const JoinDuoPrompt: React.FC<JoinDuoPromptProps> = ({
 
         {isLoading ? (
           <div className="py-12 flex flex-col items-center justify-center space-y-3">
-            <RefreshCw className="h-7 w-7 text-[#125CB9] animate-spin" />
-            <p className="text-xs font-mono text-theme-muted">Finding Duo room...</p>
+            <RefreshCw className="h-6 w-6 text-[#125CB9] animate-spin" />
+            <p className="text-xs font-mono text-theme-muted">Verifying invite...</p>
           </div>
-        ) : errorMsg ? (
+        ) : isExpired ? (
           <div className="py-6 space-y-4 text-center">
-            <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-[#F43F5E]/10 text-[#F43F5E] mx-auto">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-neutral-500/10 text-neutral-400 mx-auto">
               <AlertCircle className="h-7 w-7" />
             </div>
             <div>
               <h3 className="font-serif text-xl font-bold text-theme-primary">
-                Unable to Join Duo
+                This QR code has expired.
               </h3>
-              <p className="text-xs text-theme-secondary mt-1.5 leading-relaxed">
-                {errorMsg}
+              <p className="text-xs text-theme-secondary mt-1">
+                Please ask your partner to generate a new QR code.
               </p>
             </div>
-            <button
-              onClick={onDismiss}
-              className="mt-2 rounded-full border border-theme bg-theme-input px-6 py-2 text-xs font-medium text-theme-primary hover:bg-theme-card transition-colors"
-            >
-              Back to Home
-            </button>
+            <div className="pt-2 flex justify-center">
+              <button
+                onClick={onDismiss}
+                className="rounded-full bg-[#125CB9] px-6 py-2.5 text-xs font-semibold text-white hover:bg-[#0E4B99] transition-colors shadow-xs"
+              >
+                Back to Home
+              </button>
+            </div>
           </div>
         ) : session ? (
-          <div className="space-y-6">
-            {/* Header / Brand */}
+          <div className="space-y-5">
+            {/* Header */}
             <div className="space-y-1">
-              <div className="flex items-center justify-center space-x-1.5 text-xs font-mono text-[#125CB9] font-semibold">
-                <Sparkles className="h-3.5 w-3.5" />
-                <span>Device Pairing Invite</span>
-              </div>
-              <h3 className="font-serif text-2xl font-bold text-theme-primary">
+              <h2 className="font-serif text-2xl font-bold text-theme-primary">
                 Join this Duo?
-              </h3>
-              <p className="text-xs text-theme-secondary">
-                Connect your device to share a private room together.
+              </h2>
+              <p className="text-xs sm:text-sm text-theme-secondary">
+                You've been invited to connect to this Duo.
               </p>
             </div>
 
             {/* Creator Profile Display */}
-            <div className="rounded-3xl border border-theme bg-theme-input/60 p-5 flex items-center space-x-4 text-left">
+            <div className="rounded-2xl border border-theme bg-theme-input/60 p-4 flex items-center space-x-3.5 text-left">
               <Avatar
                 src={session.creator.avatar_url}
                 name={session.creator.name}
-                size="lg"
+                size="md"
               />
               <div className="min-w-0 flex-1">
                 <span className="text-[10px] font-mono text-theme-muted uppercase tracking-wider block">
-                  Created by
+                  Invited by
                 </span>
-                <h4 className="font-serif text-base font-bold text-theme-primary truncate">
+                <h4 className="font-serif text-sm font-semibold text-theme-primary truncate">
                   {session.creator.name}
                 </h4>
-                <p className="text-xs text-theme-muted font-mono truncate">
+                <p className="text-[11px] font-mono text-theme-muted truncate">
                   {session.creator.email}
                 </p>
               </div>
             </div>
 
-            {/* Information Bullets */}
-            <p className="text-xs text-theme-secondary leading-relaxed px-2">
-              Chats, notes, doodles, and daily questions will be synced between both devices in real time.
-            </p>
+            {errorMsg && (
+              <div className="rounded-xl border border-[#F43F5E]/30 bg-[#F43F5E]/10 p-3 text-xs text-[#F43F5E]">
+                {errorMsg}
+              </div>
+            )}
 
-            {/* Action CTA */}
-            <div className="space-y-2 pt-2">
+            {/* Actions */}
+            <div className="pt-2 flex flex-col sm:flex-row gap-2.5">
               <button
                 type="button"
                 onClick={handleJoin}
                 disabled={isSubmitting}
-                className="w-full flex items-center justify-center space-x-2 rounded-full bg-[#125CB9] py-3 text-sm font-semibold text-white hover:bg-[#0E4B99] disabled:opacity-50 transition-all shadow-md active:scale-98"
+                className="flex-1 flex items-center justify-center space-x-2 rounded-full bg-[#125CB9] px-5 py-3 text-xs sm:text-sm font-semibold text-white hover:bg-[#0E4B99] disabled:opacity-40 transition-colors shadow-xs"
               >
                 {isSubmitting ? (
                   <>
@@ -186,19 +185,16 @@ export const JoinDuoPrompt: React.FC<JoinDuoPromptProps> = ({
                     <span>Connecting...</span>
                   </>
                 ) : (
-                  <>
-                    <span>Join Duo</span>
-                    <ArrowRight className="h-4 w-4" />
-                  </>
+                  <span>Join Duo</span>
                 )}
               </button>
-
               <button
                 type="button"
                 onClick={onDismiss}
-                className="text-xs text-theme-muted hover:text-theme-primary font-mono transition-colors pt-1"
+                disabled={isSubmitting}
+                className="rounded-full border border-theme bg-theme-input px-5 py-3 text-xs sm:text-sm font-medium text-theme-secondary hover:text-theme-primary transition-colors"
               >
-                Decline & Close
+                Cancel
               </button>
             </div>
           </div>

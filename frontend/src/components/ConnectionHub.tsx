@@ -197,18 +197,14 @@ export const ConnectionHub: React.FC = () => {
             </div>
           </div>
         ) : (
-          /* Unpaired Hero Card: QR Pairing Fast-Track */
-          <div className="rounded-3xl border border-theme bg-theme-card p-6 sm:p-8 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6">
-            <div className="text-center sm:text-left space-y-2 max-w-md">
-              <div className="inline-flex items-center space-x-1.5 rounded-full px-3 py-1 text-xs font-mono font-medium text-[#125CB9] bg-[#125CB9]/10 border border-[#125CB9]/25">
-                <Smartphone className="h-3.5 w-3.5" />
-                <span>2-Device Instant Pairing</span>
-              </div>
+          /* Unpaired Hero Card: Native Pairing Entry */
+          <div className="rounded-3xl border border-theme bg-theme-card p-6 sm:p-8 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-6">
+            <div className="text-center sm:text-left space-y-1.5 max-w-md">
               <h2 className="font-serif text-2xl sm:text-3xl font-bold text-theme-primary">
-                Pair your second device
+                Connect your Duo
               </h2>
               <p className="text-xs sm:text-sm text-theme-secondary leading-relaxed">
-                Open Duo on your phone or pair with your partner by scanning a secure, short-lived QR code.
+                Pair with your partner or link your phone by scanning a QR code.
               </p>
             </div>
 
@@ -216,10 +212,10 @@ export const ConnectionHub: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setShowQRModal(true)}
-                className="flex items-center justify-center space-x-2 rounded-full bg-[#125CB9] px-6 py-3.5 text-xs sm:text-sm font-semibold text-white hover:bg-[#0E4B99] transition-all shadow-md active:scale-98"
+                className="flex items-center justify-center space-x-2 rounded-full bg-[#125CB9] px-6 py-3 text-xs sm:text-sm font-semibold text-white hover:bg-[#0E4B99] transition-all shadow-xs active:scale-98"
               >
                 <QrCode className="h-4 w-4" />
-                <span>Create a Duo (Show QR)</span>
+                <span>Create a Duo</span>
               </button>
             </div>
           </div>
