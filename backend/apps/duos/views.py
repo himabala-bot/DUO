@@ -324,7 +324,8 @@ class CreatePairingSessionView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        session = PairingSession.create_session(creator=profile)
+        force_new = bool(request.data.get('force_new', False)) if isinstance(request.data, dict) else False
+        session = PairingSession.create_session(creator=profile, force_new=force_new)
         serializer = PairingSessionPublicSerializer(session)
         return Response({
             "success": True,

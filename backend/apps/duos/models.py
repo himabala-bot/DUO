@@ -156,10 +156,19 @@ class PairingSession(models.Model):
         return self.status == 'PENDING' and timezone.now() < self.expires_at
 
     @classmethod
-    def create_session(cls, creator):
+    def create_session(cls, creator, force_new=False):
         import secrets
         from datetime import timedelta
         from django.utils import timezone
+
+        if not force_new:
+            existing = cls.objects.filter(
+                creator=creator,
+                status='PENDING',
+                expires_at__gt=timezone.now()
+            ).first()
+            if existing and existing.is_valid():
+                return existing
 
         # Invalidate existing pending sessions for this creator
         cls.objects.filter(creator=creator, status='PENDING').update(status='CANCELLED')

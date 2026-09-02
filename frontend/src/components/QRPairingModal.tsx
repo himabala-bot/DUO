@@ -263,32 +263,6 @@ export const QRPairingModal: React.FC<QRPairingModalProps> = ({
               </div>
             </div>
 
-            {/* 6-Character Fallback Code */}
-            {session?.code && (
-              <div className="space-y-1">
-                <div className="font-mono text-xl sm:text-2xl font-bold tracking-widest text-theme-primary">
-                  {session.code}
-                </div>
-                <button
-                  type="button"
-                  onClick={handleCopyCode}
-                  className="inline-flex items-center space-x-1 text-xs font-mono text-theme-muted hover:text-theme-primary transition-colors"
-                >
-                  {copied ? (
-                    <>
-                      <Check className="h-3 w-3 text-[#00D26A]" />
-                      <span className="text-[#00D26A]">Copied</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="h-3 w-3" />
-                      <span>Copy code</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            )}
-
             {/* Expiration Countdown */}
             <div className="text-xs font-mono text-theme-muted">
               <span>Expires in {formatCountdown(timeLeft)}</span>
