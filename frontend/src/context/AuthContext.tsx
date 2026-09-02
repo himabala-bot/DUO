@@ -3,7 +3,8 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
-import { authApi } from '@/lib/api';
+import { authApi, isDemoSession, getDemoRole } from '@/lib/api';
+import { getDemoUser } from '@/lib/demoStore';
 import { UserProfile, PartnerProfile } from '@/types';
 
 interface AuthContextType {
@@ -30,6 +31,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Instant local cache hydration for zero-delay page refresh
   const [profile, setProfile] = useState<UserProfile | null>(() => {
     if (typeof window !== 'undefined') {
+      if (isDemoSession()) {
+        return getDemoUser(getDemoRole());
+      }
       try {
         const cached = localStorage.getItem('duo_cached_profile');
         if (cached) return JSON.parse(cached);
@@ -40,6 +44,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const [partner, setPartner] = useState<PartnerProfile | null>(() => {
     if (typeof window !== 'undefined') {
+      if (isDemoSession()) {
+        return getDemoUser(getDemoRole()).partner || null;
+      }
       try {
         const cached = localStorage.getItem('duo_cached_profile');
         if (cached) {
@@ -51,9 +58,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return null;
   });
 
-  // If cached profile exists, start with isLoading = false for instant snappy screen rendering
+  // If cached profile or demo exists, start with isLoading = false for instant snappy screen rendering
   const [isLoading, setIsLoading] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
+      if (isDemoSession()) return false;
       const cached = localStorage.getItem('duo_cached_profile');
       if (cached) return false;
     }
@@ -216,7 +224,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const hasActiveDuo = Boolean(profile?.has_active_duo && profile?.active_duo_id);
+  const hasActiveDuo = Boolean(isDemoSession() || (profile?.has_active_duo && profile?.active_duo_id));
 
   return (
     <AuthContext.Provider

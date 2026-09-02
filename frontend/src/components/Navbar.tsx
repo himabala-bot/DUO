@@ -81,7 +81,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
 
           {/* Partner Status Card */}
           {hasActiveDuo && partner ? (
-            <div className="rounded-2xl border border-theme bg-theme-card p-3 shadow-xs space-y-2 transition-colors duration-200">
+            <div className="rounded-2xl border border-theme bg-theme-card p-3 shadow-xs space-y-2 transition-colors duration-200" suppressHydrationWarning>
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-mono uppercase tracking-wider text-theme-muted font-medium">Partner</span>
                 <span
