@@ -178,7 +178,7 @@ class PairingSession(models.Model):
         while cls.objects.filter(code=code, status='PENDING').exists():
             code = generate_pairing_code()
 
-        expires_at = timezone.now() + timedelta(minutes=10)
+        expires_at = timezone.now() + timedelta(minutes=5)
         return cls.objects.create(
             creator=creator,
             token=token,

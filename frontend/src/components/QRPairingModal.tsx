@@ -33,7 +33,7 @@ export const QRPairingModal: React.FC<QRPairingModalProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [isPaired, setIsPaired] = useState(false);
-  const [timeLeft, setTimeLeft] = useState<number>(600); // 10 mins in seconds
+  const [timeLeft, setTimeLeft] = useState<number>(300); // 5 mins in seconds
   const [isExpired, setIsExpired] = useState(false);
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -49,7 +49,7 @@ export const QRPairingModal: React.FC<QRPairingModalProps> = ({
         // Calculate remaining seconds from expires_at
         const expiresMs = new Date(res.session.expires_at).getTime();
         const diffSec = Math.max(0, Math.floor((expiresMs - Date.now()) / 1000));
-        setTimeLeft(diffSec || 600);
+        setTimeLeft(Math.min(diffSec, 300) || 300);
       }
     } catch (err: any) {
       toast.error(err.message || 'Failed to generate pairing session.', 'Error');

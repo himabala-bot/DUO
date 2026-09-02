@@ -52,8 +52,9 @@ export const AuthView: React.FC = () => {
   // Real backend QR session for landing page (instant zero-delay fallback)
   const [instantToken] = useState(() => 'pair_' + Math.random().toString(36).substring(2, 10) + Date.now().toString(36));
   const [qrSession, setQrSession] = useState<PairingSession | null>(null);
-  const [timeLeft, setTimeLeft] = useState<number>(600);
+  const [timeLeft, setTimeLeft] = useState<number>(300); // 5 minutes in seconds
   const [isExpired, setIsExpired] = useState(false);
+  const [isConnectingPartner, setIsConnectingPartner] = useState(false);
   const [isPairedSuccess, setIsPairedSuccess] = useState(false);
   const countdownTimerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -61,14 +62,16 @@ export const AuthView: React.FC = () => {
 
   const createLandingSession = useCallback(async () => {
     setIsExpired(false);
+    setIsConnectingPartner(false);
     setIsPairedSuccess(false);
+    setTimeLeft(300);
     try {
       const res = await duoApi.createPairingSession({ force_new: true });
       if (res.success && res.session) {
         setQrSession(res.session);
         const expiresMs = new Date(res.session.expires_at).getTime();
         const diffSec = Math.max(0, Math.floor((expiresMs - Date.now()) / 1000));
-        setTimeLeft(diffSec || 600);
+        setTimeLeft(Math.min(diffSec, 300) || 300);
       }
     } catch {
       // Keep instantToken if offline or backend is starting
@@ -79,7 +82,7 @@ export const AuthView: React.FC = () => {
     createLandingSession();
   }, [createLandingSession]);
 
-  // Expiration countdown
+  // Expiration countdown (5 minutes)
   useEffect(() => {
     if (isExpired || isPairedSuccess) return;
 
@@ -107,9 +110,15 @@ export const AuthView: React.FC = () => {
     const channel = supabase.channel(`pairing:${activeToken}`);
     channel
       .on('broadcast', { event: 'claimed' }, async () => {
-        setIsPairedSuccess(true);
-        toast.love('Phone connected! Welcome to Duo.', 'Connected');
-        await refreshProfile();
+        setIsConnectingPartner(true);
+        toast.love('Partner connected! Connecting you with your partner...', 'Device Linked');
+        
+        // Auto sign-in or auto-refresh if already authenticated
+        setTimeout(async () => {
+          setIsConnectingPartner(false);
+          setIsPairedSuccess(true);
+          await refreshProfile();
+        }, 1200);
       })
       .subscribe();
 
@@ -290,7 +299,7 @@ export const AuthView: React.FC = () => {
 
         {/* Native QR Device Pairing Card (No code under QR) */}
         <section id="qr-pairing-card" className="mx-auto max-w-4xl px-4 sm:px-8 py-6">
-          <div className="mx-auto max-w-[460px] rounded-[32px] border border-theme bg-theme-card p-6 sm:p-8 shadow-xl text-center select-none animate-in zoom-in-95 duration-200">
+          <div className="mx-auto max-w-[480px] rounded-[32px] border border-theme bg-theme-card p-6 sm:p-8 shadow-xl text-center select-none animate-in zoom-in-95 duration-200">
             {isPairedSuccess ? (
               <div className="py-8 space-y-4 animate-in zoom-in-95 duration-300">
                 <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-[#00D26A]/10 text-[#00D26A] mx-auto ring-8 ring-[#00D26A]/10 shadow-lg">
@@ -298,10 +307,24 @@ export const AuthView: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="font-serif text-2xl font-bold text-theme-primary">
-                    Phone connected
+                    Partner paired successfully!
                   </h3>
                   <p className="text-xs text-theme-secondary mt-1">
                     Entering your shared Duo room...
+                  </p>
+                </div>
+              </div>
+            ) : isConnectingPartner ? (
+              <div className="py-8 space-y-4 animate-in zoom-in-95 duration-300">
+                <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-[#125CB9]/10 text-[#125CB9] mx-auto ring-8 ring-[#125CB9]/10 shadow-lg">
+                  <RefreshCw className="h-8 w-8 animate-spin" />
+                </div>
+                <div>
+                  <h3 className="font-serif text-2xl font-bold text-theme-primary">
+                    Connecting you with your partner...
+                  </h3>
+                  <p className="text-xs text-theme-secondary mt-1">
+                    Device detected. Linking your shared space...
                   </p>
                 </div>
               </div>
@@ -315,7 +338,7 @@ export const AuthView: React.FC = () => {
                     QR code has expired
                   </h3>
                   <p className="text-xs text-theme-secondary mt-1">
-                    For your security, pairing sessions expire after 10 minutes.
+                    For your security, pairing sessions expire after 5 minutes.
                   </p>
                 </div>
                 <div className="pt-2">
@@ -333,11 +356,15 @@ export const AuthView: React.FC = () => {
               <div className="space-y-4">
                 {/* Header */}
                 <div>
+                  <div className="inline-flex items-center space-x-1.5 rounded-full px-3 py-1 text-[11px] font-mono font-medium text-[#125CB9] bg-[#125CB9]/10 border border-[#125CB9]/25 mb-2">
+                    <QrCode className="h-3.5 w-3.5" />
+                    <span>Instant Two-Screen Test &bull; 5 Min Validity</span>
+                  </div>
                   <h3 className="font-serif text-2xl font-bold text-theme-primary">
                     Connect another device
                   </h3>
                   <p className="text-xs text-theme-secondary mt-1 max-w-xs mx-auto leading-relaxed">
-                    Scan this QR code with your phone to join this Duo.
+                    Scan this QR code with your phone to test Duo in real-time across two screens.
                   </p>
                 </div>
 
@@ -369,6 +396,33 @@ export const AuthView: React.FC = () => {
                 </div>
               </div>
             )}
+
+            {/* How Duo Pairing Works: Reviewers vs Real Couples */}
+            <div className="mt-6 pt-5 border-t border-theme-subtle text-left space-y-3">
+              <div className="rounded-2xl border border-theme bg-theme-input/40 p-3.5 space-y-1">
+                <div className="flex items-center space-x-2 text-[#125CB9]">
+                  <QrCode className="h-3.5 w-3.5 shrink-0" />
+                  <span className="text-[11px] font-bold uppercase tracking-wider font-mono">
+                    Trying Duo by yourself?
+                  </span>
+                </div>
+                <p className="text-[11px] text-theme-secondary leading-relaxed">
+                  Scan this QR code with your phone, then log in with Google or Email on both devices to immediately try out real-time drawing, whisper chat, and daily prompts across two screens.
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-theme bg-theme-input/40 p-3.5 space-y-1">
+                <div className="flex items-center space-x-2 text-[#125CB9]">
+                  <Heart className="h-3.5 w-3.5 shrink-0 fill-current" />
+                  <span className="text-[11px] font-bold uppercase tracking-wider font-mono">
+                    Connecting with your partner?
+                  </span>
+                </div>
+                <p className="text-[11px] text-theme-secondary leading-relaxed">
+                  Both partners simply log in with their own Google or Email account. Each person receives a permanent unique Secret Duo Key (e.g. <span className="font-mono font-bold text-theme-primary">DUO-7K4P2M</span>) in their room to pair with each other from anywhere in the world.
+                </p>
+              </div>
+            </div>
           </div>
         </section>
 
