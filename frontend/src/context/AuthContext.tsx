@@ -1,9 +1,9 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
-import { authApi, duoApi } from '@/lib/api';
+import { authApi } from '@/lib/api';
 import { UserProfile, PartnerProfile } from '@/types';
 
 interface AuthContextType {
@@ -26,20 +26,60 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [supabaseUser, setSupabaseUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [partner, setPartner] = useState<PartnerProfile | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  // Instant local cache hydration for zero-delay page refresh
+  const [profile, setProfile] = useState<UserProfile | null>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('duo_cached_profile');
+        if (cached) return JSON.parse(cached);
+      } catch {}
+    }
+    return null;
+  });
+
+  const [partner, setPartner] = useState<PartnerProfile | null>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('duo_cached_profile');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          return parsed.partner || null;
+        }
+      } catch {}
+    }
+    return null;
+  });
+
+  // If cached profile exists, start with isLoading = false for instant snappy screen rendering
+  const [isLoading, setIsLoading] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      const cached = localStorage.getItem('duo_cached_profile');
+      if (cached) return false;
+    }
+    return true;
+  });
+
   const isConfigured = isSupabaseConfigured();
+  const syncingRef = useRef(false);
 
   const syncDjangoProfile = useCallback(async () => {
+    if (syncingRef.current) return;
+    syncingRef.current = true;
     try {
       const syncRes = await authApi.sync();
       if (syncRes.success && syncRes.profile) {
         setProfile(syncRes.profile);
-        setPartner(syncRes.profile.partner);
+        setPartner(syncRes.profile.partner || null);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('duo_cached_profile', JSON.stringify(syncRes.profile));
+        }
       }
     } catch (err) {
       console.warn('Django profile sync error:', err);
+    } finally {
+      syncingRef.current = false;
+      setIsLoading(false);
     }
   }, []);
 
@@ -47,28 +87,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const profileData = await authApi.getProfile();
       setProfile(profileData);
-      setPartner(profileData.partner);
+      setPartner(profileData.partner || null);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('duo_cached_profile', JSON.stringify(profileData));
+      }
     } catch (err) {
       console.warn('Failed to refresh profile:', err);
     }
   }, []);
-
-  // Apply Theme
-  useEffect(() => {
-    const activeTheme = profile?.theme || 'system';
-    if (activeTheme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else if (activeTheme === 'light') {
-      document.documentElement.classList.remove('dark');
-    } else {
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      if (prefersDark) {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
-    }
-  }, [profile?.theme]);
 
   useEffect(() => {
     if (!isConfigured) {
@@ -76,30 +102,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return;
     }
 
-    // 1. Get initial session
+    // 1. Get initial session fast
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setSupabaseUser(session?.user ?? null);
       if (session) {
-        syncDjangoProfile().finally(() => setIsLoading(false));
+        syncDjangoProfile();
       } else {
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('duo_cached_profile');
+        }
+        setProfile(null);
+        setPartner(null);
         setIsLoading(false);
       }
     });
 
-    // 2. Listen to auth changes
+    // 2. Listen to auth state changes (avoid duplicate initial sync)
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
+    } = supabase.auth.onAuthStateChange(async (event, newSession) => {
+      if (event === 'INITIAL_SESSION') return;
+
       setSession(newSession);
       setSupabaseUser(newSession?.user ?? null);
-      if (newSession) {
+      if (newSession && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED')) {
         await syncDjangoProfile();
-      } else {
+      } else if (!newSession) {
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('duo_cached_profile');
+        }
         setProfile(null);
         setPartner(null);
+        setIsLoading(false);
       }
-      setIsLoading(false);
     });
 
     return () => {
@@ -118,7 +154,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       throw error;
     }
     await syncDjangoProfile();
-    setIsLoading(false);
   };
 
   const registerWithEmail = async (email: string, pass: string, name: string) => {
@@ -139,8 +174,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     if (data.session) {
       await syncDjangoProfile();
+    } else {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   const loginWithGoogle = async () => {
@@ -149,7 +185,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       : (process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000');
     const redirectTo = `${origin}/auth/callback`;
 
-    const { data, error } = await supabase.auth.signInWithOAuth({
+    const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo,
@@ -163,13 +199,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     setIsLoading(true);
-    await supabase.auth.signOut();
-    setProfile(null);
-    setPartner(null);
-    setSupabaseUser(null);
-    setSession(null);
-    setIsLoading(false);
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('duo_cached_profile');
+      localStorage.removeItem('duo_active_tab');
+    }
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.warn('Supabase sign out error:', err);
+    } finally {
+      setSession(null);
+      setSupabaseUser(null);
+      setProfile(null);
+      setPartner(null);
+      setIsLoading(false);
+    }
   };
+
+  const hasActiveDuo = Boolean(profile?.has_active_duo && profile?.active_duo_id);
 
   return (
     <AuthContext.Provider
@@ -178,7 +225,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         session,
         profile,
         partner,
-        hasActiveDuo: profile?.has_active_duo ?? false,
+        hasActiveDuo,
         isLoading,
         isConfigured,
         loginWithEmail,
@@ -193,7 +240,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 };
 
-export const useAuth = () => {
+export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');

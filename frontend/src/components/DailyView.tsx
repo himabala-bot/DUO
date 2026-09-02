@@ -19,6 +19,7 @@ import {
   Compass,
   ArrowRight,
   Trash2,
+  Mic,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { supabase } from '@/lib/supabase';
@@ -39,6 +40,7 @@ export const DailyView: React.FC = () => {
   const [activeActions, setActiveActions] = useState<Record<string, 'saving' | 'submitting' | 'changing' | null>>({});
   const [feedbackMsg, setFeedbackMsg] = useState<{ id: string; type: 'success' | 'draft'; text: string } | null>(null);
   const [showArchiveModal, setShowArchiveModal] = useState(false);
+  const [recordingVoiceQId, setRecordingVoiceQId] = useState<string | null>(null);
 
   const fetchTodayData = useCallback(async () => {
     try {
@@ -99,9 +101,9 @@ export const DailyView: React.FC = () => {
   };
 
   const handleSendQuestion = async (q: DailyQuestion) => {
-    const text = (answers[q.id] || '').trim();
-    if (!text) {
-      toast.info('Please write a reflection before sending', 'Empty Reflection');
+    const rawAnswer = (answers[q.id] || '').trim();
+    if (!rawAnswer) {
+      toast.info('Please write or record a reflection before sending', 'Empty Reflection');
       return;
     }
 
@@ -110,7 +112,7 @@ export const DailyView: React.FC = () => {
 
     try {
       await dailyApi.saveResponses([
-        { question_id: q.id, answer: text, assignment_id: q.assignment_id }
+        { question_id: q.id, answer: rawAnswer, assignment_id: q.assignment_id }
       ], 'SUBMIT');
       setQuestionStatuses((prev) => ({ ...prev, [q.id]: 'SUBMITTED' }));
       toast.love(`Sealed and shared with ${partner?.name || 'partner'}`, 'Shared With Partner');
@@ -388,7 +390,7 @@ export const DailyView: React.FC = () => {
                   </h3>
                 </div>
 
-                {/* Answer Input or Voice Preview */}
+                {/* Answer Input or Voice Recorder / Player */}
                 <div className="mt-3.5">
                   {isVoiceAns ? (
                     <div className="rounded-2xl border border-theme bg-theme-input p-4 space-y-2">
@@ -399,15 +401,47 @@ export const DailyView: React.FC = () => {
                         {status !== 'SUBMITTED' && (
                           <button
                             type="button"
-                            onClick={() => setAnswers((prev) => ({ ...prev, [q.id]: '' }))}
+                            onClick={() => {
+                              setAnswers((prev) => ({ ...prev, [q.id]: '' }));
+                              setRecordingVoiceQId(null);
+                            }}
                             className="text-xs text-theme-muted hover:text-[#F43F5E] transition-colors p-1"
-                            title="Discard recording"
+                            title="Discard recording and switch back to text"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>
                         )}
                       </div>
                       {renderAnswerBody(currentAns, true)}
+                    </div>
+                  ) : recordingVoiceQId === q.id ? (
+                    <div className="rounded-2xl border border-[#125CB9]/40 bg-[#125CB9]/5 p-4 space-y-3 animate-in fade-in duration-200">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-mono uppercase tracking-wider text-[#125CB9] font-semibold">
+                          Recording Voice Reflection:
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setRecordingVoiceQId(null)}
+                          className="text-xs text-theme-muted hover:text-theme-primary transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                      <VoiceRecorder
+                        showSendButton={false}
+                        onAudioReady={(url, dur) => {
+                          const voicePayload = `[voice:${JSON.stringify({ url, duration: dur })}]`;
+                          setAnswers((prev) => ({ ...prev, [q.id]: voicePayload }));
+                          setRecordingVoiceQId(null);
+                        }}
+                        onCancel={() => setRecordingVoiceQId(null)}
+                        onSendVoice={(url, dur) => {
+                          const voicePayload = `[voice:${JSON.stringify({ url, duration: dur })}]`;
+                          setAnswers((prev) => ({ ...prev, [q.id]: voicePayload }));
+                          setRecordingVoiceQId(null);
+                        }}
+                      />
                     </div>
                   ) : (
                     <textarea
@@ -424,14 +458,16 @@ export const DailyView: React.FC = () => {
                 <div className="mt-3.5 flex flex-wrap items-center justify-between gap-2.5 pt-3 border-t border-theme-subtle">
                   <div className="flex items-center space-x-2">
                     {/* Voice Note Option */}
-                    {!isVoiceAns && status !== 'SUBMITTED' && (
-                      <VoiceRecorder
-                        showSendButton={false}
-                        onSendVoice={(url, dur) => {
-                          const voicePayload = `[voice:${JSON.stringify({ url, duration: dur })}]`;
-                          setAnswers((prev) => ({ ...prev, [q.id]: voicePayload }));
-                        }}
-                      />
+                    {!isVoiceAns && status !== 'SUBMITTED' && recordingVoiceQId !== q.id && (
+                      <button
+                        type="button"
+                        onClick={() => setRecordingVoiceQId(q.id)}
+                        className="flex items-center space-x-1.5 rounded-full border border-theme bg-theme-input px-3.5 py-1.5 text-xs font-medium text-theme-secondary hover:bg-theme-card hover:text-theme-primary hover:border-[#125CB9]/40 transition-colors shadow-xs"
+                        title="Record audio reflection"
+                      >
+                        <Mic className="h-3.5 w-3.5 text-[#125CB9]" />
+                        <span>Voice Note</span>
+                      </button>
                     )}
 
                     {isFeedback && (

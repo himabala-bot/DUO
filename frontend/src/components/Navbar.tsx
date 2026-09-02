@@ -55,17 +55,14 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
           <div className="flex items-center justify-between px-1">
             <button
               onClick={() => setActiveTab('daily')}
-              className="flex items-center space-x-2.5 text-left group focus:outline-none"
+              className="flex items-center space-x-2.5 text-left focus:outline-none"
             >
-              <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-white dark:bg-white/95 border border-theme shadow-xs overflow-hidden shrink-0 p-1 group-hover:scale-105 transition-transform">
+              <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-white dark:bg-white/95 border border-theme shadow-xs overflow-hidden shrink-0 p-1">
                 <img src="/logo.png" alt="Duo Logo" className="w-full h-full object-contain" />
               </div>
-              <div className="flex flex-col">
-                <span className="font-serif text-lg font-bold tracking-tight text-theme-primary leading-none">
-                  Duo
-                </span>
-                <span className="text-[10px] font-mono text-theme-muted mt-0.5">shared space</span>
-              </div>
+              <span className="font-serif text-xl font-bold tracking-tight text-theme-primary leading-none">
+                Duo
+              </span>
             </button>
 
             {/* Quick Theme Toggle Button */}

@@ -549,7 +549,13 @@ export const ChatView: React.FC = () => {
   return (
     <div className="flex-1 w-full h-full flex flex-col items-center justify-center p-2 sm:p-4 md:p-6 min-h-0">
       {/* Centered Conversation Container (~840–880px) */}
-      <div className="w-full max-w-3xl xl:max-w-4xl h-full flex flex-col overflow-hidden rounded-2xl border border-theme bg-theme-card shadow-sm transition-colors">
+      <div
+        className={`w-full max-w-3xl xl:max-w-4xl h-full flex flex-col overflow-hidden rounded-2xl transition-all duration-200 ${
+          disappearingMode
+            ? 'border-2 border-dashed border-[#FB923C]/60 bg-theme-card shadow-sm'
+            : 'border border-theme bg-theme-card shadow-sm'
+        }`}
+      >
         {/* Chat Room Subheader */}
         <div className="flex items-center justify-between border-b border-theme bg-theme-page px-4 py-2.5 shrink-0">
           <div className="flex items-center space-x-2.5">
@@ -572,23 +578,16 @@ export const ChatView: React.FC = () => {
           </div>
 
           <div className="flex items-center space-x-2">
-            {/* Subtle indicator when Disappearing Mode is active (no emojis) */}
-            {disappearingMode && (
-              <span className="text-[10px] font-mono font-medium text-[#FB923C] bg-[#FB923C]/10 border border-[#FB923C]/25 px-2.5 py-0.5 rounded-full animate-in fade-in duration-200">
-                Disappearing Mode
-              </span>
-            )}
-
-            {/* Disappearing Mode Toggle Button */}
+            {/* Disappearing Mode Toggle Button (CTA toggle acts as indicator) */}
             <button
               type="button"
               onClick={handleToggleDisappearingMode}
               className={`flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-mono transition-all border ${
                 disappearingMode
-                  ? 'bg-[#FB923C]/15 border-[#FB923C]/40 text-[#FB923C] font-semibold shadow-xs'
+                  ? 'bg-[#FB923C]/15 border-[#FB923C]/50 text-[#FB923C] font-semibold shadow-xs'
                   : 'bg-theme-input border-theme text-theme-secondary hover:text-theme-primary hover:bg-theme-card'
               }`}
-              title={disappearingMode ? 'Turn off Disappearing Mode' : 'Turn on Disappearing Mode'}
+              title={disappearingMode ? 'Disappearing Mode is Active. Click to turn off' : 'Turn on Disappearing Mode'}
             >
               <Timer className="h-3.5 w-3.5" />
               <span>Disappearing</span>

@@ -6,6 +6,7 @@ import { WaveformPlayer } from './WaveformPlayer';
 
 interface VoiceRecorderProps {
   onSendVoice: (audioDataUrl: string, duration: number) => void;
+  onAudioReady?: (audioDataUrl: string, duration: number) => void;
   onCancel?: () => void;
   onStateChange?: (state: 'idle' | 'recording' | 'preview') => void;
   compact?: boolean;
@@ -14,6 +15,7 @@ interface VoiceRecorderProps {
 
 export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
   onSendVoice,
+  onAudioReady,
   onCancel,
   onStateChange,
   compact = false,
@@ -80,11 +82,16 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
 
       mediaRecorder.onstop = () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: selectedMime || 'audio/webm' });
+        const dur = Math.max(1, Math.floor((Date.now() - startTimeRef.current) / 1000));
+        setAudioDuration(dur);
         const reader = new FileReader();
         reader.readAsDataURL(audioBlob);
         reader.onloadend = () => {
           const base64Data = reader.result as string;
           setAudioUrl(base64Data);
+          if (onAudioReady) {
+            onAudioReady(base64Data, dur);
+          }
           notifyState('preview');
         };
 

@@ -123,23 +123,29 @@ export const TodoKanbanView: React.FC = () => {
 
   // Add Task
   const handleAddTask = async (status: TaskStatus) => {
-    if (!newTitle.trim()) return;
+    const title = newTitle.trim();
+    if (!title) return;
+
+    setNewTitle('');
+    setAddingToCol(null);
 
     try {
       const created = await tasksApi.create({
-        title: newTitle.trim(),
-        description: newDescription.trim(),
+        title,
+        description: '',
         status,
       });
 
-      setTasks((prev) => [...prev, created]);
-      setNewTitle('');
-      setNewDescription('');
-      setAddingToCol(null);
+      setTasks((prev) => {
+        const exists = prev.some((t) => t.id === created.id);
+        if (exists) return prev;
+        return [...prev, created];
+      });
       toast.love('Task added to board', 'Task Added');
       broadcastUpdate();
     } catch (err: any) {
       toast.error(err.message || 'Failed to add task.', 'Error');
+      fetchTasks();
     }
   };
 
@@ -469,12 +475,12 @@ export const TodoKanbanView: React.FC = () => {
                 {/* Inline Add Task Action */}
                 <div className="mt-3 pt-2">
                   {addingToCol === col.id ? (
-                    <div className="rounded-xl border border-theme bg-theme-card p-3 space-y-2 shadow-xs">
+                    <div className="rounded-xl border border-theme bg-theme-card p-2.5 space-y-2 shadow-xs">
                       <input
                         type="text"
                         value={newTitle}
                         onChange={(e) => setNewTitle(e.target.value)}
-                        placeholder="Task title..."
+                        placeholder="What needs to be done?"
                         autoFocus
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') handleAddTask(col.id);
@@ -482,14 +488,7 @@ export const TodoKanbanView: React.FC = () => {
                         }}
                         className="w-full rounded-lg border border-theme bg-theme-input px-3 py-1.5 text-xs text-theme-primary focus:border-[#125CB9] focus:bg-theme-card focus:outline-none"
                       />
-                      <input
-                        type="text"
-                        value={newDescription}
-                        onChange={(e) => setNewDescription(e.target.value)}
-                        placeholder="Optional description..."
-                        className="w-full rounded-lg border border-theme bg-theme-input px-3 py-1 text-xs text-theme-primary focus:border-[#125CB9] focus:bg-theme-card focus:outline-none"
-                      />
-                      <div className="flex items-center justify-end gap-1.5 pt-1">
+                      <div className="flex items-center justify-end gap-1.5 pt-0.5">
                         <button
                           type="button"
                           onClick={() => setAddingToCol(null)}
@@ -512,7 +511,6 @@ export const TodoKanbanView: React.FC = () => {
                       onClick={() => {
                         setAddingToCol(col.id);
                         setNewTitle('');
-                        setNewDescription('');
                       }}
                       className="w-full flex items-center justify-center space-x-1.5 py-2 rounded-xl text-xs font-medium text-theme-secondary hover:text-theme-primary hover:bg-theme-card/60 transition-colors"
                     >
@@ -661,12 +659,12 @@ export const TodoKanbanView: React.FC = () => {
                 {/* Mobile Add Task Action */}
                 <div className="mt-3 pt-2">
                   {addingToCol === activeColConfig.id ? (
-                    <div className="rounded-xl border border-theme bg-theme-card p-3 space-y-2 shadow-xs">
+                    <div className="rounded-xl border border-theme bg-theme-card p-2.5 space-y-2 shadow-xs">
                       <input
                         type="text"
                         value={newTitle}
                         onChange={(e) => setNewTitle(e.target.value)}
-                        placeholder="Task title..."
+                        placeholder="What needs to be done?"
                         autoFocus
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') handleAddTask(activeColConfig.id);
@@ -674,14 +672,7 @@ export const TodoKanbanView: React.FC = () => {
                         }}
                         className="w-full rounded-lg border border-theme bg-theme-input px-3 py-1.5 text-xs text-theme-primary focus:border-[#125CB9] focus:bg-theme-card focus:outline-none"
                       />
-                      <input
-                        type="text"
-                        value={newDescription}
-                        onChange={(e) => setNewDescription(e.target.value)}
-                        placeholder="Optional description..."
-                        className="w-full rounded-lg border border-theme bg-theme-input px-3 py-1 text-xs text-theme-primary focus:border-[#125CB9] focus:bg-theme-card focus:outline-none"
-                      />
-                      <div className="flex items-center justify-end gap-1.5 pt-1">
+                      <div className="flex items-center justify-end gap-1.5 pt-0.5">
                         <button
                           type="button"
                           onClick={() => setAddingToCol(null)}
@@ -704,7 +695,6 @@ export const TodoKanbanView: React.FC = () => {
                       onClick={() => {
                         setAddingToCol(activeColConfig.id);
                         setNewTitle('');
-                        setNewDescription('');
                       }}
                       className="w-full flex items-center justify-center space-x-1.5 py-2 rounded-xl text-xs font-medium text-theme-secondary hover:text-theme-primary hover:bg-theme-card transition-colors"
                     >
