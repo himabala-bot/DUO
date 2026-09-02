@@ -50,13 +50,19 @@ export const AuthView: React.FC = () => {
   const [activeFeatureTab, setActiveFeatureTab] = useState<'daily' | 'notes' | 'canvas' | 'chat' | 'todo'>('daily');
 
   // Real backend QR session for landing page (instant zero-delay fallback)
-  const [instantToken] = useState(() => 'pair_' + Math.random().toString(36).substring(2, 10) + Date.now().toString(36));
+  const [mounted, setMounted] = useState(false);
+  const [instantToken, setInstantToken] = useState('pair_init');
   const [qrSession, setQrSession] = useState<PairingSession | null>(null);
   const [timeLeft, setTimeLeft] = useState<number>(300); // 5 minutes in seconds
   const [isExpired, setIsExpired] = useState(false);
   const [isConnectingPartner, setIsConnectingPartner] = useState(false);
   const [isPairedSuccess, setIsPairedSuccess] = useState(false);
   const countdownTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+    setInstantToken('pair_' + Math.random().toString(36).substring(2, 10) + Date.now().toString(36));
+  }, []);
 
   const activeToken = qrSession?.token || instantToken;
 
@@ -371,13 +377,17 @@ export const AuthView: React.FC = () => {
                 {/* Dynamic QR Code */}
                 <div className="flex flex-col items-center justify-center py-2">
                   <div className="relative rounded-2xl border border-theme bg-white p-4 shadow-xs">
-                    <QRCodeSVG
-                      value={typeof window !== 'undefined' ? `${window.location.origin}/join?token=${activeToken}` : ''}
-                      size={200}
-                      level="M"
-                      includeMargin={false}
-                      className="rounded-lg"
-                    />
+                    {mounted ? (
+                      <QRCodeSVG
+                        value={`${window.location.origin}/join?token=${activeToken}`}
+                        size={200}
+                        level="M"
+                        includeMargin={false}
+                        className="rounded-lg"
+                      />
+                    ) : (
+                      <div className="h-[200px] w-[200px] rounded-lg bg-theme-input/20 animate-pulse" />
+                    )}
                   </div>
                 </div>
 

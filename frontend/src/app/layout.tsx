@@ -39,7 +39,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${workSans.variable} ${poppins.variable} ${mono.variable}`} suppressHydrationWarning>
-      <body className="min-h-screen bg-theme-page text-theme-primary font-sans antialiased">
+      <body className="min-h-screen bg-theme-page text-theme-primary font-sans antialiased" suppressHydrationWarning>
         <ThemeProvider>
           <ToastProvider>
             <AuthProvider>
