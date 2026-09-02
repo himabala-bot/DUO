@@ -2,7 +2,16 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRealtime } from '@/context/RealtimeContext';
-import { MessageSquare, Palette, Sparkles, Heart, FileText, Bell } from 'lucide-react';
+import {
+  MessageSquare,
+  Mic,
+  Palette,
+  Sparkles,
+  Heart,
+  StickyNote,
+  ListTodo,
+  Bell,
+} from 'lucide-react';
 import { NotificationItem } from '@/types';
 
 interface NotificationPopoutProps {
@@ -23,10 +32,11 @@ export const NotificationPopout: React.FC<NotificationPopoutProps> = ({
 
     // Suppress notification popout if user is already in that active view
     const type = latestNotification.type;
-    if (activeTab === 'chat' && type === 'MESSAGE') return;
+    if (activeTab === 'chat' && (type === 'MESSAGE' || (type as string) === 'VOICE')) return;
     if (activeTab === 'canvas' && type === 'DRAWING') return;
     if (activeTab === 'daily' && type === 'DAILY_RESPONSE') return;
     if (activeTab === 'notes' && (type as string) === 'NOTE') return;
+    if (activeTab === 'todo' && (type as string) === 'TASK') return;
     if (activeTab === 'duo' && (type === 'CONNECTION_REQUEST' || type === 'CONNECTION_ACCEPTED')) return;
 
     setIsExiting(false);
@@ -52,56 +62,83 @@ export const NotificationPopout: React.FC<NotificationPopoutProps> = ({
 
   const handleClick = () => {
     markNotificationAsRead(visibleNotif.id);
-    if (visibleNotif.type === 'MESSAGE') onNavigate('chat');
-    if (visibleNotif.type === 'DRAWING') onNavigate('canvas');
-    if (visibleNotif.type === 'DAILY_RESPONSE') onNavigate('daily');
-    if ((visibleNotif.type as string) === 'NOTE') onNavigate('notes');
-    if (visibleNotif.type === 'CONNECTION_REQUEST' || visibleNotif.type === 'CONNECTION_ACCEPTED') {
+    const type = visibleNotif.type as string;
+    if (type === 'MESSAGE' || type === 'VOICE') onNavigate('chat');
+    else if (type === 'DRAWING') onNavigate('canvas');
+    else if (type === 'DAILY_RESPONSE') onNavigate('daily');
+    else if (type === 'NOTE') onNavigate('notes');
+    else if (type === 'TASK') onNavigate('todo');
+    else if (type === 'CONNECTION_REQUEST' || type === 'CONNECTION_ACCEPTED') {
       onNavigate('duo');
     }
     setVisibleNotif(null);
   };
 
   const getIconInfo = () => {
-    switch (visibleNotif.type) {
+    const type = visibleNotif.type as string;
+    switch (type) {
       case 'MESSAGE':
         return {
           icon: MessageSquare,
-          bg: 'bg-[#125CB9]',
+          bg: 'bg-gradient-to-tr from-[#0E4B99] to-[#125CB9]',
           ring: 'ring-[#125CB9]/40',
-          shadow: 'shadow-[#125CB9]/30',
+          shadow: 'shadow-[0_4px_16px_rgba(18,92,185,0.4)]',
           label: 'New message',
+        };
+      case 'VOICE':
+        return {
+          icon: Mic,
+          bg: 'bg-gradient-to-tr from-[#0284C7] to-[#00D0FF]',
+          ring: 'ring-[#00D0FF]/40',
+          shadow: 'shadow-[0_4px_16px_rgba(0,208,255,0.4)]',
+          label: 'Voice note',
         };
       case 'DRAWING':
         return {
           icon: Palette,
-          bg: 'bg-[#00D26A]',
+          bg: 'bg-gradient-to-tr from-[#059669] to-[#00D26A]',
           ring: 'ring-[#00D26A]/40',
-          shadow: 'shadow-[#00D26A]/30',
+          shadow: 'shadow-[0_4px_16px_rgba(0,210,106,0.4)]',
           label: 'New doodle',
         };
       case 'DAILY_RESPONSE':
         return {
           icon: Sparkles,
-          bg: 'bg-[#FB923C]',
+          bg: 'bg-gradient-to-tr from-[#EA580C] to-[#FB923C]',
           ring: 'ring-[#FB923C]/40',
-          shadow: 'shadow-[#FB923C]/30',
-          label: 'Love prompt',
+          shadow: 'shadow-[0_4px_16px_rgba(251,146,60,0.4)]',
+          label: 'Love prompt answered',
+        };
+      case 'NOTE':
+        return {
+          icon: StickyNote,
+          bg: 'bg-gradient-to-tr from-[#7C3AED] to-[#C084FC]',
+          ring: 'ring-[#C084FC]/40',
+          shadow: 'shadow-[0_4px_16px_rgba(192,132,252,0.4)]',
+          label: 'New note',
+        };
+      case 'TASK':
+        return {
+          icon: ListTodo,
+          bg: 'bg-gradient-to-tr from-[#D97706] to-[#F59E0B]',
+          ring: 'ring-[#F59E0B]/40',
+          shadow: 'shadow-[0_4px_16px_rgba(245,158,11,0.4)]',
+          label: 'List updated',
         };
       case 'CONNECTION_REQUEST':
       case 'CONNECTION_ACCEPTED':
         return {
           icon: Heart,
-          bg: 'bg-[#F43F5E]',
+          bg: 'bg-gradient-to-tr from-[#E11D48] to-[#F43F5E]',
           ring: 'ring-[#F43F5E]/40',
-          shadow: 'shadow-[#F43F5E]/30',
-          label: 'Room linked',
+          shadow: 'shadow-[0_4px_16px_rgba(244,63,94,0.4)]',
+          label: 'Duo paired',
         };
       default:
         return {
-          icon: ((visibleNotif.type as string) === 'NOTE') ? FileText : Bell,
-          bg: ((visibleNotif.type as string) === 'NOTE') ? 'bg-[#8B5CF6]' : 'bg-[#125CB9]',
-          ring: ((visibleNotif.type as string) === 'NOTE') ? 'ring-[#8B5CF6]/40' : 'ring-[#125CB9]/40',
+          icon: Bell,
+          bg: 'bg-[#125CB9]',
+          ring: 'ring-[#125CB9]/40',
           shadow: 'shadow-md',
           label: 'Notification',
         };
@@ -112,21 +149,48 @@ export const NotificationPopout: React.FC<NotificationPopoutProps> = ({
   const Icon = iconInfo.icon;
 
   return (
-    <div
-      onClick={handleClick}
-      title={iconInfo.label}
-      className={`fixed top-4 left-1/2 -translate-x-1/2 sm:top-5 sm:left-auto sm:right-8 lg:top-5 lg:left-72 z-50 cursor-pointer select-none transition-all duration-200 ${
-        isExiting
-          ? 'opacity-0 scale-50 -translate-y-3 pointer-events-none'
-          : 'opacity-100 scale-100 translate-y-0 animate-in zoom-in-50 fade-in slide-in-from-top-4 duration-150'
-      }`}
-    >
-      {/* Instagram-style circular icon orb popping out */}
-      <div className={`flex h-11 w-11 items-center justify-center rounded-full ${iconInfo.bg} text-white shadow-xl ${iconInfo.shadow} ring-4 ${iconInfo.ring} hover:scale-110 active:scale-95 transition-transform`}>
-        <Icon className="h-5 w-5 fill-current/20" />
+    <>
+      {/* 1. Mobile Popout: Pops out right from the top right bell header */}
+      <div
+        onClick={handleClick}
+        title={iconInfo.label}
+        className={`lg:hidden fixed top-3 right-12 z-50 cursor-pointer select-none transition-all duration-200 ${
+          isExiting
+            ? 'opacity-0 scale-50 -translate-y-2 pointer-events-none'
+            : 'opacity-100 scale-100 translate-y-0 animate-in zoom-in-50 fade-in duration-150'
+        }`}
+      >
+        <div
+          className={`flex h-9 w-9 items-center justify-center rounded-full ${iconInfo.bg} text-white shadow-lg ${iconInfo.shadow} ring-3 ${iconInfo.ring} animate-bounce duration-300`}
+        >
+          <Icon className="h-4 w-4" />
+        </div>
       </div>
-    </div>
+
+      {/* 2. Desktop Sidebar Popout: Pops out right above the bottom sidebar bell */}
+      <div
+        onClick={handleClick}
+        title={iconInfo.label}
+        className={`hidden lg:flex fixed bottom-14 left-44 z-50 cursor-pointer select-none items-center space-x-2 rounded-full border border-theme bg-theme-card/95 px-3 py-1.5 shadow-xl backdrop-blur-md transition-all duration-200 ${
+          isExiting
+            ? 'opacity-0 scale-50 translate-y-2 pointer-events-none'
+            : 'opacity-100 scale-100 translate-y-0 animate-in zoom-in-75 fade-in slide-in-from-bottom-2 duration-150'
+        }`}
+      >
+        <div
+          className={`flex h-7 w-7 items-center justify-center rounded-full ${iconInfo.bg} text-white shrink-0 shadow-md ${iconInfo.shadow} ring-2 ${iconInfo.ring}`}
+        >
+          <Icon className="h-3.5 w-3.5" />
+        </div>
+        <div className="text-left pr-1">
+          <span className="text-[11px] font-semibold text-theme-primary block leading-none">
+            {iconInfo.label}
+          </span>
+          <span className="text-[9px] font-mono text-theme-muted block truncate max-w-[120px] mt-0.5">
+            {visibleNotif.body}
+          </span>
+        </div>
+      </div>
+    </>
   );
 };
-
-

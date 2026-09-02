@@ -128,8 +128,17 @@ export const DailyView: React.FC = () => {
         duoChan.send({
           type: 'broadcast',
           event: 'daily_response',
-          payload: { user_id: profile.id },
+          payload: { user_id: profile?.id, user_name: profile?.name },
         });
+      }
+
+      if (partner?.id) {
+        const partnerNotifChannel = supabase.channel(`user:${partner.id}`);
+        partnerNotifChannel.send({
+          type: 'broadcast',
+          event: 'daily_response',
+          payload: { user_id: profile?.id, user_name: profile?.name },
+        }).catch(() => {});
       }
 
       await fetchTodayData();
@@ -158,8 +167,17 @@ export const DailyView: React.FC = () => {
         duoChan.send({
           type: 'broadcast',
           event: 'daily_response',
-          payload: { user_id: profile.id },
+          payload: { user_id: profile?.id, user_name: profile?.name },
         });
+      }
+
+      if (partner?.id) {
+        const partnerNotifChannel = supabase.channel(`user:${partner.id}`);
+        partnerNotifChannel.send({
+          type: 'broadcast',
+          event: 'daily_response',
+          payload: { user_id: profile?.id, user_name: profile?.name },
+        }).catch(() => {});
       }
 
       await fetchTodayData();

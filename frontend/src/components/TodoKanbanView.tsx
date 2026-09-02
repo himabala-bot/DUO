@@ -111,13 +111,21 @@ export const TodoKanbanView: React.FC = () => {
     };
   }, [duoId, fetchTasks]);
 
-  const broadcastUpdate = () => {
+  const broadcastUpdate = (taskItem?: any) => {
     if (channelRef.current) {
       channelRef.current.send({
         type: 'broadcast',
         event: 'tasks_updated',
-        payload: {},
+        payload: { task: taskItem },
       });
+    }
+    if (partner?.id) {
+      const partnerNotifChannel = supabase.channel(`user:${partner.id}`);
+      partnerNotifChannel.send({
+        type: 'broadcast',
+        event: 'tasks_updated',
+        payload: { task: taskItem },
+      }).catch(() => {});
     }
   };
 

@@ -57,26 +57,32 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       config: { broadcast: { self: false } },
     });
 
+    const triggerNotification = (notif: NotificationItem) => {
+      setNotifications((prev) => [notif, ...prev.filter((n) => n.id !== notif.id)]);
+      setUnreadCount((c) => c + 1);
+      setLatestNotification(notif);
+    };
+
     const handleIncomingMessage = (payload: any) => {
       const msg = payload.payload || payload;
       if (!msg) return;
       const senderId = msg.sender?.id || msg.sender_id || msg.user_id;
       if (senderId === userId) return;
 
+      const isVoice = typeof msg.content === 'string' && msg.content.startsWith('[voice:');
+
       const newNotif: NotificationItem = {
         id: `msg-${msg.id || Date.now()}`,
         recipient_id: userId,
-        type: 'MESSAGE',
-        title: 'New Message',
-        body: msg.content || 'New message',
+        type: isVoice ? ('VOICE' as any) : 'MESSAGE',
+        title: isVoice ? 'Voice Note' : 'New Message',
+        body: isVoice ? 'Sent you a voice note' : (msg.content || 'New message'),
         reference_id: msg.id || null,
         is_read: false,
         created_at: new Date().toISOString(),
       };
 
-      setNotifications((prev) => [newNotif, ...prev]);
-      setUnreadCount((c) => c + 1);
-      setLatestNotification(newNotif);
+      triggerNotification(newNotif);
     };
 
     const handleIncomingDrawing = (payload: any) => {
@@ -96,9 +102,7 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         created_at: new Date().toISOString(),
       };
 
-      setNotifications((prev) => [newNotif, ...prev]);
-      setUnreadCount((c) => c + 1);
-      setLatestNotification(newNotif);
+      triggerNotification(newNotif);
     };
 
     const handleIncomingNote = (payload: any) => {
@@ -112,15 +116,13 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         recipient_id: userId,
         type: 'NOTE' as any,
         title: 'New Note',
-        body: note.content || 'Left a note',
+        body: note.content || 'Left a new note for you',
         reference_id: note.id || null,
         is_read: false,
         created_at: new Date().toISOString(),
       };
 
-      setNotifications((prev) => [newNotif, ...prev]);
-      setUnreadCount((c) => c + 1);
-      setLatestNotification(newNotif);
+      triggerNotification(newNotif);
     };
 
     const handleIncomingDaily = (payload: any) => {
@@ -131,16 +133,33 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         id: `prompt-${Date.now()}`,
         recipient_id: userId,
         type: 'DAILY_RESPONSE',
-        title: 'Love Prompt',
-        body: 'Answered today\'s questions',
+        title: 'Prompt Answered',
+        body: 'Answered today\'s daily prompt',
         reference_id: null,
         is_read: false,
         created_at: new Date().toISOString(),
       };
 
-      setNotifications((prev) => [newNotif, ...prev]);
-      setUnreadCount((c) => c + 1);
-      setLatestNotification(newNotif);
+      triggerNotification(newNotif);
+    };
+
+    const handleIncomingTask = (payload: any) => {
+      const data = payload.payload || payload;
+      const task = data?.task;
+      if (task?.created_by?.id === userId) return;
+
+      const newNotif: NotificationItem = {
+        id: `task-${Date.now()}`,
+        recipient_id: userId,
+        type: 'TASK' as any,
+        title: 'Task Updated',
+        body: task?.title ? `"${task.title}"` : 'Shared list updated',
+        reference_id: task?.id || null,
+        is_read: false,
+        created_at: new Date().toISOString(),
+      };
+
+      triggerNotification(newNotif);
     };
 
     userChannel
@@ -154,26 +173,20 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         },
         (payload) => {
           const newNotif = payload.new as NotificationItem;
-          setNotifications((prev) => [newNotif, ...prev]);
-          setUnreadCount((c) => c + 1);
-          setLatestNotification(newNotif);
+          triggerNotification(newNotif);
         }
       )
       .on('broadcast', { event: 'new_notification' }, (payload) => {
         const newNotif = payload.payload as NotificationItem;
         if (!newNotif || !newNotif.id) return;
-        setNotifications((prev) => {
-          if (prev.some((n) => n.id === newNotif.id)) return prev;
-          return [newNotif, ...prev];
-        });
-        setUnreadCount((c) => c + 1);
-        setLatestNotification(newNotif);
+        triggerNotification(newNotif);
       })
       .on('broadcast', { event: 'new_message' }, handleIncomingMessage)
       .on('broadcast', { event: 'new_drawing' }, handleIncomingDrawing)
       .on('broadcast', { event: 'new_note' }, handleIncomingNote)
       .on('broadcast', { event: 'notes_updated' }, handleIncomingNote)
       .on('broadcast', { event: 'daily_response' }, handleIncomingDaily)
+      .on('broadcast', { event: 'tasks_updated' }, handleIncomingTask)
       .on(
         'postgres_changes',
         {
@@ -208,6 +221,7 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     let chatChannel: RealtimeChannel | null = null;
     let canvasChannel: RealtimeChannel | null = null;
     let notesChannel: RealtimeChannel | null = null;
+    let todosChannel: RealtimeChannel | null = null;
 
     if (activeDuoId) {
       // Main Duo channel for presence and global broadcasts
@@ -231,6 +245,7 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         .on('broadcast', { event: 'new_note' }, handleIncomingNote)
         .on('broadcast', { event: 'notes_updated' }, handleIncomingNote)
         .on('broadcast', { event: 'daily_response' }, handleIncomingDaily)
+        .on('broadcast', { event: 'tasks_updated' }, handleIncomingTask)
         .subscribe(async (status: string) => {
           if (status === 'SUBSCRIBED') {
             await duoChannel?.track({ online_at: new Date().toISOString() });
@@ -246,7 +261,7 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         .subscribe();
 
       // Canvas / Doodle Channel listener for instant doodle notifications
-      canvasChannel = supabase.channel(`canvas:${activeDuoId}`, {
+      canvasChannel = supabase.channel(`drawings_studio:${activeDuoId}`, {
         config: { broadcast: { self: false } },
       });
       canvasChannel
@@ -260,6 +275,14 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       notesChannel
         .on('broadcast', { event: 'new_note' }, handleIncomingNote)
         .on('broadcast', { event: 'notes_updated' }, handleIncomingNote)
+        .subscribe();
+
+      // Todos Channel listener for instant task notifications
+      todosChannel = supabase.channel(`todos:${activeDuoId}`, {
+        config: { broadcast: { self: false } },
+      });
+      todosChannel
+        .on('broadcast', { event: 'tasks_updated' }, handleIncomingTask)
         .subscribe();
 
       duoChannelRef.current = duoChannel;

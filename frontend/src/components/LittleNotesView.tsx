@@ -183,13 +183,21 @@ export const LittleNotesView: React.FC = () => {
     };
   }, [duoId, fetchNotes]);
 
-  const broadcastUpdate = () => {
+  const broadcastUpdate = (noteItem?: any) => {
     if (channelRef.current) {
       channelRef.current.send({
         type: 'broadcast',
         event: 'notes_updated',
-        payload: {},
+        payload: noteItem || {},
       });
+    }
+    if (partner?.id) {
+      const partnerNotifChannel = supabase.channel(`user:${partner.id}`);
+      partnerNotifChannel.send({
+        type: 'broadcast',
+        event: 'new_note',
+        payload: noteItem || {},
+      }).catch(() => {});
     }
   };
 

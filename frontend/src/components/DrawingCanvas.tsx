@@ -269,52 +269,64 @@ export const DrawingCanvas: React.FC = () => {
     const canvas = canvasRef.current;
     if (!canvas || !duoId) return;
 
-    setIsSending(true);
-    try {
-      const blob = await new Promise<Blob | null>((resolve) =>
-        canvas.toBlob((b) => resolve(b), 'image/png')
-      );
+    const dataUrl = canvas.toDataURL('image/png');
+    const sendCaption = caption.trim();
+    const tempId = `temp-drawing-${Date.now()}`;
 
-      if (!blob) {
-        throw new Error('Failed to generate drawing image blob.');
-      }
+    const optimisticDrawing: Drawing = {
+      id: tempId,
+      duo_id: duoId,
+      sender: profile as any,
+      receiver: partner as any,
+      storage_path: dataUrl,
+      image_url: dataUrl,
+      caption: sendCaption,
+      is_me: true,
+      created_at: new Date().toISOString(),
+    };
 
-      // Upload high-resolution PNG to Supabase Storage
-      const storagePath = await drawingsApi.uploadToSupabaseStorage(blob, duoId);
-      const savedDrawing = await drawingsApi.create(storagePath, caption.trim());
+    // 1. Instant local display & canvas reset
+    setDrawings((prev) => [optimisticDrawing, ...prev]);
+    setCaption('');
+    initCanvas();
+    toast.drawing(`Doodle sent to ${partner?.name || 'partner'}!`, 'Shared');
 
-      const confirmedDrawing: Drawing = {
-        ...savedDrawing,
-        image_url: savedDrawing.image_url || storagePath,
-        is_me: true,
-      };
-
-      setDrawings((prev) => [confirmedDrawing, ...prev.filter((d) => d.id !== confirmedDrawing.id)]);
-
-      if (channelRef.current) {
-        channelRef.current.send({
-          type: 'broadcast',
-          event: 'new_drawing',
-          payload: confirmedDrawing,
-        });
-      }
-
-      if (partner?.id) {
-        const partnerNotifChannel = supabase.channel(`user:${partner.id}`);
-        if (typeof (partnerNotifChannel as any).httpSend === 'function') {
-          (partnerNotifChannel as any).httpSend('new_drawing', confirmedDrawing).catch(() => {});
-        }
-      }
-
-      setCaption('');
-      initCanvas();
-      toast.drawing(`Doodle sent to ${partner?.name || 'partner'}!`, 'Shared');
-    } catch (err: any) {
-      console.error('Failed to save drawing to Supabase Storage:', err);
-      toast.error(err.message || 'Failed to send drawing. Please check your connection.', 'Error');
-    } finally {
-      setIsSending(false);
+    // 2. Instant 0ms broadcast to partner
+    if (channelRef.current) {
+      channelRef.current.send({
+        type: 'broadcast',
+        event: 'new_drawing',
+        payload: optimisticDrawing,
+      });
     }
+
+    if (partner?.id) {
+      const partnerNotifChannel = supabase.channel(`user:${partner.id}`);
+      partnerNotifChannel.send({
+        type: 'broadcast',
+        event: 'new_drawing',
+        payload: optimisticDrawing,
+      }).catch(() => {});
+    }
+
+    // 3. Background Storage Upload and Django persistence
+    canvas.toBlob(async (blob) => {
+      if (!blob) return;
+      try {
+        const storagePath = await drawingsApi.uploadToSupabaseStorage(blob, duoId);
+        const savedDrawing = await drawingsApi.create(storagePath, sendCaption);
+        const confirmedDrawing: Drawing = {
+          ...savedDrawing,
+          image_url: savedDrawing.image_url || storagePath,
+          is_me: true,
+        };
+        setDrawings((prev) =>
+          prev.map((d) => (d.id === tempId ? confirmedDrawing : d))
+        );
+      } catch (err: any) {
+        console.warn('Background drawing upload error:', err);
+      }
+    }, 'image/png');
   };
 
   const handleDownloadDrawing = async (drawing: Drawing) => {

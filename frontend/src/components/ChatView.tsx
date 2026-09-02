@@ -176,6 +176,16 @@ export const ChatView: React.FC = () => {
       }
     });
 
+    // 1b. Listen for message confirmation to reconcile temp IDs
+    channel.on('broadcast', { event: 'message_confirmed' }, (payload) => {
+      const { temp_id, message } = payload.payload || {};
+      if (temp_id && message) {
+        setMessages((prev) =>
+          prev.map((m) => (m.id === temp_id ? { ...message, is_me: false } : m))
+        );
+      }
+    });
+
     // 2. Listen for real-time reactions
     channel.on('broadcast', { event: 'message_reacted' }, (payload) => {
       const { message_id, reactions } = payload.payload as {
@@ -290,7 +300,6 @@ export const ChatView: React.FC = () => {
     const currentReply = replyingTo;
     setInputText('');
     setReplyingTo(null);
-    setIsSending(true);
 
     const tempId = `temp-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
     const optimisticMsg: Message = {
@@ -316,13 +325,33 @@ export const ChatView: React.FC = () => {
       isOptimistic: true,
     };
 
+    // 1. Instant local render
     setMessages((prev) => [...prev, optimisticMsg]);
 
-    try {
-      const confirmedMsg = await messagesApi.send(content, currentReply?.id);
+    // 2. Instant 0ms broadcast to partner (Realtime speed)
+    if (channelRef.current) {
+      channelRef.current.send({
+        type: 'broadcast',
+        event: 'new_message',
+        payload: optimisticMsg,
+      });
+    }
+
+    if (partner?.id) {
+      const partnerNotifChannel = supabase.channel(`user:${partner.id}`);
+      partnerNotifChannel.send({
+        type: 'broadcast',
+        event: 'new_message',
+        payload: optimisticMsg,
+      }).catch(() => {});
+    }
+
+    // 3. Persist to Django backend in background
+    messagesApi.send(content, currentReply?.id).then((confirmedMsg) => {
       const formattedConfirmed: Message = {
         ...confirmedMsg,
         is_me: true,
+        isOptimistic: false,
       };
 
       setMessages((prev) =>
@@ -332,24 +361,15 @@ export const ChatView: React.FC = () => {
       if (channelRef.current) {
         channelRef.current.send({
           type: 'broadcast',
-          event: 'new_message',
-          payload: confirmedMsg,
+          event: 'message_confirmed',
+          payload: { temp_id: tempId, message: confirmedMsg },
         });
       }
-
-      if (partner?.id) {
-        const partnerNotifChannel = supabase.channel(`user:${partner.id}`);
-        if (typeof (partnerNotifChannel as any).httpSend === 'function') {
-          (partnerNotifChannel as any).httpSend('new_message', confirmedMsg).catch(() => {});
-        }
-      }
-    } catch (err) {
+    }).catch((err) => {
       console.error('Failed to send message:', err);
       setMessages((prev) => prev.filter((m) => m.id !== tempId));
       toast.error('Message failed to send. Please check your connection.', 'Send Error');
-    } finally {
-      setIsSending(false);
-    }
+    });
   };
 
   // Toggle Disappearing Mode
@@ -373,10 +393,9 @@ export const ChatView: React.FC = () => {
     }
   };
 
-  // Handle Sending Voice Note
+  // Handle Sending Voice Note (Instant 0ms audio)
   const handleSendVoiceNote = async (audioDataUrl: string, duration: number) => {
     if (!duoId) return;
-    setIsSending(true);
     const voicePayload = `[voice:${JSON.stringify({ url: audioDataUrl, duration })}]`;
     const tempId = `temp-voice-${Date.now()}`;
 
@@ -395,36 +414,47 @@ export const ChatView: React.FC = () => {
       isOptimistic: true,
     };
 
+    // 1. Instant local render
     setMessages((prev) => [...prev, optimisticMsg]);
 
-    try {
-      const confirmedMsg = await messagesApi.send(voicePayload);
+    // 2. Instant 0ms broadcast to partner
+    if (channelRef.current) {
+      channelRef.current.send({
+        type: 'broadcast',
+        event: 'new_message',
+        payload: optimisticMsg,
+      });
+    }
+
+    if (partner?.id) {
+      const partnerNotifChannel = supabase.channel(`user:${partner.id}`);
+      partnerNotifChannel.send({
+        type: 'broadcast',
+        event: 'new_message',
+        payload: optimisticMsg,
+      }).catch(() => {});
+    }
+
+    toast.love('Voice note sent', 'Voice Note');
+
+    // 3. Persist to backend in background
+    messagesApi.send(voicePayload).then((confirmedMsg) => {
       setMessages((prev) =>
-        prev.map((m) => (m.id === tempId ? { ...confirmedMsg, is_me: true } : m))
+        prev.map((m) => (m.id === tempId ? { ...confirmedMsg, is_me: true, isOptimistic: false } : m))
       );
 
       if (channelRef.current) {
         channelRef.current.send({
           type: 'broadcast',
-          event: 'new_message',
-          payload: confirmedMsg,
+          event: 'message_confirmed',
+          payload: { temp_id: tempId, message: confirmedMsg },
         });
       }
-
-      if (partner?.id) {
-        const partnerNotifChannel = supabase.channel(`user:${partner.id}`);
-        if (typeof (partnerNotifChannel as any).httpSend === 'function') {
-          (partnerNotifChannel as any).httpSend('new_message', confirmedMsg).catch(() => {});
-        }
-      }
-      toast.love('Voice note sent', 'Voice Note');
-    } catch (err) {
+    }).catch((err) => {
       console.error('Failed to send voice note:', err);
       setMessages((prev) => prev.filter((m) => m.id !== tempId));
       toast.error('Failed to send voice note.', 'Error');
-    } finally {
-      setIsSending(false);
-    }
+    });
   };
 
   // Toggle Reaction (SVG icon keys: heart, sparkles, smile, star, thumbsup)
