@@ -1,10 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { QRCodeSVG } from 'qrcode.react';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
+import { useToast } from '@/context/ToastContext';
 import { duoApi } from '@/lib/api';
 import { PairingSession } from '@/types';
+import { supabase } from '@/lib/supabase';
 import { Avatar } from './Avatar';
 import {
   PenTool,
@@ -25,11 +28,16 @@ import {
   Check,
   Sun,
   Moon,
+  Copy,
+  RefreshCw,
+  AlertCircle,
+  QrCode,
 } from 'lucide-react';
 
 export const AuthView: React.FC = () => {
-  const { loginWithEmail, registerWithEmail, loginWithGoogle } = useAuth();
+  const { loginWithEmail, registerWithEmail, loginWithGoogle, refreshProfile } = useAuth();
   const { resolvedTheme, toggleTheme } = useTheme();
+  const { toast } = useToast();
   const [isLogin, setIsLogin] = useState<boolean>(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -41,6 +49,87 @@ export const AuthView: React.FC = () => {
   // QR Pairing session state on landing page
   const [pairingSession, setPairingSession] = useState<PairingSession | null>(null);
   const [activeFeatureTab, setActiveFeatureTab] = useState<'daily' | 'notes' | 'canvas' | 'chat' | 'todo'>('daily');
+
+  // Landing page live QR pairing code state
+  const [landingToken, setLandingToken] = useState<string>('');
+  const [landingCode, setLandingCode] = useState<string>('');
+  const [timeLeft, setTimeLeft] = useState<number>(600);
+  const [isExpired, setIsExpired] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [isPairedSuccess, setIsPairedSuccess] = useState(false);
+  const countdownTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Generate a random 6-character code and token for landing preview
+  const generateLandingQR = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let code = '';
+    for (let i = 0; i < 6; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    const token = 'duo_' + Math.random().toString(36).substring(2, 12) + Date.now().toString(36);
+    setLandingCode(code);
+    setLandingToken(token);
+    setTimeLeft(600);
+    setIsExpired(false);
+    setIsPairedSuccess(false);
+  };
+
+  useEffect(() => {
+    generateLandingQR();
+  }, []);
+
+  // Live countdown timer for landing QR
+  useEffect(() => {
+    if (isExpired || isPairedSuccess) return;
+
+    if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
+    countdownTimerRef.current = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          setIsExpired(true);
+          if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => {
+      if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
+    };
+  }, [isExpired, isPairedSuccess]);
+
+  // Listen to Supabase Realtime broadcast when second device scans QR
+  useEffect(() => {
+    if (!landingToken || isExpired || isPairedSuccess) return;
+
+    const channel = supabase.channel(`pairing:${landingToken}`);
+    channel
+      .on('broadcast', { event: 'claimed' }, async () => {
+        setIsPairedSuccess(true);
+        toast.love('Phone connected! Welcome to Duo.', 'Paired');
+        await refreshProfile();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [landingToken, isExpired, isPairedSuccess, refreshProfile, toast]);
+
+  const handleCopyCode = () => {
+    if (!landingCode) return;
+    navigator.clipboard.writeText(landingCode);
+    setCopied(true);
+    toast.love('Pairing code copied', 'Copied');
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const formatCountdown = (secs: number) => {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+  };
 
   // Check if landing page was opened via QR scan (?pair=...)
   useEffect(() => {
@@ -196,6 +285,123 @@ export const AuthView: React.FC = () => {
               <span>Enter Your Room</span>
               <ArrowRight className="h-4 w-4" />
             </a>
+            <a
+              href="#qr-pairing-card"
+              className="rounded-full border border-theme bg-theme-input px-5 py-3 text-sm font-medium text-theme-primary hover:bg-theme-card transition-colors flex items-center space-x-2"
+            >
+              <QrCode className="h-4 w-4 text-[#125CB9]" />
+              <span>Pair Second Device (QR)</span>
+            </a>
+          </div>
+        </section>
+
+        {/* Native In-App QR Device Pairing Card */}
+        <section id="qr-pairing-card" className="mx-auto max-w-4xl px-4 sm:px-8 py-6">
+          <div className="mx-auto max-w-[460px] rounded-[32px] border border-theme bg-theme-card p-6 sm:p-8 shadow-xl text-center select-none animate-in zoom-in-95 duration-200">
+            {isPairedSuccess ? (
+              <div className="py-8 space-y-4 animate-in zoom-in-95 duration-300">
+                <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-[#00D26A]/10 text-[#00D26A] mx-auto ring-8 ring-[#00D26A]/10 shadow-lg">
+                  <CheckCircle2 className="h-9 w-9" />
+                </div>
+                <div>
+                  <h3 className="font-serif text-2xl font-bold text-theme-primary">
+                    Phone connected
+                  </h3>
+                  <p className="text-xs text-theme-secondary mt-1">
+                    Entering your shared Duo room...
+                  </p>
+                </div>
+              </div>
+            ) : isExpired ? (
+              <div className="py-8 space-y-5">
+                <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-[#FB923C]/10 text-[#FB923C] mx-auto">
+                  <AlertCircle className="h-7 w-7" />
+                </div>
+                <div>
+                  <h3 className="font-serif text-xl font-bold text-theme-primary">
+                    QR code has expired
+                  </h3>
+                  <p className="text-xs text-theme-secondary mt-1">
+                    For your security, pairing sessions expire after 10 minutes.
+                  </p>
+                </div>
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={generateLandingQR}
+                    className="inline-flex items-center space-x-2 rounded-full bg-[#125CB9] px-6 py-2.5 text-xs font-semibold text-white hover:bg-[#0E4B99] transition-all shadow-xs"
+                  >
+                    <RefreshCw className="h-3.5 w-3.5" />
+                    <span>Generate a new QR</span>
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {/* Header */}
+                <div>
+                  <h3 className="font-serif text-2xl font-bold text-theme-primary">
+                    Connect another device
+                  </h3>
+                  <p className="text-xs text-theme-secondary mt-1 max-w-xs mx-auto leading-relaxed">
+                    Scan this QR code with your phone to join this Duo.
+                  </p>
+                </div>
+
+                {/* Dynamic QR Code */}
+                <div className="flex flex-col items-center justify-center py-2">
+                  <div className="relative rounded-2xl border border-theme bg-white p-4 shadow-xs">
+                    <QRCodeSVG
+                      value={typeof window !== 'undefined' ? `${window.location.origin}/join?token=${landingToken}` : ''}
+                      size={200}
+                      level="M"
+                      includeMargin={false}
+                      className="rounded-lg"
+                    />
+                  </div>
+                </div>
+
+                {/* Fallback 6-Character Code */}
+                {landingCode && (
+                  <div className="space-y-1">
+                    <div className="font-mono text-xl sm:text-2xl font-bold tracking-widest text-theme-primary">
+                      {landingCode}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleCopyCode}
+                      className="inline-flex items-center space-x-1 text-xs font-mono text-theme-muted hover:text-theme-primary transition-colors"
+                    >
+                      {copied ? (
+                        <>
+                          <Check className="h-3 w-3 text-[#00D26A]" />
+                          <span className="text-[#00D26A]">Copied</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="h-3 w-3" />
+                          <span>Copy code</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
+
+                {/* Expiration Countdown */}
+                <div className="text-xs font-mono text-theme-muted">
+                  <span>Expires in {formatCountdown(timeLeft)}</span>
+                </div>
+
+                {/* Live Waiting Status */}
+                <div className="flex items-center justify-center space-x-2 py-1 text-xs font-mono text-theme-secondary">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00D26A] opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-[#00D26A]" />
+                  </span>
+                  <span>Waiting for your phone to connect...</span>
+                </div>
+              </div>
+            )}
           </div>
         </section>
 
